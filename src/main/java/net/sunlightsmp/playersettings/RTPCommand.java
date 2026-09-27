@@ -85,69 +85,34 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
         }
 
         player.closeInventory();
-        final int searchSeconds = 10;
-        player.sendTitle(ChatColor.GOLD + "☀ RTP SEARCH", ChatColor.YELLOW + "Finding a safe location...", 0, 20, 0);
-        player.sendActionBar(ChatColor.YELLOW + "☀ SEARCHING FOR SAFE LOCATION • " + searchSeconds + "s");
 
-        new BukkitRunnable() {
-            int elapsed = 0;
-            int attempts = 0;
-            boolean found = false;
+        double angle = random.nextDouble() * Math.PI * 2.0;
+        int x = (int) Math.round(Math.cos(angle) * 15_000);
+        int z = (int) Math.round(Math.sin(angle) * 15_000);
 
-            @Override
-            public void run() {
-                if (!player.isOnline() || found) {
-                    cancel();
+        // Load the destination chunk, then place the player directly above its highest block.
+        world.getChunkAtAsync(x >> 4, z >> 4, true).whenComplete((chunk, error) -> {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (!player.isOnline()) return;
+                if (error != null) {
+                    player.sendMessage(ChatColor.RED + "☀ RTP failed. Try again.");
                     return;
                 }
 
-                elapsed++;
-                int remaining = Math.max(0, searchSeconds - elapsed);
-                player.sendActionBar(ChatColor.YELLOW + "☀ RTP SEARCH • " + remaining + "s " + ChatColor.GRAY + "» " + ChatColor.WHITE + "Checking safe terrain");
-
-                if (elapsed < searchSeconds) {
-                    // Check several chunks in parallel instead of waiting for one chunk at a time.
-                    for (int i = 0; i < 6; i++) {
-                        double angle = random.nextDouble() * Math.PI * 2.0;
-                        int x = (int) Math.round(Math.cos(angle) * 15_000);
-                        int z = (int) Math.round(Math.sin(angle) * 15_000);
-                        world.getChunkAtAsync(x >> 4, z >> 4, true).whenComplete((chunk, error) -> {
-                            Bukkit.getScheduler().runTask(plugin, () -> {
-                                if (!player.isOnline() || found || error != null) return;
-
-                                attempts++;
-                                Location target = randomLocation(world, x, z);
-                                if (target != null && isSafe(target, world)) {
-                                    found = true;
-                                    player.sendActionBar(ChatColor.GREEN + "☀ RTP FOUND! " + ChatColor.WHITE + "Teleporting...");
-                                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.4f);
-                                    player.teleportAsync(target).thenAccept(success -> Bukkit.getScheduler().runTask(plugin, () -> {
-                                        if (!player.isOnline()) return;
-                                        if (success) {
-                                            player.sendActionBar(ChatColor.GREEN + "☀ RTP SUCCESSFUL!");
-                                            player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
-                                        } else {
-                                            player.sendActionBar(ChatColor.RED + "☀ RTP failed. Try again.");
-                                        }
-                                    }));
-                                    cancel();
-                                } else if (attempts >= 60) {
-                                    player.sendActionBar(ChatColor.RED + "☀ No safe location found. Try /rtp again.");
-                                    player.sendMessage(ChatColor.RED + "☀ RTP couldn't find a safe location.");
-                                    cancel();
-                                }
-                            });
-                        });
+                int y = world.getHighestBlockYAt(x, z);
+                Location target = new Location(world, x + 0.5, y + 1.0, z + 0.5);
+                player.sendActionBar(ChatColor.GREEN + "☀ RTP " + ChatColor.WHITE + "Teleporting...");
+                player.teleportAsync(target).thenAccept(success -> Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (!player.isOnline()) return;
+                    if (success) {
+                        player.sendActionBar(ChatColor.GREEN + "☀ RTP SUCCESSFUL!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
+                    } else {
+                        player.sendActionBar(ChatColor.RED + "☀ RTP failed. Try again.");
                     }
-                }
-
-                if (elapsed >= searchSeconds && !found) {
-                    player.sendActionBar(ChatColor.RED + "☀ RTP SEARCH TIMED OUT");
-                    player.sendMessage(ChatColor.RED + "☀ RTP search timed out. Try /rtp again.");
-                    cancel();
-                }
-            }
-        }.runTaskTimer(plugin, 0L, 20L);
+                }));
+            });
+        });
     }
 
     private int randomCoordinate() {
