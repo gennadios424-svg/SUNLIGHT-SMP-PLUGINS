@@ -99,7 +99,12 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
                     return;
                 }
 
-                int y = world.getHighestBlockYAt(x, z);
+                int y = findSolidGroundY(world, x, z);
+                if (y == Integer.MIN_VALUE) {
+                    player.sendActionBar(ChatColor.RED + "☀ RTP failed. Try again.");
+                    return;
+                }
+
                 Location target = new Location(world, x + 0.5, y + 1.0, z + 0.5);
                 player.sendActionBar(ChatColor.GREEN + "☀ RTP " + ChatColor.WHITE + "Teleporting...");
                 player.teleportAsync(target).thenAccept(success -> Bukkit.getScheduler().runTask(plugin, () -> {
@@ -113,6 +118,21 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
                 }));
             });
         });
+    }
+
+    private int findSolidGroundY(World world, int x, int z) {
+        int highest = world.getHighestBlockYAt(x, z);
+        if (highest > world.getMaxHeight() - 1) highest = world.getMaxHeight() - 1;
+
+        // Walk downward until we find a real solid block.
+        // This prevents RTP from placing players in air, water, or a void column.
+        for (int y = highest; y >= world.getMinHeight(); y--) {
+            Material type = world.getBlockAt(x, y, z).getType();
+            if (type.isSolid()) {
+                return y;
+            }
+        }
+        return Integer.MIN_VALUE;
     }
 
     private int randomCoordinate() {
