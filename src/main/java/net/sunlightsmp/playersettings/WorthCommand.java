@@ -107,6 +107,11 @@ public final class WorthCommand implements CommandExecutor, Listener, TabComplet
         return NumberFormat.getNumberInstance(Locale.US).format(n);
     }
 
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        return Collections.emptyList();
+    }
+
     @EventHandler
     public void click(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player p) || !e.getView().getTitle().equals(TITLE)) return;
