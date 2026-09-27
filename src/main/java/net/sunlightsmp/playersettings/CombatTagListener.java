@@ -6,9 +6,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,8 +57,42 @@ public final class CombatTagListener implements Listener {
         combatUntil.put(p.getUniqueId(), System.currentTimeMillis() + COMBAT_SECONDS * 1000L);
     }
 
+    public boolean isInCombat(Player p) {
+        Long until = combatUntil.get(p.getUniqueId());
+        if (until == null) return false;
+        if (until <= System.currentTimeMillis()) {
+            combatUntil.remove(p.getUniqueId());
+            return false;
+        }
+        return true;
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onCommand(PlayerCommandPreprocessEvent event) {
+        Player p = event.getPlayer();
+        if (!isInCombat(p)) return;
+
+        String command = event.getMessage().trim().split("\s+")[0].toLowerCase(Locale.ROOT);
+        if (command.startsWith("/")) command = command.substring(1);
+        if (command.contains(":")) command = command.substring(command.lastIndexOf(':') + 1);
+
+        if (command.equals("ah") || command.equals("auction") || command.equals("auctionhouse")
+                || command.equals("rtp") || command.equals("tpa") || command.equals("tpahere")
+                || command.equals("tpaccept") || command.equals("tpdeny") || command.equals("tpacancel")) {
+            event.setCancelled(true);
+            p.sendMessage(ChatColor.RED + "☀ You cannot use " + ChatColor.YELLOW + "/" + command
+                    + ChatColor.RED + " while in combat!");
+        }
+    }
+
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        combatUntil.remove(event.getPlayer().getUniqueId());
+        Player p = event.getPlayer();
+        if (isInCombat(p)) {
+            combatUntil.remove(p.getUniqueId());
+            p.setHealth(0.0);
+        } else {
+            combatUntil.remove(p.getUniqueId());
+        }
     }
 }
