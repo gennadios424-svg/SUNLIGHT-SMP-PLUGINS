@@ -16,6 +16,7 @@ public final class SunlightPickaxe implements Listener {
     private final SunlightPlayerSettings plugin;
     private final NamespacedKey expiryKey;
     private final NamespacedKey pickaxeKey;
+
     public SunlightPickaxe(SunlightPlayerSettings plugin){
         this.plugin=plugin;
         expiryKey=new NamespacedKey(plugin,"sunlight_pickaxe_expiry");
@@ -30,9 +31,11 @@ public final class SunlightPickaxe implements Listener {
             ChatColor.YELLOW+"3x3 Mining",
             ChatColor.GRAY+"Breaks a 3x3 area at once.",
             "",
+            ChatColor.GREEN+"UNBREAKABLE",
             ChatColor.RED+"Expires in 2 days",
             ChatColor.DARK_GRAY+"Temporary Sunlight tool"
         ));
+        meta.setUnbreakable(true);
         meta.getPersistentDataContainer().set(pickaxeKey,PersistentDataType.BYTE,(byte)1);
         meta.getPersistentDataContainer().set(expiryKey,PersistentDataType.LONG,System.currentTimeMillis()+172800000L);
         item.setItemMeta(meta);
@@ -92,6 +95,5 @@ public final class SunlightPickaxe implements Listener {
             if(extra.isCancelled())continue;
             b.breakNaturally(tool);
         }
-        // Let the original event handle the center block, preserving normal drops/XP/protection.
     }
 }
