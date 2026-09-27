@@ -47,3 +47,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 # Build trigger refresh
+
+# Trigger build after RTP update
