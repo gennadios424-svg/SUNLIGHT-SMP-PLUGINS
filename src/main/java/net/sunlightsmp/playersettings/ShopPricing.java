@@ -9,11 +9,14 @@ public final class ShopPricing {
     public static double buyPrice(Material m) {
         if (m == null || !m.isItem()) return 0;
         if (m == Material.SPAWNER) return 2_000_000;
+        if (m == Material.SHULKER_BOX) return 250;
         if (m == Material.END_CRYSTAL) return 1_000;
         return Math.max(1, Math.ceil(SellPricing.price(m) * 2.5));
     }
 
     private static boolean isSurvivalObtainable(Material m) {
+        String n = m.name();
+        if (n.endsWith("_SPAWN_EGG")) return false;
         return switch(m) {
             case BEDROCK, BARRIER, END_PORTAL_FRAME, END_PORTAL, NETHER_PORTAL,
                  COMMAND_BLOCK, CHAIN_COMMAND_BLOCK, REPEATING_COMMAND_BLOCK,
@@ -30,11 +33,11 @@ public final class ShopPricing {
         List<Material> items = switch(c) {
             case "redstone" -> List.of(
                 Material.REDSTONE, Material.REDSTONE_TORCH,
-                Material.PISTON, Material.STICKY_PISTON, Material.OBSERVER,
-                Material.DISPENSER, Material.DROPPER, Material.HOPPER,
-                Material.CRAFTER, Material.REPEATER, Material.COMPARATOR,
-                Material.LEVER, Material.STONE_BUTTON, Material.STONE_PRESSURE_PLATE,
-                Material.RAIL, Material.TNT
+                Material.NOTE_BLOCK, Material.PISTON, Material.STICKY_PISTON,
+                Material.OBSERVER, Material.DISPENSER, Material.DROPPER,
+                Material.HOPPER, Material.CRAFTER, Material.REPEATER,
+                Material.COMPARATOR, Material.LEVER, Material.STONE_BUTTON,
+                Material.STONE_PRESSURE_PLATE, Material.RAIL, Material.TNT
             );
 
             case "farm" -> List.of(
@@ -62,23 +65,16 @@ public final class ShopPricing {
             );
 
             case "blocks" -> List.of(
-                // Building / utility blocks
                 Material.STONE, Material.COBBLESTONE, Material.DEEPSLATE,
                 Material.COBBLED_DEEPSLATE, Material.NETHERRACK,
                 Material.BLACKSTONE, Material.BASALT, Material.END_STONE,
                 Material.SAND, Material.GRAVEL, Material.DIRT, Material.CLAY,
                 Material.GLASS, Material.BRICKS, Material.PRISMARINE,
                 Material.PURPUR_BLOCK, Material.OBSIDIAN, Material.CRYING_OBSIDIAN,
-
-                // Storage
                 Material.CHEST, Material.TRAPPED_CHEST, Material.BARREL,
                 Material.SHULKER_BOX, Material.ENDER_CHEST,
-
-                // Wool — useful core colors without filling the shop with every dye
                 Material.WHITE_WOOL, Material.BLACK_WOOL, Material.RED_WOOL,
                 Material.BLUE_WOOL, Material.GREEN_WOOL, Material.YELLOW_WOOL,
-
-                // Concrete — useful core colors without filling the shop with every dye
                 Material.WHITE_CONCRETE, Material.BLACK_CONCRETE, Material.RED_CONCRETE,
                 Material.BLUE_CONCRETE, Material.GREEN_CONCRETE, Material.YELLOW_CONCRETE
             );
@@ -88,9 +84,7 @@ public final class ShopPricing {
 
         List<Material> out = new ArrayList<>();
         for (Material m : items) {
-            if (m != Material.AIR && m.isItem() && isSurvivalObtainable(m)) {
-                out.add(m);
-            }
+            if (m != Material.AIR && m.isItem() && isSurvivalObtainable(m)) out.add(m);
         }
         return out;
     }
