@@ -1,0 +1,178 @@
+package net.sunlightsmp.playersettings;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
+import org.bukkit.event.*;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.scheduler.BukkitTask;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+public final class TPAManager implements Listener {
+    private final SunlightPlayerSettings plugin;
+    private final Map<UUID, TPARequest> incoming = new ConcurrentHashMap<>();
+    private final Map<UUID, TPARequest> outgoing = new ConcurrentHashMap<>();
+    private final Map<UUID, BukkitTask> teleports = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
+
+    public TPAManager(SunlightPlayerSettings plugin) {
+        this.plugin = plugin;
+    }
+
+    public void sendRequest(Player requester, Player target, boolean tpHere) {
+        if (requester.equals(target)) {
+            requester.sendMessage(Component.text("You cannot send a TPA request to yourself.", NamedTextColor.RED));
+            return;
+        }
+        if (!plugin.getSettings().get(target, Setting.TP_REQUESTS)) {
+            requester.sendMessage(Component.text("That player has TPA requests disabled.", NamedTextColor.RED));
+            return;
+        }
+        long now = System.currentTimeMillis();
+        long cooldown = plugin.getConfig().getLong("tpa.cooldown-seconds", 3) * 1000L;
+        if (now < cooldowns.getOrDefault(requester.getUniqueId(), 0L)) {
+            long left = Math.max(1, (cooldowns.get(requester.getUniqueId()) - now + 999) / 1000);
+            requester.sendMessage(Component.text("Please wait " + left + "s before sending another TPA request.", NamedTextColor.RED));
+            return;
+        }
+        TPARequest old = outgoing.remove(requester.getUniqueId());
+        if (old != null) incoming.remove(old.target().getUniqueId());
+
+        int timeout = plugin.getConfig().getInt("tpa.request-timeout-seconds", 30);
+        TPARequest request = new TPARequest(requester, target, tpHere, now + timeout * 1000L);
+        outgoing.put(requester.getUniqueId(), request);
+        incoming.put(target.getUniqueId(), request);
+        cooldowns.put(requester.getUniqueId(), now + cooldown * 1000L);
+
+        requester.sendMessage(Component.text("TPA request sent to ", NamedTextColor.GRAY)
+                .append(Component.text(target.getName(), NamedTextColor.YELLOW))
+                .append(Component.text(".", NamedTextColor.GRAY)));
+        target.sendMessage(Component.text(requester.getName(), NamedTextColor.YELLOW)
+                .append(Component.text(tpHere ? " wants you to teleport to them. " : " wants to teleport to you. ", NamedTextColor.GRAY))
+                .append(button("ACCEPT", NamedTextColor.GREEN, "/tpaccept"))
+                .append(Component.text(" "))
+                .append(button("DENY", NamedTextColor.RED, "/tpdeny")));
+        target.playSound(target.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (outgoing.get(requester.getUniqueId()) == request) {
+                outgoing.remove(requester.getUniqueId());
+                incoming.remove(target.getUniqueId());
+                requester.sendMessage(Component.text("Your TPA request to " + target.getName() + " expired.", NamedTextColor.RED));
+                target.sendMessage(Component.text("The TPA request from " + requester.getName() + " expired.", NamedTextColor.GRAY));
+            }
+        }, timeout * 20L);
+    }
+
+    private Component button(String text, NamedTextColor color, String command) {
+        return Component.text("[" + text + "]", color)
+                .clickEvent(ClickEvent.runCommand(command))
+                .hoverEvent(HoverEvent.showText(Component.text("Click to " + text.toLowerCase() + " this request.", color)));
+    }
+
+    public void acceptLatest(Player target) {
+        TPARequest request = incoming.get(target.getUniqueId());
+        if (request == null || request.expired()) {
+            if (request != null) remove(request);
+            target.sendMessage(Component.text("You have no pending TPA requests.", NamedTextColor.RED));
+            return;
+        }
+        remove(request);
+        Player requester = request.requester();
+        Player teleporter = request.tpHere() ? target : requester;
+        Player destination = request.tpHere() ? requester : target;
+        startTeleport(teleporter, destination);
+    }
+
+    public void denyLatest(Player target) {
+        TPARequest request = incoming.remove(target.getUniqueId());
+        if (request == null || request.expired()) {
+            if (request != null) outgoing.remove(request.requester().getUniqueId());
+            target.sendMessage(Component.text("You have no pending TPA requests.", NamedTextColor.RED));
+            return;
+        }
+        outgoing.remove(request.requester().getUniqueId());
+        target.sendMessage(Component.text("TPA request denied.", NamedTextColor.GRAY));
+        request.requester().sendMessage(Component.text(target.getName() + " denied your TPA request.", NamedTextColor.RED));
+    }
+
+    public void cancelOutgoing(Player requester) {
+        TPARequest request = outgoing.remove(requester.getUniqueId());
+        if (request == null) {
+            requester.sendMessage(Component.text("You have no outgoing TPA request.", NamedTextColor.RED));
+            return;
+        }
+        incoming.remove(request.target().getUniqueId());
+        requester.sendMessage(Component.text("TPA request cancelled.", NamedTextColor.GRAY));
+        request.target().sendMessage(Component.text(requester.getName() + " cancelled their TPA request.", NamedTextColor.GRAY));
+    }
+
+    private void remove(TPARequest request) {
+        outgoing.remove(request.requester().getUniqueId(), request);
+        incoming.remove(request.target().getUniqueId(), request);
+    }
+
+    private void startTeleport(Player teleporter, Player destination) {
+        cancelTeleport(teleporter);
+        int delay = plugin.getConfig().getInt("tpa.teleport-delay-seconds", 5);
+        Location start = teleporter.getLocation().clone();
+        teleporter.sendMessage(Component.text("Teleporting in " + delay + " seconds. Don't move!", NamedTextColor.GREEN));
+        teleporter.playSound(teleporter.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
+
+        BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            teleports.remove(teleporter.getUniqueId());
+            if (!teleporter.isOnline() || !destination.isOnline()) return;
+            teleporter.teleport(destination.getLocation());
+            teleporter.sendMessage(Component.text("Teleported successfully.", NamedTextColor.GREEN));
+            teleporter.playSound(teleporter.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+        }, delay * 20L);
+        teleports.put(teleporter.getUniqueId(), task);
+        plugin.getTpaStartLocations().put(teleporter.getUniqueId(), start);
+    }
+
+    private void cancelTeleport(Player player) {
+        BukkitTask task = teleports.remove(player.getUniqueId());
+        if (task != null) {
+            task.cancel();
+            plugin.getTpaStartLocations().remove(player.getUniqueId());
+        }
+    }
+
+    @EventHandler
+    public void onMove(PlayerMoveEvent event) {
+        Player p = event.getPlayer();
+        if (!teleports.containsKey(p.getUniqueId()) || event.getTo() == null) return;
+        Location from = event.getFrom();
+        Location to = event.getTo();
+        if (from.getBlockX() != to.getBlockX() || from.getBlockY() != to.getBlockY() || from.getBlockZ() != to.getBlockZ()) {
+            cancelTeleport(p);
+            p.sendMessage(Component.text("Teleport cancelled because you moved.", NamedTextColor.RED));
+            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+        }
+    }
+
+    @EventHandler
+    public void onDamage(EntityDamageEvent event) {
+        if (event.getEntity() instanceof Player p && teleports.containsKey(p.getUniqueId())) {
+            cancelTeleport(p);
+            p.sendMessage(Component.text("Teleport cancelled because you took damage.", NamedTextColor.RED));
+            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+        }
+    }
+
+    public void cleanup(Player p) {
+        cancelTeleport(p);
+        TPARequest out = outgoing.remove(p.getUniqueId());
+        if (out != null) incoming.remove(out.target().getUniqueId());
+        TPARequest in = incoming.remove(p.getUniqueId());
+        if (in != null) outgoing.remove(in.requester().getUniqueId());
+    }
+}
