@@ -71,13 +71,13 @@ commands:
     usage: /sunflowerspawner <skeleton|zombie|witch|iron_golem|spider|creeper>
   keyall:
     description: Give every online player crate keys with an animation
-    usage: /keyall <crate> <amount>
+    usage: /keyall <crate> <amount> | /keyall reload
   crates:
     description: Open the Sunlight Crates menu
     usage: /crates
   crate:
     description: Open a Sunlight crate
-    usage: /crate <common|spawner|sunlight|crimson|sunset>
+    usage: /crate <crate> | /crate edit <crate> | /crate reload
 permissions:
   sunlightsmp.settings:
     default: true
