@@ -15,6 +15,7 @@ public final class KeyAllManager {
         String t=type.toLowerCase(Locale.ROOT);
         if(!List.of("common","spawner","sunlight","crimson","sunset").contains(t))return;
         amount=Math.min(64,Math.max(1,amount));
+        final int finalAmount = amount;
         ItemStack key=new ItemStack(Material.TRIPWIRE_HOOK,amount);
         ItemMeta meta=key.getItemMeta();
         meta.setDisplayName(ChatColor.GOLD+"☀ "+pretty(t)+" Crate Key");
@@ -39,7 +40,7 @@ public final class KeyAllManager {
         }
         plugin.getServer().getScheduler().runTaskLater(plugin,()->{
             for(Player p:plugin.getServer().getOnlinePlayers()){
-                p.sendTitle(ChatColor.GOLD+"☀ KEY ALL! ☀",ChatColor.YELLOW+"+"+amount+" "+pretty(t)+" Key"+(amount==1?"":"s"),5,35,10);
+                p.sendTitle(ChatColor.GOLD+"☀ KEY ALL! ☀",ChatColor.YELLOW+"+"+finalAmount+" "+pretty(t)+" Key"+(finalAmount==1?"":"s"),5,35,10);
                 p.sendActionBar(ChatColor.YELLOW+"☀ Everyone received "+amount+"x "+pretty(t)+" Key!");
                 p.playSound(p.getLocation(),org.bukkit.Sound.ENTITY_PLAYER_LEVELUP,1f,1.3f);
             }
