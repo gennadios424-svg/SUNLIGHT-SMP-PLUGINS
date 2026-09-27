@@ -1,0 +1,14 @@
+name: SunlightPlayerSettings
+version: 1.0.0
+main: net.sunlightsmp.playersettings.SunlightPlayerSettings
+api-version: '1.21'
+author: Sunlight SMP
+description: Per-player settings GUI for Sunlight SMP
+commands:
+  settings:
+    description: Open your personal Sunlight SMP settings
+    usage: /settings
+    aliases: [setting, options]
+permissions:
+  sunlightsmp.settings:
+    default: true
