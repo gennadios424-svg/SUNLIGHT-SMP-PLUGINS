@@ -37,11 +37,11 @@ public final class ShopMenu implements Listener {
             inv.setItem(14,item(Material.COOKED_BEEF,ChatColor.GOLD+"Food","",ChatColor.GRAY+"Food & consumables"));
             inv.setItem(16,item(Material.END_CRYSTAL,ChatColor.LIGHT_PURPLE+"PvP","",ChatColor.GRAY+"Crystal PvP supplies — no armor/weapons"));
             inv.setItem(20,item(Material.BRICKS,ChatColor.YELLOW+"Blocks","",ChatColor.GRAY+"Building blocks"));
-            inv.setItem(24,item(Material.SPAWNER,ChatColor.AQUA+"Spawners","",ChatColor.GRAY+"$2,000,000 each"));
+            inv.setItem(24,item(Material.SPAWNER,ChatColor.AQUA+"Spawners","",ChatColor.GRAY+"1,500 Sunflowers each"));
             inv.setItem(49,item(Material.SUNFLOWER,ChatColor.GOLD+"☀ Sunlight Shop","",ChatColor.GRAY+"Choose a category"));
         }else{
-            List<Material> list=c.equals("spawners")?List.of(Material.SPAWNER):ShopPricing.category(c); int pg=pages.getOrDefault(p.getUniqueId(),0),start=pg*27;
-            for(int i=0;i<27&&start+i<list.size();i++){Material m=list.get(start+i);String price=m==Material.SPAWNER?"$2,000,000":"$"+money(ShopPricing.buyPrice(m));inv.setItem(i,item(m,ChatColor.WHITE+pretty(m),"",ChatColor.GREEN+"Buy: "+price,ChatColor.GRAY+"Click to choose amount")); }
+            List<Material> list=c.equals("spawners")?List.of(Material.SKELETON_SPAWN_EGG,Material.ZOMBIE_SPAWN_EGG,Material.WITCH_SPAWN_EGG,Material.IRON_GOLEM_SPAWN_EGG,Material.SPIDER_SPAWN_EGG,Material.CREEPER_SPAWN_EGG):ShopPricing.category(c); int pg=pages.getOrDefault(p.getUniqueId(),0),start=pg*27;
+            for(int i=0;i<27&&start+i<list.size();i++){Material m=list.get(start+i);String price=c.equals("spawners")?"1,500 Sunflowers":"$"+money(ShopPricing.buyPrice(m));inv.setItem(i,item(m,ChatColor.WHITE+pretty(m),"",ChatColor.GREEN+"Buy: "+price,ChatColor.GRAY+"Click to choose amount")); }
             inv.setItem(27,item(Material.ARROW,ChatColor.YELLOW+"Previous"));inv.setItem(31,item(Material.BARRIER,ChatColor.RED+"Back"));inv.setItem(35,item(Material.ARROW,ChatColor.YELLOW+"Next"));
         }
         p.openInventory(inv);
@@ -101,13 +101,26 @@ public final class ShopMenu implements Listener {
             if(n!=null){cats.put(p.getUniqueId(),n);pages.put(p.getUniqueId(),0);draw(p);}
             return;
         }
-        List<Material> list=c.equals("spawners")?List.of(Material.SPAWNER):ShopPricing.category(c);int pg=pages.getOrDefault(p.getUniqueId(),0);
+        List<Material> list=c.equals("spawners")?List.of(Material.SKELETON_SPAWN_EGG,Material.ZOMBIE_SPAWN_EGG,Material.WITCH_SPAWN_EGG,Material.IRON_GOLEM_SPAWN_EGG,Material.SPIDER_SPAWN_EGG,Material.CREEPER_SPAWN_EGG):ShopPricing.category(c);int pg=pages.getOrDefault(p.getUniqueId(),0);
         if(s==31){cats.put(p.getUniqueId(),"home");pages.put(p.getUniqueId(),0);draw(p);return;}
         if(s==27){if(pg>0){pages.put(p.getUniqueId(),pg-1);draw(p);}return;}
         if(s==35){if((pg+1)*27<list.size()){pages.put(p.getUniqueId(),pg+1);draw(p);}return;}
         int idx=pg*27+s;
         if(s<27&&idx<list.size()){
             Material m=list.get(idx);
+            if(c.equals("spawners")){
+                String type=switch(m){
+                    case SKELETON_SPAWN_EGG -> "skeleton";
+                    case ZOMBIE_SPAWN_EGG -> "zombie";
+                    case WITCH_SPAWN_EGG -> "witch";
+                    case IRON_GOLEM_SPAWN_EGG -> "iron_golem";
+                    case SPIDER_SPAWN_EGG -> "spider";
+                    case CREEPER_SPAWN_EGG -> "creeper";
+                    default -> "";
+                };
+                if(!type.isEmpty()) plugin.getServer().dispatchCommand(p,"sunflowerspawner "+type);
+                return;
+            }
             selected.put(p.getUniqueId(),m);
             amounts.put(p.getUniqueId(),1);
             drawPurchase(p);
@@ -116,7 +129,6 @@ public final class ShopMenu implements Listener {
 
     private void buy(Player p,Material m,int amount){
         amount=Math.max(1,Math.min(2304,amount));
-        if(m==Material.SPAWNER){p.sendMessage(ChatColor.YELLOW+"Spawners cost 2,000,000 each. Shard currency needs to be connected to the server's shard system.");return;}
         Economy eco=economy();if(eco==null){p.sendMessage(ChatColor.RED+"Economy is unavailable.");return;}
         double total=ShopPricing.buyPrice(m)*amount;
         if(eco.getBalance(p)<total){p.sendMessage(ChatColor.RED+"You need $"+money(total)+" to buy "+amount+"x "+pretty(m)+".");return;}
