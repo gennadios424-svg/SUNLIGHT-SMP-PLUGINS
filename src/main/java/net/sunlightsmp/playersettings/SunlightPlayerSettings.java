@@ -21,10 +21,6 @@ public final class SunlightPlayerSettings extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
 
-        // Keep chunk/network load reasonable so players are less likely to time out on weaker connections.
-        // These are safe server-wide defaults and can still be overridden by the host/server setup if needed.
-        getServer().setViewDistance(8);
-        getServer().setSimulationDistance(6);
         settings = new PlayerSettingsManager(this);
 
         SettingsListener settingsListener = new SettingsListener(this);
