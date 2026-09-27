@@ -21,6 +21,7 @@ public final class TPAManager implements Listener {
     private final Map<UUID, TPARequest> incoming = new ConcurrentHashMap<>();
     private final Map<UUID, TPARequest> outgoing = new ConcurrentHashMap<>();
     private final Map<UUID, BukkitTask> teleports = new ConcurrentHashMap<>();
+    private final Map<UUID, BukkitTask> countdowns = new ConcurrentHashMap<>();
     private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
 
     public TPAManager(SunlightPlayerSettings plugin) {
@@ -124,11 +125,28 @@ public final class TPAManager implements Listener {
         cancelTeleport(teleporter);
         int delay = plugin.getConfig().getInt("tpa.teleport-delay-seconds", 5);
         Location start = teleporter.getLocation().clone();
-        teleporter.sendMessage(Component.text("Teleporting in " + delay + " seconds. Don't move!", NamedTextColor.GREEN));
+        teleporter.sendMessage(Component.text("Teleport started. Don't move!", NamedTextColor.GREEN));
         teleporter.playSound(teleporter.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
 
+        UUID id = teleporter.getUniqueId();
+        BukkitTask countdownTask = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
+            int secondsLeft = delay;
+            @Override public void run() {
+                if (!teleporter.isOnline() || !teleports.containsKey(id)) {
+                    BukkitTask self = countdowns.remove(id);
+                    if (self != null) self.cancel();
+                    return;
+                }
+                teleporter.sendActionBar(Component.text("Teleporting in " + secondsLeft + "s", NamedTextColor.GREEN));
+                secondsLeft--;
+            }
+        }, 0L, 20L);
+        countdowns.put(id, countdownTask);
+
         BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            teleports.remove(teleporter.getUniqueId());
+            BukkitTask countdown = countdowns.remove(id);
+            if (countdown != null) countdown.cancel();
+            teleports.remove(id);
             if (!teleporter.isOnline() || !destination.isOnline()) return;
             teleporter.teleport(destination.getLocation());
             teleporter.sendMessage(Component.text("Teleported successfully.", NamedTextColor.GREEN));
@@ -139,10 +157,14 @@ public final class TPAManager implements Listener {
     }
 
     private void cancelTeleport(Player player) {
-        BukkitTask task = teleports.remove(player.getUniqueId());
-        if (task != null) {
-            task.cancel();
-            plugin.getTpaStartLocations().remove(player.getUniqueId());
+        UUID id = player.getUniqueId();
+        BukkitTask task = teleports.remove(id);
+        BukkitTask countdown = countdowns.remove(id);
+        if (task != null) task.cancel();
+        if (countdown != null) countdown.cancel();
+        if (task != null || countdown != null) {
+            player.sendActionBar(Component.empty());
+            plugin.getTpaStartLocations().remove(id);
         }
     }
 
