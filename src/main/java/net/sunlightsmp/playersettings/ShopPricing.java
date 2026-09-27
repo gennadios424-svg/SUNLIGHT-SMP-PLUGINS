@@ -38,7 +38,7 @@ public final class ShopPricing {
                 Material.OBSERVER, Material.DISPENSER, Material.DROPPER,
                 Material.HOPPER, Material.CRAFTER, Material.REPEATER,
                 Material.COMPARATOR, Material.LEVER, Material.STONE_BUTTON,
-                Material.STONE_PRESSURE_PLATE, Material.RAIL, Material.TNT
+                Material.STONE_PRESSURE_PLATE, Material.WATER_BUCKET, Material.LAVA_BUCKET, Material.RAIL, Material.TNT
             );
 
             case "farm" -> List.of(
@@ -46,7 +46,7 @@ public final class ShopPricing {
                 Material.BEETROOT_SEEDS, Material.SUGAR_CANE, Material.BAMBOO,
                 Material.CACTUS, Material.KELP, Material.MELON, Material.PUMPKIN,
                 Material.COCOA_BEANS, Material.NETHER_WART, Material.BONE_MEAL,
-                Material.OAK_SAPLING, Material.COMPOSTER, Material.WATER_BUCKET, Material.LAVA_BUCKET, Material.CHEST, Material.BARREL
+                Material.OAK_SAPLING, Material.COMPOSTER
             );
 
             case "food" -> List.of(
