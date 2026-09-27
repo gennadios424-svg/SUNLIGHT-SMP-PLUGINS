@@ -84,7 +84,7 @@ public final class SellPricing {
         for(String s:logs)m.put(s,16D);
         m.put("COAL_BLOCK",350D); m.put("IRON_BLOCK",3_000D); m.put("GOLD_BLOCK",12_000D);
         m.put("REDSTONE_BLOCK",1_000D); m.put("LAPIS_BLOCK",1_500D); m.put("COPPER_BLOCK",900D);
-        m.put("AMETHYST_BLOCK",1_200D); m.put("ANCIENT_DEBRIS",8_000D); m.put("OBSIDIAN",1_500D);
+        m.put("AMETHYST_BLOCK",1_200D); m.put("ANCIENT_DEBRIS",8_000D); m.put("OBSIDIAN",250D);
         return Collections.unmodifiableMap(m);
     }
 }
