@@ -69,15 +69,15 @@ commands:
   sunflowerspawner:
     description: Buy a Sunlight Spawner for 1,500 Sunflowers
     usage: /sunflowerspawner <skeleton|zombie|witch|iron_golem|spider|creeper>
-  keyall:
+  sunkeyall:
     description: Give every online player crate keys with an animation
-    usage: /keyall <crate> <amount> | /keyall reload
-  crates:
+    usage: /sunkeyall <crate> <amount> | /sunkeyall reload
+  suncrates:
     description: Open the Sunlight Crates menu
-    usage: /crates
-  crate:
+    usage: /suncrates
+  suncrate:
     description: Open a Sunlight crate
-    usage: /crate <crate> | /crate edit <crate> | /crate reload
+    usage: /suncrate <crate> | /suncrate edit <crate> | /suncrate reload
 permissions:
   sunlightsmp.settings:
     default: true
