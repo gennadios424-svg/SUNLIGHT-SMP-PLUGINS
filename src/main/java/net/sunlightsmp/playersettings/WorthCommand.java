@@ -21,7 +21,14 @@ public final class WorthCommand implements CommandExecutor, Listener, TabComplet
 
     public WorthCommand(SunlightPlayerSettings plugin) { this.plugin = plugin; }
 
-    @Override\n    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {\n        if (!(sender instanceof Player p)) { sender.sendMessage("Only players can use /worth."); return true; }\n        open(p);\n        return true;\n    }\n\n    public void open(Player p) {
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player p)) { sender.sendMessage("Only players can use /worth."); return true; }
+        open(p);
+        return true;
+    }
+
+    public void open(Player p) {
         pages.put(p.getUniqueId(), 0);
         draw(p);
     }
