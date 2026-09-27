@@ -5,6 +5,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -126,8 +127,8 @@ public final class TPAManager implements Listener {
         int delay = plugin.getConfig().getInt("tpa.teleport-delay-seconds", 5);
         Location start = teleporter.getLocation().clone();
         teleporter.sendMessage(Component.text("✦ Teleport initiated — stay still!", NamedTextColor.YELLOW));
-        teleporter.sendTitle(Component.text("TELEPORTING", NamedTextColor.YELLOW),
-                Component.text("Stay still for " + delay + " seconds", NamedTextColor.GRAY), 0, 25, 5);
+        teleporter.sendTitle(ChatColor.YELLOW + "TELEPORTING",
+                ChatColor.GRAY + "Stay still for " + delay + " seconds", 0, 25, 5);
         teleporter.playSound(teleporter.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 0.7f, 1.2f);
 
         UUID id = teleporter.getUniqueId();
