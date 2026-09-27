@@ -1,0 +1,49 @@
+# Sunlight Crates - edit these rewards, then use /crate reload
+# material must be a valid Minecraft material name
+# amount: fixed amount or min-max range
+
+common:
+  - material: DIAMOND
+    amount: 1-3
+  - material: GOLD_INGOT
+    amount: 2-8
+  - material: EMERALD
+    amount: 1-5
+  - material: EXPERIENCE_BOTTLE
+    amount: 4-16
+
+spawner:
+  - material: SKELETON_SPAWNER
+    amount: 1
+  - material: ZOMBIE_SPAWNER
+    amount: 1
+  - material: SPIDER_SPAWNER
+    amount: 1
+  - material: CREEPER_SPAWNER
+    amount: 1
+
+sunlight:
+  - material: SUNFLOWER
+    amount: 5-15
+  - material: TOTEM_OF_UNDYING
+    amount: 1
+  - material: ENDER_CHEST
+    amount: 1
+
+crimson:
+  - material: NETHERITE_SCRAP
+    amount: 1-3
+  - material: CRIMSON_FUNGUS
+    amount: 8-32
+  - material: BLAZE_ROD
+    amount: 2-8
+
+sunset:
+  - material: GOLDEN_APPLE
+    amount: 1-3
+  - material: ENDER_PEARL
+    amount: 4-16
+  - material: SHULKER_SHELL
+    amount: 1-2
+  - material: DIAMOND_BLOCK
+    amount: 1-2
