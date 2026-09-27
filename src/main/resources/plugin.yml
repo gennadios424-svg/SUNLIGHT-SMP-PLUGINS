@@ -27,8 +27,8 @@ commands:
     description: Open the Sunlight Sell menu
     usage: /sell
   worth:
-    description: Check the Sunlight sell price of an item
-    usage: /worth [item] [amount]
+    description: Open the Sunlight item worth menu
+    usage: /worth
   shop:
     description: Open the Sunlight Shop
     usage: /shop
@@ -55,4 +55,4 @@ permissions:
   sunlightsmp.ah:
     default: true
   sunlightsmp.pickaxe:
-    default: op
+    default: true
