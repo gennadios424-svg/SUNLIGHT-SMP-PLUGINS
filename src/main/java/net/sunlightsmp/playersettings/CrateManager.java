@@ -87,7 +87,7 @@ public final class CrateManager {
         return item;
     }
 
-            String[] p = e.getKey().split("\\|", -1);
+    public CrateType getKeyType(ItemStack item) {
         if (item == null || item.getType() != Material.TRIPWIRE_HOOK || !item.hasItemMeta()) return null;
         return parse(item.getItemMeta().getPersistentDataContainer().get(keyTag, PersistentDataType.STRING));
     }
