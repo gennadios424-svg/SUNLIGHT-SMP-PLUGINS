@@ -9,7 +9,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public final class SunlightPickaxe implements Listener {
@@ -17,6 +19,7 @@ public final class SunlightPickaxe implements Listener {
     private final NamespacedKey expiryKey;
     private final NamespacedKey pickaxeKey;
     private final NamespacedKey uniqueKey;
+    private final Set<UUID> processing = new HashSet<>();
 
     public SunlightPickaxe(SunlightPlayerSettings plugin) {
         this.plugin = plugin;
@@ -29,14 +32,8 @@ public final class SunlightPickaxe implements Listener {
         ItemStack item = new ItemStack(Material.NETHERITE_PICKAXE);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(ChatColor.GOLD + "☀ Sunlight Pickaxe");
-        meta.setLore(List.of(
-                ChatColor.YELLOW + "3x3 Mining",
-                ChatColor.GRAY + "Breaks a 3x3 area at once.",
-                "",
-                ChatColor.GREEN + "UNBREAKABLE",
-                ChatColor.RED + "Expires in 2 days",
-                ChatColor.DARK_GRAY + "Temporary Sunlight tool"
-        ));
+        meta.setLore(List.of(ChatColor.YELLOW + "3x3 Mining", ChatColor.GRAY + "Breaks a 3x3 area at once.", "",
+                ChatColor.GREEN + "UNBREAKABLE", ChatColor.RED + "Expires in 2 days", ChatColor.DARK_GRAY + "Temporary Sunlight tool"));
         meta.setUnbreakable(true);
         meta.getPersistentDataContainer().set(pickaxeKey, PersistentDataType.BYTE, (byte) 1);
         meta.getPersistentDataContainer().set(uniqueKey, PersistentDataType.STRING, UUID.randomUUID().toString());
@@ -65,35 +62,29 @@ public final class SunlightPickaxe implements Listener {
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = false)
     public void onBreak(BlockBreakEvent event) {
         Player p = event.getPlayer();
+        if (processing.contains(p.getUniqueId())) return;
+
         ItemStack tool = p.getInventory().getItemInMainHand();
         if (!isPickaxe(tool)) return;
-
         if (expired(tool)) {
             event.setCancelled(true);
             expire(p);
             return;
         }
-
-        // Let protection plugins decide first. If another plugin cancelled the
-        // original break, do not bypass its protection.
         if (event.isCancelled()) return;
 
         Block center = event.getBlock();
-        VectorDirection direction = VectorDirection.from(p);
-
+        org.bukkit.util.Vector dir = p.getLocation().getDirection();
         int minX = center.getX(), maxX = center.getX();
         int minY = center.getY(), maxY = center.getY();
         int minZ = center.getZ(), maxZ = center.getZ();
 
-        if (direction == VectorDirection.HORIZONTAL_XZ) {
-            minX--; maxX++;
-            minZ--; maxZ++;
-        } else if (direction == VectorDirection.VERTICAL_YZ) {
-            minY--; maxY++;
-            minZ--; maxZ++;
+        if (Math.abs(dir.getY()) > 0.7) {
+            minX--; maxX++; minZ--; maxZ++;
+        } else if (Math.abs(dir.getX()) > Math.abs(dir.getZ())) {
+            minY--; maxY++; minZ--; maxZ++;
         } else {
-            minX--; maxX++;
-            minY--; maxY++;
+            minX--; maxX++; minY--; maxY++;
         }
 
         List<Block> blocks = new ArrayList<>();
@@ -108,36 +99,17 @@ public final class SunlightPickaxe implements Listener {
             }
         }
 
-        // Cancel the vanilla single-block break and handle the entire 3x3
-        // ourselves. This fixes the pickaxe relying on the vanilla break path.
         event.setCancelled(true);
-
-        for (Block b : blocks) {
-            if (b.equals(center)) {
-                // Fire a fresh event so protection/plugins can still block it.
-                BlockBreakEvent centerEvent = new BlockBreakEvent(b, p);
-                plugin.getServer().getPluginManager().callEvent(centerEvent);
-                if (centerEvent.isCancelled()) return;
-            } else {
-                BlockBreakEvent extraEvent = new BlockBreakEvent(b, p);
-                plugin.getServer().getPluginManager().callEvent(extraEvent);
-                if (extraEvent.isCancelled()) continue;
+        processing.add(p.getUniqueId());
+        try {
+            for (Block b : blocks) {
+                BlockBreakEvent breakEvent = new BlockBreakEvent(b, p);
+                plugin.getServer().getPluginManager().callEvent(breakEvent);
+                if (breakEvent.isCancelled()) continue;
+                b.breakNaturally(tool);
             }
-
-            b.breakNaturally(tool);
-        }
-    }
-
-    private enum VectorDirection {
-        HORIZONTAL_XZ,
-        VERTICAL_YZ,
-        VERTICAL_XY;
-
-        static VectorDirection from(Player p) {
-            org.bukkit.util.Vector dir = p.getLocation().getDirection();
-            if (Math.abs(dir.getY()) > 0.7) return HORIZONTAL_XZ;
-            if (Math.abs(dir.getX()) > Math.abs(dir.getZ())) return VERTICAL_YZ;
-            return VERTICAL_XY;
+        } finally {
+            processing.remove(p.getUniqueId());
         }
     }
 }
