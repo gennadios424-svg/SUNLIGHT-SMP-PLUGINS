@@ -87,7 +87,7 @@ public final class CrateManager {
         return item;
     }
 
-    public CrateType getKeyType(ItemStack item) {
+    public ItemStack createCrateItem(CrateType type, int amount) {\n        ItemStack item = new ItemStack(type.icon(), Math.max(1, amount));\n        ItemMeta meta = item.getItemMeta();\n        meta.setDisplayName(ChatColor.YELLOW + "✦ " + type.displayName() + " Crate");\n        meta.setLore(List.of(ChatColor.GRAY + "Place this block, then register it with /crate set " + type.name().toLowerCase(Locale.ROOT) + "."));\n        item.setItemMeta(meta);\n        return item;\n    }\n\n    public CrateType getKeyType(ItemStack item) {
         if (item == null || item.getType() != Material.TRIPWIRE_HOOK || !item.hasItemMeta()) return null;
         return parse(item.getItemMeta().getPersistentDataContainer().get(keyTag, PersistentDataType.STRING));
     }
