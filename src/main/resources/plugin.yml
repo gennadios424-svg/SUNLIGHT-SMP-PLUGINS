@@ -1,9 +1,9 @@
 name: SunlightPlayerSettings
-version: 1.1.0
+version: 1.1.1
 main: net.sunlightsmp.playersettings.SunlightPlayerSettings
 api-version: '1.21'
 author: Sunlight SMP
-description: Sunlight SMP player settings and built-in TPA system
+description: Sunlight SMP player settings, TPA and native crates
 commands:
   settings:
     description: Open your personal Sunlight SMP settings
@@ -24,8 +24,16 @@ commands:
   tpacancel:
     description: Cancel your outgoing TPA request
     usage: /tpacancel
+  crate:
+    description: Manage and open Sunlight Crates
+    usage: /crate [preview|set|remove|give|key|reload]
+    aliases: [crates]
 permissions:
   sunlightsmp.settings:
     default: true
   sunlightsmp.tpa:
     default: true
+  sunlightsmp.crates.use:
+    default: true
+  sunlightsmp.crates.admin:
+    default: op
