@@ -13,7 +13,7 @@ public final class SettingsListener implements Listener {
   private ItemStack item(Material m,String name,List<String> lore){ItemStack i=new ItemStack(m);ItemMeta meta=i.getItemMeta();meta.setDisplayName(name);meta.setLore(lore);i.setItemMeta(meta);return i;}
   @EventHandler public void click(InventoryClickEvent e){
     if(!(e.getWhoClicked() instanceof Player p)||!e.getView().getTitle().equals(TITLE))return;
-    e.setCancelled(true); int slot=e.getRawSlot(); if(slot==22){p.closeInventory();return;} if(slot<9||slot>15)return;
+    e.setCancelled(true); int slot=e.getRawSlot(); if(slot==22){p.closeInventory();return;} if(slot<9||slot>16)return;
     Setting s=Setting.values()[slot-9]; plugin.getSettings().toggle(p,s);
     p.sendMessage(ChatColor.GRAY+s.displayName()+": "+(plugin.getSettings().get(p,s)?ChatColor.GREEN+"ON":ChatColor.RED+"OFF"));
     Bukkit.getScheduler().runTask(plugin,()->open(p));
