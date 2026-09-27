@@ -29,11 +29,11 @@ public final class SunlightPickaxe implements Listener {
         ItemStack item = new ItemStack(Material.NETHERITE_PICKAXE);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(ChatColor.GOLD + "☀ Sunlight Pickaxe");
-        meta.setLore(List.of(ChatColor.YELLOW + "3x3 Mining", ChatColor.GRAY + "Breaks a 3x3 area at once.", "", ChatColor.GREEN + "UNBREAKABLE", ChatColor.RED + "Expires in 2 days", ChatColor.DARK_GRAY + "Temporary Sunlight tool"));
+        meta.setLore(List.of(ChatColor.YELLOW + "3x3 Mining", ChatColor.GRAY + "Breaks a 3x3 area at once.", "", ChatColor.GREEN + "UNBREAKABLE", ChatColor.RED + "Expires in 5 days", ChatColor.DARK_GRAY + "Temporary Sunlight tool"));
         meta.setUnbreakable(true);
         meta.getPersistentDataContainer().set(pickaxeKey, PersistentDataType.BYTE, (byte) 1);
         meta.getPersistentDataContainer().set(uniqueKey, PersistentDataType.STRING, UUID.randomUUID().toString());
-        meta.getPersistentDataContainer().set(expiryKey, PersistentDataType.LONG, System.currentTimeMillis() + 172800000L);
+        meta.getPersistentDataContainer().set(expiryKey, PersistentDataType.LONG, System.currentTimeMillis() + 5L * 24 * 60 * 60 * 1000);
         item.setItemMeta(meta);
         return item;
     }
