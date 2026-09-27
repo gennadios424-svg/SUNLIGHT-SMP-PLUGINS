@@ -10,10 +10,21 @@ public final class ShopPricing {
         if (m == Material.SPAWNER) return 1500;
         return Math.max(1, Math.ceil(SellPricing.price(m) * 2.5));
     }
+    private static boolean isSurvivalObtainable(Material m) {
+        return switch(m) {
+            case BEDROCK, BARRIER, END_PORTAL_FRAME, END_PORTAL, NETHER_PORTAL,
+                 COMMAND_BLOCK, CHAIN_COMMAND_BLOCK, REPEATING_COMMAND_BLOCK,
+                 STRUCTURE_BLOCK, STRUCTURE_VOID, JIGSAW, LIGHT,
+                 DEBUG_STICK, KNOWLEDGE_BOOK, BUDDING_AMETHYST,
+                 REINFORCED_DEEPSLATE, PETRIFIED_OAK_SLAB -> false;
+            default -> true;
+        };
+    }
+
     public static List<Material> category(String name) {
         List<Material> out=new ArrayList<>();
         for(Material m:Material.values()){
-            if(!m.isItem()||m==Material.AIR||m==Material.SPAWNER)continue;
+            if(!m.isItem()||m==Material.AIR||m==Material.SPAWNER||!isSurvivalObtainable(m))continue;
             String n=m.name(); boolean add=switch(name.toLowerCase(Locale.ROOT)){
                 case "redstone"->n.contains("REDSTONE")||n.contains("PISTON")||n.contains("OBSERVER")||n.contains("DISPENSER")||n.contains("DROPPER")||n.contains("HOPPER")||n.contains("REPEATER")||n.contains("COMPARATOR")||n.contains("NOTE_BLOCK")||n.contains("TARGET")||n.contains("RAIL")||n.contains("TNT")||n.contains("LEVER")||n.contains("BUTTON")||n.contains("PRESSURE_PLATE");
                 case "farm"->n.contains("SEED")||n.contains("SAPLING")||n.contains("WHEAT")||n.contains("CARROT")||n.contains("POTATO")||n.contains("BEETROOT")||n.contains("MELON")||n.contains("PUMPKIN")||n.contains("SUGAR_CANE")||n.contains("BAMBOO")||n.contains("CACTUS")||n.contains("KELP")||n.contains("VINE")||n.contains("MOSS")||n.contains("BONE_MEAL")||n.contains("BONE")||n.contains("HAY_BLOCK")||n.contains("COMPOSTER");
