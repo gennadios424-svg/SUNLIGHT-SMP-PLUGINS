@@ -68,7 +68,48 @@ public final class SellPricing {
         if (n.contains("RAIL")) return 25;
         if (n.contains("TNT")) return 250;
 
+        if (n.equals("TOTEM_OF_UNDYING")) return 25_000;
+        if (n.equals("NETHER_STAR")) return 50_000;
+        if (n.equals("HEART_OF_THE_SEA")) return 15_000;
+        if (n.equals("NAUTILUS_SHELL")) return 1_500;
+        if (n.equals("WITHER_SKELETON_SKULL")) return 8_000;
+        if (n.equals("PLAYER_HEAD") || n.equals("ZOMBIE_HEAD") || n.equals("SKELETON_SKULL") || n.equals("CREEPER_HEAD") || n.equals("PIGLIN_HEAD") || n.equals("DRAGON_HEAD")) return 5_000;
+
+        if (n.endsWith("_HELMET") || n.endsWith("_CHESTPLATE") || n.endsWith("_LEGGINGS") || n.endsWith("_BOOTS")) return armorPrice(n);
+        if (n.endsWith("_PICKAXE") || n.endsWith("_AXE") || n.endsWith("_SHOVEL") || n.endsWith("_HOE") || n.endsWith("_SWORD")) return toolPrice(n);
+        if (n.equals("BOW") || n.equals("CROSSBOW") || n.equals("TRIDENT") || n.equals("MACE")) return 5_000;
+
+        if (n.equals("ENCHANTED_GOLDEN_APPLE")) return 15_000;
+        if (n.equals("GOLDEN_APPLE")) return 2_500;
+        if (n.equals("ENDER_PEARL")) return 250;
+        if (n.equals("BLAZE_ROD")) return 300;
+        if (n.equals("GHAST_TEAR")) return 1_000;
+        if (n.equals("ENDER_EYE")) return 500;
+        if (n.equals("SHULKER_SHELL")) return 2_000;
+        if (n.equals("FIREWORK_ROCKET")) return 25;
+        if (n.equals("EXPERIENCE_BOTTLE")) return 150;
+        if (n.equals("GUNPOWDER")) return 20;
+
         return m.isBlock() ? 10 : 5;
+    }
+
+    private static double armorPrice(String n) {
+        if (n.contains("NETHERITE")) return 60_000;
+        if (n.contains("DIAMOND")) return 15_000;
+        if (n.contains("IRON")) return 2_500;
+        if (n.contains("CHAINMAIL")) return 1_500;
+        if (n.contains("GOLDEN")) return 1_000;
+        if (n.contains("LEATHER")) return 500;
+        return 250;
+    }
+
+    private static double toolPrice(String n) {
+        if (n.contains("NETHERITE")) return 50_000;
+        if (n.contains("DIAMOND")) return 12_000;
+        if (n.contains("IRON")) return 2_000;
+        if (n.contains("GOLDEN")) return 800;
+        if (n.contains("STONE")) return 250;
+        return 100;
     }
 
     private static final Map<String, Double> EXACT = createExact();
