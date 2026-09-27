@@ -1,35 +1,117 @@
 package net.sunlightsmp.playersettings;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
+import org.bukkit.event.*;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
 import java.text.NumberFormat;
 import java.util.*;
 
-public final class WorthCommand implements CommandExecutor,TabCompleter {
-    @Override public boolean onCommand(CommandSender s,Command c,String l,String[] a){
-        if(!(s instanceof Player p)){s.sendMessage("Only players can use /worth.");return true;}
-        Material mat; int amount=1;
-        if(a.length==0){
-            ItemStack held=p.getInventory().getItemInMainHand();
-            if(held.getType().isAir()){p.sendMessage(ChatColor.RED+"Hold an item or use /worth <item>.");return true;}
-            mat=held.getType(); amount=held.getAmount();
-        }else{
-            String key=String.join("_",a).toUpperCase(Locale.ROOT).replace('-','_').replace(' ','_');
-            if(a.length>=2){try{int maybe=Integer.parseInt(a[a.length-1]);if(maybe>0){amount=maybe;key=String.join("_",Arrays.copyOf(a,a.length-1)).toUpperCase(Locale.ROOT).replace('-','_').replace(' ','_');}}catch(NumberFormatException ignored){}}
-            try{mat=Material.valueOf(key);}catch(IllegalArgumentException ex){p.sendMessage(ChatColor.RED+"Unknown item. Example: /worth diamond_block or /worth sea_pickle");return true;}
-        }
-        double each=SellPricing.price(mat);
-        p.sendMessage(ChatColor.GOLD+"☀ "+ChatColor.YELLOW+mat.name()+ChatColor.GRAY+" = "+ChatColor.GREEN+"$"+money(each)+ChatColor.GRAY+" each"+(amount>1?ChatColor.GRAY+" | "+ChatColor.GREEN+"$"+money(each*amount)+ChatColor.GRAY+" for "+amount:""));
-        return true;
+public final class WorthCommand implements CommandExecutor, Listener, TabCompleter {
+    private static final String TITLE = ChatColor.GOLD + "☀ Sunlight Worth";
+    private final SunlightPlayerSettings plugin;
+    private final Map<UUID, Integer> pages = new HashMap<>();
+
+    public WorthCommand(SunlightPlayerSettings plugin) { this.plugin = plugin; }
+
+    public void open(Player p) {
+        pages.put(p.getUniqueId(), 0);
+        draw(p);
     }
-    private String money(double n){return NumberFormat.getNumberInstance(Locale.US).format(n);}
-    @Override public List<String> onTabComplete(CommandSender s,Command c,String l,String[] a){
-        if(a.length!=1)return Collections.emptyList();
-        String q=a[0].toUpperCase(Locale.ROOT);List<String> out=new ArrayList<>();
-        for(Material m:Material.values())if(m.name().startsWith(q))out.add(m.name().toLowerCase(Locale.ROOT));
-        return out.subList(0,Math.min(20,out.size()));
+
+    private void draw(Player p) {
+        List<Material> items = obtainableItems();
+        int page = pages.getOrDefault(p.getUniqueId(), 0);
+        int maxPage = Math.max(0, (items.size() - 1) / 45);
+        if (page > maxPage) page = maxPage;
+        pages.put(p.getUniqueId(), page);
+
+        Inventory inv = Bukkit.createInventory(null, 54, TITLE);
+        for (int i = 45; i < 54; i++) inv.setItem(i, item(Material.GRAY_STAINED_GLASS_PANE, " "));
+
+        int start = page * 45;
+        for (int i = 0; i < 45 && start + i < items.size(); i++) {
+            Material m = items.get(start + i);
+            double each = SellPricing.price(m);
+            inv.setItem(i, item(m, ChatColor.WHITE + pretty(m),
+                    "",
+                    ChatColor.GREEN + "Sell: $" + money(each) + " each",
+                    ChatColor.GRAY + "64 items: $" + money(each * 64)));
+        }
+
+        inv.setItem(45, item(Material.ARROW, ChatColor.YELLOW + "Previous Page"));
+        inv.setItem(49, item(Material.SUNFLOWER, ChatColor.GOLD + "☀ Sunlight Worth",
+                ChatColor.GRAY + "Every survival-obtainable item",
+                ChatColor.GRAY + "is listed here."));
+        inv.setItem(53, item(Material.ARROW, ChatColor.YELLOW + "Next Page"));
+        p.openInventory(inv);
+    }
+
+    private List<Material> obtainableItems() {
+        List<Material> out = new ArrayList<>();
+        for (Material m : Material.values()) {
+            if (!isWorthListed(m)) continue;
+            out.add(m);
+        }
+        out.sort(Comparator.comparing(m -> m.name()));
+        return out;
+    }
+
+    private boolean isWorthListed(Material m) {
+        if (m == null || m == Material.AIR || !m.isItem()) return false;
+        String n = m.name();
+        if (n.endsWith("_SPAWN_EGG")) return false;
+        return switch (m) {
+            case BEDROCK, BARRIER, END_PORTAL_FRAME, END_PORTAL, NETHER_PORTAL,
+                 COMMAND_BLOCK, CHAIN_COMMAND_BLOCK, REPEATING_COMMAND_BLOCK,
+                 STRUCTURE_BLOCK, STRUCTURE_VOID, JIGSAW, LIGHT,
+                 DEBUG_STICK, KNOWLEDGE_BOOK, BUDDING_AMETHYST,
+                 REINFORCED_DEEPSLATE, PETRIFIED_OAK_SLAB -> false;
+            default -> true;
+        };
+    }
+
+    private ItemStack item(Material m, String name, String... lore) {
+        ItemStack i = new ItemStack(m);
+        ItemMeta meta = i.getItemMeta();
+        meta.setDisplayName(name);
+        meta.setLore(Arrays.asList(lore));
+        i.setItemMeta(meta);
+        return i;
+    }
+
+    private String pretty(Material m) {
+        StringBuilder s = new StringBuilder();
+        for (String x : m.name().toLowerCase(Locale.ROOT).split("_")) {
+            if (s.length() > 0) s.append(' ');
+            s.append(Character.toUpperCase(x.charAt(0))).append(x.substring(1));
+        }
+        return s.toString();
+    }
+
+    private String money(double n) {
+        return NumberFormat.getNumberInstance(Locale.US).format(n);
+    }
+
+    @EventHandler
+    public void click(InventoryClickEvent e) {
+        if (!(e.getWhoClicked() instanceof Player p) || !e.getView().getTitle().equals(TITLE)) return;
+        e.setCancelled(true);
+        int s = e.getRawSlot();
+        if (s == 45) {
+            int page = pages.getOrDefault(p.getUniqueId(), 0);
+            if (page > 0) { pages.put(p.getUniqueId(), page - 1); draw(p); }
+        } else if (s == 53) {
+            List<Material> items = obtainableItems();
+            int page = pages.getOrDefault(p.getUniqueId(), 0);
+            if ((page + 1) * 45 < items.size()) { pages.put(p.getUniqueId(), page + 1); draw(p); }
+        }
     }
 }
