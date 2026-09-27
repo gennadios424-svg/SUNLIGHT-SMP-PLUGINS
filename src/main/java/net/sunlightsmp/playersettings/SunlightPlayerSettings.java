@@ -76,7 +76,9 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         getServer().getPluginManager().registerEvents(shopMenu, this);
         if (getCommand("shop") != null) getCommand("shop").setExecutor(new ShopCommand(shopMenu));
 
-        if (getCommand("rtp") != null) getCommand("rtp").setExecutor(new RTPCommand(this));
+        RTPCommand rtpCommand = new RTPCommand(this);
+        getServer().getPluginManager().registerEvents(rtpCommand, this);
+        if (getCommand("rtp") != null) getCommand("rtp").setExecutor(rtpCommand);
 
         auctionManager = new AuctionHouseManager(this);
         auctionMenu = new AuctionHouseMenu(this, auctionManager);
@@ -115,7 +117,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             }
         }, 3600L, 3600L);
 
-        getLogger().info("Sunlight Player Settings + TPA + Auction House + Sell/Worth/Shop enabled.");
+        getLogger().info("Sunlight Player Settings + TPA + Auction House + Sell/Worth/Shop/RTP enabled.");
     }
 
     @Override
