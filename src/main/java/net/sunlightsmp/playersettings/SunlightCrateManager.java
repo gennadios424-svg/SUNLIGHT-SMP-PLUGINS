@@ -1,87 +1,22 @@
 package net.sunlightsmp.playersettings;
-
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.block.CreatureSpawner;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BlockStateMeta;
-import org.bukkit.inventory.meta.ItemMeta;
-import java.util.*;
-
-public final class SunlightCrateManager implements Listener {
-    private static final String TITLE="☀ Sunlight Crates";
-    private final SunlightPlayerSettings plugin;
-    private final Random random=new Random();
-    public SunlightCrateManager(SunlightPlayerSettings plugin){this.plugin=plugin;}
-
-    public void openMenu(Player p){
-        Inventory inv=plugin.getServer().createInventory(null,27,TITLE);
-        String[] types={"Common","Spawner","Sunlight","Crimson","Sunset"};
-        Material[] mats={Material.BARREL,Material.SPAWNER,Material.SUNFLOWER,Material.CRIMSON_FUNGUS,Material.GOLDEN_APPLE};
-        for(int i=0;i<5;i++){ItemStack x=new ItemStack(mats[i]);ItemMeta m=x.getItemMeta();m.setDisplayName(ChatColor.GOLD+"☀ "+types[i]+" Crate");m.setLore(List.of(ChatColor.GRAY+"Open with a matching crate key",ChatColor.YELLOW+"/crate "+types[i].toLowerCase()));x.setItemMeta(m);inv.setItem(10+i*2,x);}
-        p.openInventory(inv);
-    }
-
-    public void openCrate(Player p,String type){
-        String t=normalize(type);
-        if(!valid(t)){p.sendMessage(ChatColor.RED+"Unknown crate.");return;}
-        if(!takeKey(p,t)){p.sendMessage(ChatColor.RED+"☀ You need a "+pretty(t)+" Crate Key.");return;}
-        String title=ChatColor.DARK_PURPLE+"✦ "+pretty(t)+" Crate";
-        Inventory inv=plugin.getServer().createInventory(null,27,title);
-        for(int i=0;i<27;i++)if(i<9||i>17)inv.setItem(i,glass());
-        inv.setItem(13,crateIcon(t));
-        inv.setItem(22,item(Material.TRIPWIRE_HOOK,ChatColor.YELLOW+"Opening "+pretty(t)+"...",List.of(ChatColor.GRAY+"Choosing your reward...")));
-        p.openInventory(inv);
-        plugin.getServer().getScheduler().runTaskLater(plugin,()->{
-            if(!p.isOnline()||!p.getOpenInventory().getTitle().equals(title))return;
-            ItemStack reward=reward(t);
-            HashMap<Integer,ItemStack> left=p.getInventory().addItem(reward);
-            left.values().forEach(x->p.getWorld().dropItemNaturally(p.getLocation(),x));
-            p.closeInventory();
-            p.sendMessage(ChatColor.GOLD+"☀ "+ChatColor.YELLOW+"CRATE OPENED! "+ChatColor.GRAY+"You won "+ChatColor.WHITE+name(reward)+" x"+reward.getAmount()+ChatColor.GRAY+"!");
-            p.playSound(p.getLocation(),org.bukkit.Sound.ENTITY_PLAYER_LEVELUP,1f,1.4f);
-        },30L);
-    }
-
-    public void giveKey(Player p,String type,int amount){
-        String t=normalize(type);if(!valid(t)){p.sendMessage(ChatColor.RED+"Unknown crate.");return;}
-        amount=Math.min(64,Math.max(1,amount));
-        ItemStack key=item(Material.TRIPWIRE_HOOK,ChatColor.GOLD+"☀ "+pretty(t)+" Crate Key",List.of(ChatColor.GRAY+"Use /crate "+t+" to open"));
-        key.setAmount(amount);HashMap<Integer,ItemStack> left=p.getInventory().addItem(key);left.values().forEach(x->p.getWorld().dropItemNaturally(p.getLocation(),x));
-        p.sendMessage(ChatColor.GREEN+"☀ Given "+amount+" "+pretty(t)+" Crate Key(s).");
-    }
-
-    private boolean valid(String t){return List.of("common","spawner","sunlight","crimson","sunset").contains(t);}
-    private boolean takeKey(Player p,String t){
-        String wanted=ChatColor.GOLD+"☀ "+pretty(t)+" Crate Key";
-        for(ItemStack s:p.getInventory().getContents())if(s!=null&&s.getType()==Material.TRIPWIRE_HOOK&&s.hasItemMeta()&&wanted.equals(s.getItemMeta().getDisplayName())){if(s.getAmount()==1)s.setAmount(0);else s.setAmount(s.getAmount()-1);return true;}
-        return false;
-    }
-    private ItemStack reward(String t){
-        List<ItemStack> r=new ArrayList<>();
-        switch(t){
-            case "common"->{r.add(item(Material.DIAMOND,ChatColor.AQUA+"Diamond",List.of()));r.add(item(Material.GOLD_INGOT,ChatColor.GOLD+"Gold",List.of()));r.add(item(Material.EMERALD,ChatColor.GREEN+"Emerald",List.of()));r.add(item(Material.EXPERIENCE_BOTTLE,ChatColor.LIGHT_PURPLE+"XP Bottle",List.of()));}
-            case "spawner"->{r.add(spawner(EntityType.SKELETON));r.add(spawner(EntityType.ZOMBIE));r.add(spawner(EntityType.SPIDER));r.add(spawner(EntityType.CREEPER));}
-            case "sunlight"->{r.add(item(Material.SUNFLOWER,ChatColor.YELLOW+"Sunflowers",List.of()));r.add(item(Material.TOTEM_OF_UNDYING,ChatColor.GOLD+"Totem of Undying",List.of()));r.add(item(Material.ENDER_CHEST,ChatColor.DARK_PURPLE+"Ender Chest",List.of()));}
-            case "crimson"->{r.add(item(Material.NETHERITE_SCRAP,ChatColor.DARK_GRAY+"Netherite Scrap",List.of()));r.add(item(Material.CRIMSON_FUNGUS,ChatColor.RED+"Crimson Fungus",List.of()));r.add(item(Material.BLAZE_ROD,ChatColor.GOLD+"Blaze Rod",List.of()));}
-            default->{r.add(item(Material.GOLDEN_APPLE,ChatColor.GOLD+"Golden Apple",List.of()));r.add(item(Material.ENDER_PEARL,ChatColor.LIGHT_PURPLE+"Ender Pearl",List.of()));r.add(item(Material.SHULKER_SHELL,ChatColor.LIGHT_PURPLE+"Shulker Shell",List.of()));r.add(item(Material.DIAMOND_BLOCK,ChatColor.AQUA+"Diamond Block",List.of()));}
-        }
-        ItemStack x=r.get(random.nextInt(r.size())).clone();x.setAmount(t.equals("sunlight")&&x.getType()==Material.SUNFLOWER?random.nextInt(10)+5:random.nextInt(3)+1);return x;
-    }
-    private ItemStack spawner(EntityType type){
-        ItemStack x=new ItemStack(Material.SPAWNER);BlockStateMeta meta=(BlockStateMeta)x.getItemMeta();CreatureSpawner state=(CreatureSpawner)meta.getBlockState();state.setSpawnedType(type);meta.setBlockState(state);meta.setDisplayName(ChatColor.GOLD+"☀ "+pretty(type.getName())+" Spawner");x.setItemMeta(meta);return x;
-    }
-    private ItemStack crateIcon(String t){return item(Material.CHEST,ChatColor.GOLD+"☀ "+pretty(t)+" Crate",List.of(ChatColor.GRAY+"Reward incoming..."));}
-    private ItemStack glass(){return item(Material.GRAY_STAINED_GLASS_PANE," ",List.of());}
-    private ItemStack item(Material m,String n,List<String> l){ItemStack x=new ItemStack(m);ItemMeta z=x.getItemMeta();z.setDisplayName(n);z.setLore(l);x.setItemMeta(z);return x;}
-    private String normalize(String s){return s.toLowerCase(Locale.ROOT).replace("_","");}
-    private String pretty(String s){return Character.toUpperCase(s.charAt(0))+s.substring(1)+" Crate";}
-    private String name(ItemStack s){return s.hasItemMeta()&&s.getItemMeta().hasDisplayName()?s.getItemMeta().getDisplayName():s.getType().name().toLowerCase(Locale.ROOT);}
-    @EventHandler public void click(InventoryClickEvent e){if(e.getView().getTitle().equals(TITLE)||e.getView().getTitle().contains("Crate"))e.setCancelled(true);}
+import org.bukkit.*;import org.bukkit.block.CreatureSpawner;import org.bukkit.configuration.file.*;import org.bukkit.entity.*;import org.bukkit.event.*;import org.bukkit.event.inventory.InventoryClickEvent;import org.bukkit.inventory.*;import org.bukkit.inventory.meta.*;import java.io.*;import java.util.*;
+public final class SunlightCrateManager implements Listener{
+ private static final String MENU="☀ Sunlight Crates";private final SunlightPlayerSettings plugin;private final Random random=new Random();private final Map<UUID,String> editing=new HashMap<>();private File file;private FileConfiguration cfg;
+ private final String[] types={"common","spawner","sunlight","crimson","sunset"};private final Material[] icons={Material.BARREL,Material.SPAWNER,Material.SUNFLOWER,Material.CRIMSON_FUNGUS,Material.GOLDEN_APPLE};
+ public SunlightCrateManager(SunlightPlayerSettings p){plugin=p;reload();}public void reload(){file=new File(plugin.getDataFolder(),"crates.yml");if(!file.exists())plugin.saveResource("crates.yml",false);cfg=YamlConfiguration.loadConfiguration(file);}private void save(){try{cfg.save(file);}catch(IOException e){plugin.getLogger().warning("Could not save crates.yml: "+e.getMessage());}}
+ private String norm(String s){return s.toLowerCase(Locale.ROOT).replace("_","");}private boolean valid(String s){return Arrays.asList(types).contains(s);}private String pretty(String s){return Character.toUpperCase(s.charAt(0))+s.substring(1);}
+ private ItemStack item(Material m,String n,List<String> l){ItemStack x=new ItemStack(m);ItemMeta z=x.getItemMeta();z.setDisplayName(n);z.setLore(l);x.setItemMeta(z);return x;}private void fill(Inventory i,Material m){for(int n=0;n<i.getSize();n++)i.setItem(n,item(m," ",List.of()));}
+ public void openMenu(Player p){Inventory i=plugin.getServer().createInventory(null,54,MENU);fill(i,Material.GRAY_STAINED_GLASS_PANE);for(int n=0;n<5;n++)i.setItem(10+n*7,item(icons[n],ChatColor.GOLD+"☀ "+pretty(types[n])+" Crate",List.of(ChatColor.GRAY+"View possible rewards",ChatColor.YELLOW+"Click to open")));i.setItem(49,item(Material.SUNFLOWER,ChatColor.YELLOW+"☀ SUNLIGHT CRATES ☀",List.of(ChatColor.GRAY+"5 custom crates")));p.openInventory(i);}
+ public void openCrate(Player p,String raw){String t=norm(raw);if(!valid(t)){p.sendMessage(ChatColor.RED+"☀ Unknown crate.");return;}if(!takeKey(p,t)){p.sendMessage(ChatColor.RED+"☀ You need a "+pretty(t)+" Crate Key.");return;}List<ItemStack> r=rewards(t);if(r.isEmpty()){giveKey(p,t,1);p.sendMessage(ChatColor.RED+"☀ This crate has no rewards.");return;}String title=ChatColor.DARK_PURPLE+"✦ "+pretty(t)+" Crate";Inventory i=plugin.getServer().createInventory(null,54,title);fill(i,Material.BLACK_STAINED_GLASS_PANE);for(int n=0;n<7;n++)i.setItem(10+n*5,r.get(n%r.size()).clone());i.setItem(22,item(Material.CHEST,ChatColor.GOLD+"☀ "+pretty(t)+" Crate",List.of(ChatColor.YELLOW+"ROLLING...")));p.openInventory(i);
+  for(int f=0;f<10;f++){final int q=f;plugin.getServer().getScheduler().runTaskLater(plugin,()->{if(!p.isOnline()||!p.getOpenInventory().getTitle().equals(title))return;for(int n=0;n<7;n++)i.setItem(10+n*5,r.get(random.nextInt(r.size())).clone());p.sendActionBar(ChatColor.YELLOW+"☀ ROLLING » "+(q%2==0?"◆ ◇ ◆":"◇ ◆ ◇"));p.playSound(p.getLocation(),Sound.BLOCK_NOTE_BLOCK_PLING,.8f,.75f+q*.08f);},f*4L);}
+  plugin.getServer().getScheduler().runTaskLater(plugin,()->{if(!p.isOnline()||!p.getOpenInventory().getTitle().equals(title))return;ItemStack win=r.get(random.nextInt(r.size())).clone();p.getInventory().addItem(win).values().forEach(x->p.getWorld().dropItemNaturally(p.getLocation(),x));p.closeInventory();p.sendMessage(ChatColor.GOLD+"☀ "+ChatColor.YELLOW+"CRATE OPENED! "+ChatColor.GRAY+"You won "+ChatColor.WHITE+name(win)+" x"+win.getAmount()+"!");p.playSound(p.getLocation(),Sound.ENTITY_PLAYER_LEVELUP,1f,1.4f);},44L);}
+ public void openEditor(Player p,String raw){if(!p.hasPermission("sunlightsmp.crates.admin")){p.sendMessage(ChatColor.RED+"No permission.");return;}String t=norm(raw);if(!valid(t)){p.sendMessage(ChatColor.RED+"☀ Unknown crate.");return;}editing.put(p.getUniqueId(),t);Inventory i=plugin.getServer().createInventory(null,54,ChatColor.DARK_AQUA+"✎ Edit "+pretty(t));fill(i,Material.GRAY_STAINED_GLASS_PANE);List<ItemStack> r=rewards(t);for(int n=0;n<Math.min(28,r.size());n++)i.setItem(10+(n/7)*9+n%7,r.get(n).clone());i.setItem(45,item(Material.BOOK,ChatColor.AQUA+"EDITING",List.of(ChatColor.GRAY+"Add/remove reward items")));i.setItem(49,item(Material.EMERALD,ChatColor.GREEN+"SAVE CRATE",List.of(ChatColor.GRAY+"Save rewards")));i.setItem(53,item(Material.BARRIER,ChatColor.RED+"CANCEL",List.of(ChatColor.GRAY+"Discard changes")));p.openInventory(i);}
+ private void saveEditor(Player p){String t=editing.remove(p.getUniqueId());if(t==null)return;Inventory i=p.getOpenInventory().getTopInventory();List<ItemStack> r=new ArrayList<>();for(int row=1;row<=4;row++)for(int col=1;col<=7;col++){ItemStack x=i.getItem(row*9+col);if(x!=null&&!x.getType().isAir())r.add(x.clone());}if(r.isEmpty()){p.sendMessage(ChatColor.RED+"☀ Add at least one reward.");return;}cfg.set(t+".rewards",r);save();p.closeInventory();p.sendMessage(ChatColor.GREEN+"☀ "+pretty(t)+" rewards saved!");}
+ private List<ItemStack> rewards(String t){List<ItemStack> out=new ArrayList<>();List<?> saved=cfg.getList(t+".rewards");if(saved!=null)for(Object o:saved)if(o instanceof ItemStack x)out.add(x.clone());if(!out.isEmpty())return out;for(Map<?,?> m:cfg.getMapList(t)){String ms=String.valueOf(m.get("material")).toUpperCase(Locale.ROOT);int a=parse(String.valueOf(m.get("amount")));try{if(ms.endsWith("_SPAWNER")){EntityType e=EntityType.valueOf(ms.substring(0,ms.length()-8));out.add(spawner(e,a));}else out.add(item(Material.valueOf(ms),ChatColor.WHITE+"",List.of()));out.get(out.size()-1).setAmount(a);}catch(Exception ignored){}}return out;}
+ private int parse(String s){try{if(s.contains("-")){String[] a=s.split("-");int lo=Integer.parseInt(a[0]),hi=Integer.parseInt(a[1]);return lo+random.nextInt(Math.max(1,hi-lo+1));}return Math.max(1,Math.min(64,Integer.parseInt(s)));}catch(Exception e){return 1;}}
+ private ItemStack spawner(EntityType e,int a){ItemStack x=new ItemStack(Material.SPAWNER,a);BlockStateMeta m=(BlockStateMeta)x.getItemMeta();CreatureSpawner s=(CreatureSpawner)m.getBlockState();s.setSpawnedType(e);m.setBlockState(s);m.setDisplayName(ChatColor.GOLD+"☀ "+pretty(e.getName())+" Spawner");x.setItemMeta(m);return x;}
+ private boolean takeKey(Player p,String t){String w=ChatColor.GOLD+"☀ "+pretty(t)+" Crate Key";for(ItemStack x:p.getInventory().getContents())if(x!=null&&x.getType()==Material.TRIPWIRE_HOOK&&x.hasItemMeta()&&w.equals(x.getItemMeta().getDisplayName())){x.setAmount(x.getAmount()-1);return true;}return false;}
+ public void giveKey(Player p,String t,int a){t=norm(t);if(!valid(t)){p.sendMessage(ChatColor.RED+"☀ Unknown crate.");return;}a=Math.max(1,Math.min(64,a));ItemStack k=item(Material.TRIPWIRE_HOOK,ChatColor.GOLD+"☀ "+pretty(t)+" Crate Key",List.of(ChatColor.GRAY+"Use /crate "+t+" to open"));k.setAmount(a);p.getInventory().addItem(k).values().forEach(x->p.getWorld().dropItemNaturally(p.getLocation(),x));p.sendMessage(ChatColor.GREEN+"☀ Given "+a+" "+pretty(t)+" Crate Key(s).");}
+ private String name(ItemStack x){return x.hasItemMeta()&&x.getItemMeta().hasDisplayName()&&!x.getItemMeta().getDisplayName().isEmpty()?x.getItemMeta().getDisplayName():x.getType().name();}
+ @EventHandler public void click(InventoryClickEvent e){String t=e.getView().getTitle();if(t.equals(MENU)){e.setCancelled(true);if(!(e.getWhoClicked() instanceof Player p)||e.getClickedInventory()!=e.getView().getTopInventory())return;for(int n=0;n<5;n++)if(e.getRawSlot()==10+n*7){openCrate(p,types[n]);return;}}else if(t.startsWith(ChatColor.DARK_AQUA+"✎ Edit ")){int s=e.getRawSlot();if(s==49){e.setCancelled(true);saveEditor((Player)e.getWhoClicked());}else if(s==53){e.setCancelled(true);editing.remove(e.getWhoClicked().getUniqueId());e.getWhoClicked().closeInventory();}else if(s==45||s<0||s>=45||s/9==0)e.setCancelled(true);}else if(t.contains("Crate"))e.setCancelled(true);}
 }
