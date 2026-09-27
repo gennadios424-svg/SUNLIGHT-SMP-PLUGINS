@@ -11,6 +11,7 @@ public final class ShopPricing {
         if (m == Material.SPAWNER) return 2_000_000;
         if (m == Material.SHULKER_BOX) return 250;
         if (m == Material.END_CRYSTAL) return 1_000;
+        if (m == Material.CARROT) return 15_000;
         return Math.max(1, Math.ceil(SellPricing.price(m) * 2.5));
     }
 
