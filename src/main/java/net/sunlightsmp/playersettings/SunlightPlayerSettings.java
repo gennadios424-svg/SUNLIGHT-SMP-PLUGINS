@@ -50,7 +50,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             }
         }
 
-        CrateCommand crateCommand = new CrateCommand(this, crateManager);
+        CrateCommand crateCommand = new CrateCommand(this, crateManager, crateMenu);
         if (getCommand("crate") != null) {
             getCommand("crate").setExecutor(crateCommand);
             getCommand("crate").setTabCompleter(crateCommand);
