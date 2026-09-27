@@ -51,17 +51,6 @@ commands:
   tpacancel:
     description: Cancel your outgoing TPA request
     usage: /tpacancel
-permissions:
-  sunlightsmp.settings:
-    default: true
-  sunlightsmp.tpa:
-    default: true
-  sunlightsmp.ah:
-    default: true
-  sunlightsmp.pickaxe:
-    default: true
-  sunlightsmp.rtp:
-    default: true
 
   sunlightsellaxe:
     description: Give a Sunlight Sellaxe
@@ -75,3 +64,15 @@ permissions:
   sunlightbucket:
     description: Give a Sunlight Bucket
     usage: /sunlightbucket
+
+permissions:
+  sunlightsmp.settings:
+    default: true
+  sunlightsmp.tpa:
+    default: true
+  sunlightsmp.ah:
+    default: true
+  sunlightsmp.pickaxe:
+    default: true
+  sunlightsmp.rtp:
+    default: true
