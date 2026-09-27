@@ -24,6 +24,15 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         getServer().getPluginManager().registerEvents(tpaManager, this);
         getServer().getPluginManager().registerEvents(new TPAPlayerListener(tpaManager), this);
 
+        getServer().getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+            @org.bukkit.event.EventHandler
+            public void onJoin(org.bukkit.event.player.PlayerJoinEvent event) {
+                org.bukkit.entity.Player player = event.getPlayer();
+                player.sendTitle(org.bukkit.ChatColor.GOLD + "Welcome to Sunlight SMP!", "", 10, 60, 20);
+                player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
+            }
+        }, this);
+
         if (getCommand("settings") != null) {
             getCommand("settings").setExecutor(new SettingsCommand(settingsListener));
         }
