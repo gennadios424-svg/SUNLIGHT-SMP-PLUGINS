@@ -24,16 +24,8 @@ commands:
   tpacancel:
     description: Cancel your outgoing TPA request
     usage: /tpacancel
-  crate:
-    description: Manage and open Sunlight Crates
-    usage: /crate [preview|set|remove|give|key|reload]
-    aliases: [crates]
 permissions:
   sunlightsmp.settings:
     default: true
   sunlightsmp.tpa:
     default: true
-  sunlightsmp.crates.use:
-    default: true
-  sunlightsmp.crates.admin:
-    default: op
