@@ -20,13 +20,11 @@ public final class SunlightPlayerSettings extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-
         settings = new PlayerSettingsManager(this);
-
         SettingsListener settingsListener = new SettingsListener(this);
         getServer().getPluginManager().registerEvents(settingsListener, this);
-
         getServer().getPluginManager().registerEvents(new MobSpawnListener(this), this);
+        getServer().getPluginManager().registerEvents(new CombatTagListener(this), this);
 
         tpaManager = new TPAManager(this);
         getServer().getPluginManager().registerEvents(tpaManager, this);
@@ -45,10 +43,8 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         }, this);
 
         if (getCommand("settings") != null) getCommand("settings").setExecutor(new SettingsCommand(settingsListener));
-
         sunlightPickaxe = new SunlightPickaxe(this);
         getServer().getPluginManager().registerEvents(sunlightPickaxe, this);
-
         getServer().getPluginManager().registerEvents(new SunlightAntiDupe(this), this);
 
         if (getCommand("sunlightpickaxe") != null) getCommand("sunlightpickaxe").setExecutor((sender, command, label, args) -> {
@@ -64,14 +60,9 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         sellMenu = new SellMenu(this);
         getServer().getPluginManager().registerEvents(sellMenu, this);
         if (getCommand("sell") != null) getCommand("sell").setExecutor(new SellCommand(sellMenu));
-
         worthCommand = new WorthCommand(this);
         getServer().getPluginManager().registerEvents(worthCommand, this);
-        if (getCommand("worth") != null) {
-            getCommand("worth").setExecutor(worthCommand);
-            getCommand("worth").setTabCompleter(worthCommand);
-        }
-
+        if (getCommand("worth") != null) { getCommand("worth").setExecutor(worthCommand); getCommand("worth").setTabCompleter(worthCommand); }
         shopMenu = new ShopMenu(this);
         getServer().getPluginManager().registerEvents(shopMenu, this);
         if (getCommand("shop") != null) getCommand("shop").setExecutor(new ShopCommand(shopMenu));
@@ -88,10 +79,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
 
         TPACommand tpaCommand = new TPACommand(tpaManager);
         for (String command : new String[]{"tpa", "tpahere", "tpaccept", "tpdeny", "tpacancel"}) {
-            if (getCommand(command) != null) {
-                getCommand(command).setExecutor(tpaCommand);
-                getCommand(command).setTabCompleter(tpaCommand);
-            }
+            if (getCommand(command) != null) { getCommand(command).setExecutor(tpaCommand); getCommand(command).setTabCompleter(tpaCommand); }
         }
 
         if (getCommand("discord") != null) getCommand("discord").setExecutor((sender, command, label, args) -> {
@@ -99,7 +87,6 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             sender.sendMessage(org.bukkit.ChatColor.GRAY + "Join the community: " + org.bukkit.ChatColor.AQUA + "https://discord.gg/9a9THhwDT");
             return true;
         });
-
         if (getCommand("store") != null) getCommand("store").setExecutor((sender, command, label, args) -> {
             sender.sendMessage(org.bukkit.ChatColor.GOLD + "☀ " + org.bukkit.ChatColor.YELLOW + "Sunlight SMP Store");
             sender.sendMessage(org.bukkit.ChatColor.GRAY + "Shop here: " + org.bukkit.ChatColor.YELLOW + "https://sunlight-dawn-shop.lovable.app/");
@@ -116,19 +103,14 @@ public final class SunlightPlayerSettings extends JavaPlugin {
                 player.sendMessage(org.bukkit.ChatColor.GOLD + "━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             }
         }, 3600L, 3600L);
-
         getLogger().info("Sunlight Player Settings + TPA + Auction House + Sell/Worth/Shop/RTP enabled.");
     }
 
-    @Override
-    public void onDisable() {
-        if (tpaManager != null) {
-            for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) tpaManager.cleanup(player);
-        }
+    @Override public void onDisable() {
+        if (tpaManager != null) for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) tpaManager.cleanup(player);
         if (settings != null) settings.save();
         if (auctionManager != null) auctionManager.save();
     }
-
     public PlayerSettingsManager getSettings() { return settings; }
     public Map<UUID, Location> getTpaStartLocations() { return tpaStartLocations; }
 }
