@@ -127,9 +127,11 @@ public final class TPAManager implements Listener {
         int delay = plugin.getConfig().getInt("tpa.teleport-delay-seconds", 5);
         Location start = teleporter.getLocation().clone();
         teleporter.sendMessage(Component.text("✦ Teleport initiated — stay still!", NamedTextColor.YELLOW));
-        teleporter.sendTitle(ChatColor.YELLOW + "TELEPORTING",
-                ChatColor.GRAY + "Stay still for " + delay + " seconds", 0, 25, 5);
+        destination.sendMessage(Component.text("✦ " + teleporter.getName() + " is teleporting to you!", NamedTextColor.YELLOW));
+        teleporter.sendTitle(ChatColor.YELLOW + "TELEPORTING", ChatColor.GRAY + "Stay still!", 0, 25, 5);
+        destination.sendTitle(ChatColor.YELLOW + "INCOMING TELEPORT", ChatColor.GRAY + teleporter.getName() + " is teleporting to you", 0, 25, 5);
         teleporter.playSound(teleporter.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 0.7f, 1.2f);
+        destination.playSound(destination.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 0.7f, 1.0f);
 
         UUID id = teleporter.getUniqueId();
         BukkitTask countdownTask = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
@@ -141,12 +143,11 @@ public final class TPAManager implements Listener {
                     return;
                 }
                 NamedTextColor yellow = NamedTextColor.YELLOW;
-                teleporter.sendActionBar(Component.text("✦ ", yellow)
-                        .append(Component.text("Teleporting in ", yellow))
-                        .append(Component.text(secondsLeft + "s", yellow))
-                        .append(Component.text(" ✦", yellow)));
+                teleporter.sendActionBar(Component.text("✦ TELEPORTING — STAY STILL ✦", yellow));
+                destination.sendActionBar(Component.text("✦ " + teleporter.getName() + " IS TELEPORTING TO YOU ✦", yellow));
                 float pitch = secondsLeft == 1 ? 1.8f : 1.4f;
                 teleporter.playSound(teleporter.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, pitch);
+                destination.playSound(destination.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.5f, pitch);
                 secondsLeft--;
             }
         }, 0L, 20L);
@@ -158,8 +159,10 @@ public final class TPAManager implements Listener {
             teleports.remove(id);
             if (!teleporter.isOnline() || !destination.isOnline()) return;
             teleporter.teleport(destination.getLocation());
-            teleporter.sendActionBar(Component.text("✦ Teleported successfully!", NamedTextColor.YELLOW));
+            teleporter.sendActionBar(Component.text("✦ TELEPORTED SUCCESSFULLY! ✦", NamedTextColor.YELLOW));
+            destination.sendActionBar(Component.text("✦ " + teleporter.getName() + " HAS ARRIVED! ✦", NamedTextColor.GREEN));
             teleporter.playSound(teleporter.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
+            destination.playSound(destination.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.1f);
         }, delay * 20L);
         teleports.put(teleporter.getUniqueId(), task);
         plugin.getTpaStartLocations().put(teleporter.getUniqueId(), start);
