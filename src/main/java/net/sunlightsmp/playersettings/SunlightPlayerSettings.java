@@ -16,6 +16,10 @@ public final class SunlightPlayerSettings extends JavaPlugin {
     private SellMenu sellMenu;
     private ShopMenu shopMenu;
     private WorthCommand worthCommand;
+    private SunlightSellaxe sellaxe;
+    private SunlightTreeChopper treeChopper;
+    private SunlightShardBooster shardBooster;
+    private SunlightBucket sunlightBucket;
 
     @Override
     public void onEnable() {
@@ -46,6 +50,44 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         sunlightPickaxe = new SunlightPickaxe(this);
         getServer().getPluginManager().registerEvents(sunlightPickaxe, this);
         getServer().getPluginManager().registerEvents(new SunlightAntiDupe(this), this);
+
+        sellaxe = new SunlightSellaxe(this);
+        treeChopper = new SunlightTreeChopper(this);
+        shardBooster = new SunlightShardBooster(this);
+        sunlightBucket = new SunlightBucket(this);
+        getServer().getPluginManager().registerEvents(sellaxe, this);
+        getServer().getPluginManager().registerEvents(treeChopper, this);
+        getServer().getPluginManager().registerEvents(shardBooster, this);
+        getServer().getPluginManager().registerEvents(sunlightBucket, this);
+
+        if (getCommand("sunlightsellaxe") != null) getCommand("sunlightsellaxe").setExecutor((sender, command, label, args) -> {
+            if (!(sender instanceof org.bukkit.entity.Player player)) return true;
+            java.util.Map<Integer, org.bukkit.inventory.ItemStack> left = player.getInventory().addItem(sellaxe.create());
+            left.values().forEach(i -> player.getWorld().dropItemNaturally(player.getLocation(), i));
+            player.sendMessage(org.bukkit.ChatColor.GOLD + "☀ Sunlight Sellaxe received! " + org.bukkit.ChatColor.GRAY + "Expires in 5 days.");
+            return true;
+        });
+        if (getCommand("sunlighttreechopper") != null) getCommand("sunlighttreechopper").setExecutor((sender, command, label, args) -> {
+            if (!(sender instanceof org.bukkit.entity.Player player)) return true;
+            java.util.Map<Integer, org.bukkit.inventory.ItemStack> left = player.getInventory().addItem(treeChopper.create());
+            left.values().forEach(i -> player.getWorld().dropItemNaturally(player.getLocation(), i));
+            player.sendMessage(org.bukkit.ChatColor.GOLD + "☀ Sunlight Tree Chopper received! " + org.bukkit.ChatColor.GRAY + "Expires in 5 days.");
+            return true;
+        });
+        if (getCommand("sunlightshardbooster") != null) getCommand("sunlightshardbooster").setExecutor((sender, command, label, args) -> {
+            if (!(sender instanceof org.bukkit.entity.Player player)) return true;
+            java.util.Map<Integer, org.bukkit.inventory.ItemStack> left = player.getInventory().addItem(shardBooster.create());
+            left.values().forEach(i -> player.getWorld().dropItemNaturally(player.getLocation(), i));
+            player.sendMessage(org.bukkit.ChatColor.GOLD + "☀ 4x Shard Booster received! " + org.bukkit.ChatColor.GRAY + "Expires in 24 hours.");
+            return true;
+        });
+        if (getCommand("sunlightbucket") != null) getCommand("sunlightbucket").setExecutor((sender, command, label, args) -> {
+            if (!(sender instanceof org.bukkit.entity.Player player)) return true;
+            java.util.Map<Integer, org.bukkit.inventory.ItemStack> left = player.getInventory().addItem(sunlightBucket.create());
+            left.values().forEach(i -> player.getWorld().dropItemNaturally(player.getLocation(), i));
+            player.sendMessage(org.bukkit.ChatColor.GOLD + "☀ Sunlight Bucket received! " + org.bukkit.ChatColor.GRAY + "Expires in 5 days.");
+            return true;
+        });
 
         if (getCommand("sunlightpickaxe") != null) getCommand("sunlightpickaxe").setExecutor((sender, command, label, args) -> {
             if (!(sender instanceof org.bukkit.entity.Player player)) { sender.sendMessage("Only players can use this command."); return true; }
