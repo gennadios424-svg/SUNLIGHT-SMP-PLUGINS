@@ -11,6 +11,8 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.util.Vector;
+import java.util.HashSet;
+import java.util.Set;
 
 public final class SunlightPickaxe implements Listener {
     private final SunlightPlayerSettings plugin;
@@ -86,10 +88,13 @@ public final class SunlightPickaxe implements Listener {
             Block b=center.getWorld().getBlockAt(x,y,z);
             if(b.getType().isAir()||b.isLiquid()||b.getType()==Material.BEDROCK)continue;
             if(!b.equals(center)&&!b.getType().isOccluding())continue;
+            if(!b.getWorld().equals(center.getWorld()))continue;
             blocks.add(b);
         }
+        Set<Block> processed=new HashSet<>();
+        processed.add(center);
         for(Block b:blocks){
-            if(b.equals(center))continue;
+            if(b.equals(center)||!processed.add(b))continue;
             BlockBreakEvent extra=new BlockBreakEvent(b,p);
             plugin.getServer().getPluginManager().callEvent(extra);
             if(extra.isCancelled())continue;
