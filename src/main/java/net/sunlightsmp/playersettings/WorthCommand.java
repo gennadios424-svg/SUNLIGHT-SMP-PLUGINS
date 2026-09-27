@@ -36,17 +36,31 @@ public final class WorthCommand implements CommandExecutor, Listener, TabComplet
                 p.sendMessage(ChatColor.RED + "☀ No obtainable items matched: " + String.join(" ", args));
                 return true;
             }
-            p.sendMessage(ChatColor.GOLD + "☀ Worth: " + ChatColor.YELLOW + String.join(" ", args));
-            for (Material m : matches) {
-                double each = SellPricing.price(m);
-                p.sendMessage(ChatColor.GRAY + "• " + ChatColor.WHITE + pretty(m) + ChatColor.GRAY + " — " + ChatColor.GREEN + "$" + money(each) + ChatColor.GRAY + " each");
-            }
-            p.sendMessage(ChatColor.DARK_GRAY + "Showing " + matches.size() + " matching obtainable item(s).");
+            pages.put(p.getUniqueId(), 0);
+            drawSearch(p, matches, String.join(" ", args));
             return true;
         }
 
         open(p);
         return true;
+    }
+
+    private void drawSearch(Player p, List<Material> items, String query) {
+        Inventory inv = Bukkit.createInventory(null, 54, TITLE + ChatColor.DARK_GRAY + " • " + query);
+        for (int i = 45; i < 54; i++) inv.setItem(i, item(Material.GRAY_STAINED_GLASS_PANE, " "));
+        for (int i = 0; i < Math.min(45, items.size()); i++) {
+            Material m = items.get(i);
+            double each = SellPricing.price(m);
+            inv.setItem(i, item(m, ChatColor.WHITE + pretty(m),
+                    "",
+                    ChatColor.GREEN + "Sell: $" + money(each) + " each",
+                    ChatColor.GRAY + "64 items: $" + money(each * 64)));
+        }
+        inv.setItem(45, item(Material.ARROW, ChatColor.YELLOW + "Previous Page"));
+        inv.setItem(49, item(Material.SUNFLOWER, ChatColor.GOLD + "☀ " + query,
+                ChatColor.GRAY + "Matching items: " + items.size()));
+        inv.setItem(53, item(Material.ARROW, ChatColor.YELLOW + "Next Page"));
+        p.openInventory(inv);
     }
 
     public void open(Player p) {
