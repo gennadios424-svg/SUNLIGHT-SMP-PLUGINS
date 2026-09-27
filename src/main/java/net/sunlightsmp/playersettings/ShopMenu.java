@@ -24,8 +24,8 @@ public final class ShopMenu implements Listener {
     private String money(double n){return NumberFormat.getNumberInstance(Locale.US).format(n);}
     public void open(Player p){cats.put(p.getUniqueId(),"home");pages.put(p.getUniqueId(),0);draw(p);}
     private void draw(Player p){
-        String c=cats.getOrDefault(p.getUniqueId(),"home"); Inventory inv=Bukkit.createInventory(null,54,TITLE);
-        for(int i=45;i<54;i++)inv.setItem(i,item(Material.GRAY_STAINED_GLASS_PANE," "));
+        String c=cats.getOrDefault(p.getUniqueId(),"home"); Inventory inv=Bukkit.createInventory(null,36,TITLE);
+        for(int i=27;i<36;i++)inv.setItem(i,item(Material.GRAY_STAINED_GLASS_PANE," "));
         if(c.equals("home")){
             inv.setItem(10,item(Material.REDSTONE,ChatColor.RED+"Redstone","",ChatColor.GRAY+"Redstone & automation"));
             inv.setItem(12,item(Material.WHEAT,ChatColor.GREEN+"Farm","",ChatColor.GRAY+"Farming supplies"));
@@ -33,22 +33,22 @@ public final class ShopMenu implements Listener {
             inv.setItem(16,item(Material.END_CRYSTAL,ChatColor.LIGHT_PURPLE+"PvP","",ChatColor.GRAY+"Crystal PvP supplies — no armor/weapons"));
             inv.setItem(20,item(Material.BRICKS,ChatColor.YELLOW+"Blocks","",ChatColor.GRAY+"Building blocks"));
             inv.setItem(24,item(Material.SPAWNER,ChatColor.AQUA+"Spawners","",ChatColor.GRAY+"$2,000,000 each"));
-            inv.setItem(49,item(Material.SUNFLOWER,ChatColor.GOLD+"☀ Sunlight Shop","",ChatColor.GRAY+"Choose a category"));
+            inv.setItem(31,item(Material.SUNFLOWER,ChatColor.GOLD+"☀ Sunlight Shop","",ChatColor.GRAY+"Choose a category"));
         }else{
             List<Material> list=c.equals("spawners")?List.of(Material.SPAWNER):ShopPricing.category(c); int pg=pages.getOrDefault(p.getUniqueId(),0),start=pg*45;
-            for(int i=0;i<45&&start+i<list.size();i++){Material m=list.get(start+i);String price=m==Material.SPAWNER?"$2,000,000":"$"+money(ShopPricing.buyPrice(m));inv.setItem(i,item(m,ChatColor.WHITE+pretty(m),"",ChatColor.GREEN+"Buy: "+price,ChatColor.GRAY+"Left-click: Buy 1",ChatColor.GRAY+"Shift-click: Buy 16"));}
-            inv.setItem(45,item(Material.ARROW,ChatColor.YELLOW+"Previous"));inv.setItem(49,item(Material.BARRIER,ChatColor.RED+"Back"));inv.setItem(53,item(Material.ARROW,ChatColor.YELLOW+"Next"));
+            for(int i=0;i<27&&start+i<list.size();i++){Material m=list.get(start+i);String price=m==Material.SPAWNER?"$2,000,000":"$"+money(ShopPricing.buyPrice(m));inv.setItem(i,item(m,ChatColor.WHITE+pretty(m),"",ChatColor.GREEN+"Buy: "+price,ChatColor.GRAY+"Left-click: Buy 1",ChatColor.GRAY+"Shift-click: Buy 16"));}
+            inv.setItem(27,item(Material.ARROW,ChatColor.YELLOW+"Previous"));inv.setItem(31,item(Material.BARRIER,ChatColor.RED+"Back"));inv.setItem(35,item(Material.ARROW,ChatColor.YELLOW+"Next"));
         }
         p.openInventory(inv);
     }
     @EventHandler public void click(InventoryClickEvent e){
-        if(!(e.getWhoClicked() instanceof Player p)||!e.getView().getTitle().equals(TITLE))return;e.setCancelled(true);int s=e.getRawSlot();if(s<0||s>=54)return;String c=cats.getOrDefault(p.getUniqueId(),"home");
+        if(!(e.getWhoClicked() instanceof Player p)||!e.getView().getTitle().equals(TITLE))return;e.setCancelled(true);int s=e.getRawSlot();if(s<0||s>=36)return;String c=cats.getOrDefault(p.getUniqueId(),"home");
         if(c.equals("home")){String n=s==10?"redstone":s==12?"farm":s==14?"food":s==16?"pvp":s==20?"blocks":s==24?"spawners":null;if(n!=null){cats.put(p.getUniqueId(),n);pages.put(p.getUniqueId(),0);draw(p);}return;}
         List<Material> list=c.equals("spawners")?List.of(Material.SPAWNER):ShopPricing.category(c);int pg=pages.getOrDefault(p.getUniqueId(),0);
-        if(s==49){cats.put(p.getUniqueId(),"home");pages.put(p.getUniqueId(),0);draw(p);return;}
-        if(s==45){if(pg>0){pages.put(p.getUniqueId(),pg-1);draw(p);}return;}
-        if(s==53){if((pg+1)*45<list.size()){pages.put(p.getUniqueId(),pg+1);draw(p);}return;}
-        int idx=pg*45+s;if(s<45&&idx<list.size())buy(p,list.get(idx),e.isShiftClick()?16:1);
+        if(s==31){cats.put(p.getUniqueId(),"home");pages.put(p.getUniqueId(),0);draw(p);return;}
+        if(s==27){if(pg>0){pages.put(p.getUniqueId(),pg-1);draw(p);}return;}
+        if(s==35){if((pg+1)*27<list.size()){pages.put(p.getUniqueId(),pg+1);draw(p);}return;}
+        int idx=pg*27+s;if(s<27&&idx<list.size())buy(p,list.get(idx),e.isShiftClick()?16:1);
     }
     private void buy(Player p,Material m,int amount){
         if(m==Material.SPAWNER){p.sendMessage(ChatColor.YELLOW+"Spawners cost 2,000,000 each. Shard currency needs to be connected to the server's shard system.");return;}
