@@ -62,3 +62,16 @@ permissions:
     default: true
   sunlightsmp.rtp:
     default: true
+
+  sunlightsellaxe:
+    description: Give a Sunlight Sellaxe
+    usage: /sunlightsellaxe
+  sunlighttreechopper:
+    description: Give a Sunlight Tree Chopper
+    usage: /sunlighttreechopper
+  sunlightshardbooster:
+    description: Give a 4x Sunlight Shard Booster
+    usage: /sunlightshardbooster
+  sunlightbucket:
+    description: Give a Sunlight Bucket
+    usage: /sunlightbucket
