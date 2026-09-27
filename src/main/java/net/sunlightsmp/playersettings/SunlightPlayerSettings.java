@@ -28,6 +28,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         saveDefaultConfig(); settings = new PlayerSettingsManager(this);
         SettingsListener settingsListener = new SettingsListener(this);
         getServer().getPluginManager().registerEvents(settingsListener, this);
+        getServer().getPluginManager().registerEvents(new SunlightTabList(this), this);
         getServer().getPluginManager().registerEvents(new MobSpawnListener(this), this);
         getServer().getPluginManager().registerEvents(new CombatTagListener(this), this);
         tpaManager = new TPAManager(this);
