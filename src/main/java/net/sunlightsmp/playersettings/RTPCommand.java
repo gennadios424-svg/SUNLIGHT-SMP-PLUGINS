@@ -34,43 +34,19 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
             sender.sendMessage("Only players can use /rtp.");
             return true;
         }
-
         open(player);
         return true;
     }
 
     public void open(Player player) {
         Inventory inv = Bukkit.createInventory(null, 27, TITLE);
-
         for (int slot : new int[]{0,1,2,3,4,5,6,7,8,18,19,20,21,22,23,24,25,26}) {
             inv.setItem(slot, item(Material.YELLOW_STAINED_GLASS_PANE, ChatColor.GOLD + " "));
         }
-
-        inv.setItem(10, item(Material.GRASS_BLOCK,
-                ChatColor.GREEN + "☀ Overworld",
-                ChatColor.GRAY + "Random safe location",
-                ChatColor.YELLOW + "15,000 blocks from 0,0",
-                "",
-                ChatColor.GREEN + "Click to teleport"));
-
-        inv.setItem(13, item(Material.NETHERRACK,
-                ChatColor.RED + "🔥 Nether",
-                ChatColor.GRAY + "Random safe location",
-                ChatColor.YELLOW + "15,000 blocks from 0,0",
-                "",
-                ChatColor.GREEN + "Click to teleport"));
-
-        inv.setItem(16, item(Material.END_STONE,
-                ChatColor.LIGHT_PURPLE + "✦ The End",
-                ChatColor.GRAY + "Random safe location",
-                ChatColor.YELLOW + "15,000 blocks from 0,0",
-                "",
-                ChatColor.GREEN + "Click to teleport"));
-
-        inv.setItem(22, item(Material.BARRIER,
-                ChatColor.RED + "Close",
-                ChatColor.GRAY + "Close the RTP menu"));
-
+        inv.setItem(10, item(Material.GRASS_BLOCK, ChatColor.GREEN + "☀ Overworld", ChatColor.GRAY + "Random safe location", ChatColor.GREEN + "Click to search"));
+        inv.setItem(13, item(Material.NETHERRACK, ChatColor.RED + "🔥 Nether", ChatColor.GRAY + "Random safe location", ChatColor.GREEN + "Click to search"));
+        inv.setItem(16, item(Material.END_STONE, ChatColor.LIGHT_PURPLE + "✦ The End", ChatColor.GRAY + "Random safe location", ChatColor.GREEN + "Click to search"));
+        inv.setItem(22, item(Material.BARRIER, ChatColor.RED + "Close", ChatColor.GRAY + "Close the RTP menu"));
         player.openInventory(inv);
         player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.6f, 1.15f);
     }
@@ -88,16 +64,11 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
     public void onClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (!event.getView().getTitle().equals(TITLE)) return;
-
         event.setCancelled(true);
         int slot = event.getRawSlot();
-
         if (slot == 22) {
             player.closeInventory();
-            return;
-        }
-
-        if (slot == 10) {
+        } else if (slot == 10) {
             startRtp(player, World.Environment.NORMAL);
         } else if (slot == 13) {
             startRtp(player, World.Environment.NETHER);
@@ -108,17 +79,20 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
 
     private void startRtp(Player player, World.Environment environment) {
         World world = findWorld(environment);
-
         if (world == null) {
             player.sendMessage(ChatColor.RED + "☀ That dimension is not available on this server.");
             return;
         }
 
         player.closeInventory();
-        player.sendMessage(ChatColor.GOLD + "☀ " + ChatColor.YELLOW + "Finding a safe random location in the " + dimensionName(world) + "...");
+        final int searchSeconds = 10;
+        player.sendTitle(ChatColor.GOLD + "☀ RTP SEARCH", ChatColor.YELLOW + "Finding a safe location...", 0, 20, 0);
+        player.sendActionBar(ChatColor.YELLOW + "☀ SEARCHING FOR SAFE LOCATION • " + searchSeconds + "s");
 
         new BukkitRunnable() {
+            int elapsed = 0;
             int attempts = 0;
+            boolean searching = false;
 
             @Override
             public void run() {
@@ -127,36 +101,59 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
                     return;
                 }
 
-                attempts++;
-                Location target = randomLocation(world);
+                elapsed++;
+                int remaining = Math.max(0, searchSeconds - elapsed);
+                player.sendActionBar(ChatColor.YELLOW + "☀ RTP SEARCH • " + remaining + "s " + ChatColor.GRAY + "» " + ChatColor.WHITE + "Checking safe terrain");
 
-                if (target != null && isSafe(target, world)) {
-                    player.teleport(target);
-                    player.sendMessage(ChatColor.GREEN + "☀ RTP successful! Teleported " + ChatColor.YELLOW + "15,000 blocks" + ChatColor.GREEN + " away.");
-                    player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
-                    cancel();
-                    return;
+                if (!searching && elapsed < searchSeconds) {
+                    searching = true;
+                    int x = randomCoordinate();
+                    int z = randomCoordinate();
+                    world.getChunkAtAsync(x >> 4, z >> 4, true).whenComplete((chunk, error) -> {
+                        Bukkit.getScheduler().runTask(plugin, () -> {
+                            searching = false;
+                            if (!player.isOnline()) return;
+                            if (error != null) return;
+
+                            attempts++;
+                            Location target = randomLocation(world, x, z);
+                            if (target != null && isSafe(target, world)) {
+                                player.sendActionBar(ChatColor.GREEN + "☀ RTP FOUND! " + ChatColor.WHITE + "Teleporting...");
+                                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.4f);
+                                player.teleportAsync(target).thenAccept(success -> Bukkit.getScheduler().runTask(plugin, () -> {
+                                    if (!player.isOnline()) return;
+                                    if (success) {
+                                        player.sendActionBar(ChatColor.GREEN + "☀ RTP SUCCESSFUL!");
+                                        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
+                                    } else {
+                                        player.sendActionBar(ChatColor.RED + "☀ RTP failed. Try again.");
+                                    }
+                                }));
+                                cancel();
+                            } else if (attempts >= 30) {
+                                player.sendActionBar(ChatColor.RED + "☀ No safe location found. Try /rtp again.");
+                                player.sendMessage(ChatColor.RED + "☀ RTP couldn't find a safe location.");
+                                cancel();
+                            }
+                        });
+                    });
                 }
 
-                if (attempts >= 30) {
-                    player.sendMessage(ChatColor.RED + "☀ Couldn't find a safe location. Try /rtp again.");
+                if (elapsed >= searchSeconds) {
+                    player.sendActionBar(ChatColor.RED + "☀ RTP SEARCH TIMED OUT");
+                    player.sendMessage(ChatColor.RED + "☀ RTP search timed out. Try /rtp again.");
                     cancel();
                 }
             }
-        }.runTaskTimer(plugin, 1L, 2L);
+        }.runTaskTimer(plugin, 0L, 20L);
     }
 
-    private World findWorld(World.Environment environment) {
-        for (World world : Bukkit.getWorlds()) {
-            if (world.getEnvironment() == environment) return world;
-        }
-        return null;
-    }
-
-    private Location randomLocation(World world) {
+    private int randomCoordinate() {
         double angle = random.nextDouble() * Math.PI * 2.0;
-        int x = (int) Math.round(Math.cos(angle) * 15_000);
-        int z = (int) Math.round(Math.sin(angle) * 15_000);
+        return (int) Math.round(Math.cos(angle) * 15_000);
+    }
+
+    private Location randomLocation(World world, int x, int z) {
         int y = world.getHighestBlockYAt(x, z);
         return new Location(world, x + 0.5, y + 1.0, z + 0.5);
     }
@@ -165,33 +162,25 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
         int x = location.getBlockX();
         int y = location.getBlockY();
         int z = location.getBlockZ();
-
         if (y <= world.getMinHeight() || y >= world.getMaxHeight() - 2) return false;
-
         Material floor = world.getBlockAt(x, y - 1, z).getType();
         Material feet = world.getBlockAt(x, y, z).getType();
         Material head = world.getBlockAt(x, y + 1, z).getType();
-
-        if (!floor.isSolid()) return false;
-        if (!feet.isAir() || !head.isAir()) return false;
-
+        if (!floor.isSolid() || !feet.isAir() || !head.isAir()) return false;
         return !isDangerous(floor);
     }
 
     private boolean isDangerous(Material material) {
         return switch (material) {
-            case LAVA, MAGMA_BLOCK, FIRE, SOUL_FIRE, CACTUS,
-                 CAMPFIRE, SOUL_CAMPFIRE, POWDER_SNOW -> true;
+            case LAVA, MAGMA_BLOCK, FIRE, SOUL_FIRE, CACTUS, CAMPFIRE, SOUL_CAMPFIRE, POWDER_SNOW -> true;
             default -> false;
         };
     }
 
-    private String dimensionName(World world) {
-        return switch (world.getEnvironment()) {
-            case NORMAL -> "Overworld";
-            case NETHER -> "Nether";
-            case THE_END -> "The End";
-            default -> "world";
-        };
+    private World findWorld(World.Environment environment) {
+        for (World world : Bukkit.getWorlds()) {
+            if (world.getEnvironment() == environment) return world;
+        }
+        return null;
     }
 }
