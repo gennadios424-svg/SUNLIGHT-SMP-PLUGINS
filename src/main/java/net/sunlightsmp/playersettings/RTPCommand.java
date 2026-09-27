@@ -25,12 +25,8 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor {
             return true;
         }
 
-        if (player.getWorld().getEnvironment() != World.Environment.NORMAL) {
-            player.sendMessage(ChatColor.RED + "☀ RTP is only available in the Overworld.");
-            return true;
-        }
-
-        player.sendMessage(ChatColor.GOLD + "☀ " + ChatColor.YELLOW + "Finding a safe random location...");
+        World world = player.getWorld();
+        player.sendMessage(ChatColor.GOLD + "☀ " + ChatColor.YELLOW + "Finding a safe random location in the " + dimensionName(world) + "...");
 
         new BukkitRunnable() {
             int attempts = 0;
@@ -43,26 +39,17 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor {
                 }
 
                 attempts++;
-                World world = player.getWorld();
+                Location target = randomLocation(world);
 
-                // Random location within a 5,000 block radius.
-                double angle = random.nextDouble() * Math.PI * 2.0;
-                double distance = 1_000 + random.nextDouble() * 4_000;
-                int x = (int) Math.round(Math.cos(angle) * distance);
-                int z = (int) Math.round(Math.sin(angle) * distance);
-
-                int y = world.getHighestBlockYAt(x, z);
-                Location target = new Location(world, x + 0.5, y + 1.0, z + 0.5);
-
-                if (isSafe(target)) {
+                if (target != null && isSafe(target, world)) {
                     player.teleport(target);
-                    player.sendMessage(ChatColor.GREEN + "☀ RTP successful! Teleported to a random safe location.");
+                    player.sendMessage(ChatColor.GREEN + "☀ RTP successful! Teleported " + ChatColor.YELLOW + "15,000 blocks" + ChatColor.GREEN + " away.");
                     player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
                     cancel();
                     return;
                 }
 
-                if (attempts >= 20) {
+                if (attempts >= 30) {
                     player.sendMessage(ChatColor.RED + "☀ Couldn't find a safe location. Try /rtp again.");
                     cancel();
                 }
@@ -72,10 +59,30 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor {
         return true;
     }
 
-    private boolean isSafe(Location location) {
-        World world = location.getWorld();
-        if (world == null) return false;
+    private Location randomLocation(World world) {
+        double angle = random.nextDouble() * Math.PI * 2.0;
+        double distance = 15_000;
 
+        int x = (int) Math.round(Math.cos(angle) * distance);
+        int z = (int) Math.round(Math.sin(angle) * distance);
+
+        if (world.getEnvironment() == World.Environment.NETHER) {
+            // Nether RTP is 15,000 Nether blocks from 0,0.
+            // It does not use the Overworld coordinate conversion.
+            int y = world.getHighestBlockYAt(x, z);
+            return new Location(world, x + 0.5, y + 1.0, z + 0.5);
+        }
+
+        if (world.getEnvironment() == World.Environment.THE_END) {
+            int y = world.getHighestBlockYAt(x, z);
+            return new Location(world, x + 0.5, y + 1.0, z + 0.5);
+        }
+
+        int y = world.getHighestBlockYAt(x, z);
+        return new Location(world, x + 0.5, y + 1.0, z + 0.5);
+    }
+
+    private boolean isSafe(Location location, World world) {
         int x = location.getBlockX();
         int y = location.getBlockY();
         int z = location.getBlockZ();
@@ -97,6 +104,15 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor {
             case LAVA, MAGMA_BLOCK, FIRE, SOUL_FIRE, CACTUS,
                  CAMPFIRE, SOUL_CAMPFIRE, POWDER_SNOW -> true;
             default -> false;
+        };
+    }
+
+    private String dimensionName(World world) {
+        return switch (world.getEnvironment()) {
+            case NORMAL -> "Overworld";
+            case NETHER -> "Nether";
+            case THE_END -> "End";
+            default -> "world";
         };
     }
 }
