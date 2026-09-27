@@ -2,7 +2,6 @@ package net.sunlightsmp.playersettings;
 
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,6 +10,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
     private PlayerSettingsManager settings;
     private final Map<UUID, Location> tpaStartLocations = new ConcurrentHashMap<>();
     private TPAManager tpaManager;
+    private CrateManager crateManager;
 
     @Override
     public void onEnable() {
@@ -24,6 +24,11 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         getServer().getPluginManager().registerEvents(tpaManager, this);
         getServer().getPluginManager().registerEvents(new TPAPlayerListener(tpaManager), this);
 
+        crateManager = new CrateManager(this);
+        CrateMenu crateMenu = new CrateMenu(crateManager);
+        getServer().getPluginManager().registerEvents(new CrateListener(crateManager), this);
+        getServer().getPluginManager().registerEvents(crateMenu, this);
+
         getServer().getPluginManager().registerEvents(new org.bukkit.event.Listener() {
             @org.bukkit.event.EventHandler
             public void onJoin(org.bukkit.event.player.PlayerJoinEvent event) {
@@ -35,9 +40,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             }
         }, this);
 
-        if (getCommand("settings") != null) {
-            getCommand("settings").setExecutor(new SettingsCommand(settingsListener));
-        }
+        if (getCommand("settings") != null) getCommand("settings").setExecutor(new SettingsCommand(settingsListener));
 
         TPACommand tpaCommand = new TPACommand(tpaManager);
         for (String command : new String[]{"tpa", "tpahere", "tpaccept", "tpdeny", "tpacancel"}) {
@@ -47,24 +50,24 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             }
         }
 
-        getLogger().info("Sunlight Player Settings + TPA enabled.");
+        CrateCommand crateCommand = new CrateCommand(this, crateManager);
+        if (getCommand("crate") != null) {
+            getCommand("crate").setExecutor(crateCommand);
+            getCommand("crate").setTabCompleter(crateCommand);
+        }
+
+        getLogger().info("Sunlight Player Settings + TPA + Crates enabled.");
     }
 
     @Override
     public void onDisable() {
         if (tpaManager != null) {
-            for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
-                tpaManager.cleanup(player);
-            }
+            for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) tpaManager.cleanup(player);
         }
+        if (crateManager != null) crateManager.shutdown();
         if (settings != null) settings.save();
     }
 
-    public PlayerSettingsManager getSettings() {
-        return settings;
-    }
-
-    public Map<UUID, Location> getTpaStartLocations() {
-        return tpaStartLocations;
-    }
+    public PlayerSettingsManager getSettings() { return settings; }
+    public Map<UUID, Location> getTpaStartLocations() { return tpaStartLocations; }
 }
