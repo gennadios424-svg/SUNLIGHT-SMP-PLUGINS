@@ -64,7 +64,6 @@ public final class ShopPricing {
             case WATER_BUCKET -> 1_000;
             case LAVA_BUCKET -> 1_500;
             case RAIL -> 100;
-            case TNT -> 750;
 
             // Food
             case APPLE -> 100;
