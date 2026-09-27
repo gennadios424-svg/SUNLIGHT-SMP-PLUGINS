@@ -32,7 +32,7 @@ public final class ShopMenu implements Listener {
             inv.setItem(14,item(Material.COOKED_BEEF,ChatColor.GOLD+"Food","",ChatColor.GRAY+"Food & consumables"));
             inv.setItem(16,item(Material.END_CRYSTAL,ChatColor.LIGHT_PURPLE+"PvP","",ChatColor.GRAY+"Crystal PvP supplies — no armor/weapons"));
             inv.setItem(20,item(Material.BRICKS,ChatColor.YELLOW+"Blocks","",ChatColor.GRAY+"Building blocks"));
-            inv.setItem(24,item(Material.SPAWNER,ChatColor.AQUA+"Spawners","",ChatColor.GRAY+"1,500 Shards each"));
+            inv.setItem(24,item(Material.SPAWNER,ChatColor.AQUA+"Spawners","",ChatColor.GRAY+"2,000,000 each"));
             inv.setItem(49,item(Material.SUNFLOWER,ChatColor.GOLD+"☀ Sunlight Shop","",ChatColor.GRAY+"Choose a category"));
         }else{
             List<Material> list=c.equals("spawners")?List.of(Material.SPAWNER):ShopPricing.category(c); int pg=pages.getOrDefault(p.getUniqueId(),0),start=pg*45;
@@ -51,7 +51,7 @@ public final class ShopMenu implements Listener {
         int idx=pg*45+s;if(s<45&&idx<list.size())buy(p,list.get(idx),e.isShiftClick()?16:1);
     }
     private void buy(Player p,Material m,int amount){
-        if(m==Material.SPAWNER){p.sendMessage(ChatColor.YELLOW+"Spawners cost 1,500 Shards each. Shard currency needs to be connected to the server's shard system.");return;}
+        if(m==Material.SPAWNER){p.sendMessage(ChatColor.YELLOW+"Spawners cost 2,000,000 each. Shard currency needs to be connected to the server's shard system.");return;}
         Economy eco=economy();if(eco==null){p.sendMessage(ChatColor.RED+"Economy is unavailable.");return;}double total=ShopPricing.buyPrice(m)*amount;
         if(eco.getBalance(p)<total){p.sendMessage(ChatColor.RED+"You need $"+money(total)+" to buy "+amount+"x "+pretty(m)+".");return;}
         if(!p.getInventory().addItem(new ItemStack(m,amount)).isEmpty()){p.sendMessage(ChatColor.RED+"Not enough inventory space.");return;}
