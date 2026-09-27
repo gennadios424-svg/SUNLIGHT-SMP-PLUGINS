@@ -1,16 +1,26 @@
 package net.sunlightsmp.playersettings;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.Arrays;
 import java.util.Random;
 
-public final class RTPCommand implements org.bukkit.command.CommandExecutor {
+public final class RTPCommand implements org.bukkit.command.CommandExecutor, Listener {
+    private static final String TITLE = ChatColor.GOLD + "☀ Sunlight RTP";
     private final JavaPlugin plugin;
     private final Random random = new Random();
 
@@ -25,7 +35,86 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor {
             return true;
         }
 
-        World world = player.getWorld();
+        open(player);
+        return true;
+    }
+
+    public void open(Player player) {
+        Inventory inv = Bukkit.createInventory(null, 27, TITLE);
+
+        for (int slot : new int[]{0,1,2,3,4,5,6,7,8,18,19,20,21,22,23,24,25,26}) {
+            inv.setItem(slot, item(Material.YELLOW_STAINED_GLASS_PANE, ChatColor.GOLD + " "));
+        }
+
+        inv.setItem(10, item(Material.GRASS_BLOCK,
+                ChatColor.GREEN + "☀ Overworld",
+                ChatColor.GRAY + "Random safe location",
+                ChatColor.YELLOW + "15,000 blocks from 0,0",
+                "",
+                ChatColor.GREEN + "Click to teleport"));
+
+        inv.setItem(13, item(Material.NETHERRACK,
+                ChatColor.RED + "🔥 Nether",
+                ChatColor.GRAY + "Random safe location",
+                ChatColor.YELLOW + "15,000 blocks from 0,0",
+                "",
+                ChatColor.GREEN + "Click to teleport"));
+
+        inv.setItem(16, item(Material.END_STONE,
+                ChatColor.LIGHT_PURPLE + "✦ The End",
+                ChatColor.GRAY + "Random safe location",
+                ChatColor.YELLOW + "15,000 blocks from 0,0",
+                "",
+                ChatColor.GREEN + "Click to teleport"));
+
+        inv.setItem(22, item(Material.BARRIER,
+                ChatColor.RED + "Close",
+                ChatColor.GRAY + "Close the RTP menu"));
+
+        player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.6f, 1.15f);
+    }
+
+    private ItemStack item(Material material, String name, String... lore) {
+        ItemStack stack = new ItemStack(material);
+        ItemMeta meta = stack.getItemMeta();
+        meta.setDisplayName(name);
+        meta.setLore(Arrays.asList(lore));
+        stack.setItemMeta(meta);
+        return stack;
+    }
+
+    @EventHandler
+    public void onClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!event.getView().getTitle().equals(TITLE)) return;
+
+        event.setCancelled(true);
+        int slot = event.getRawSlot();
+
+        if (slot == 22) {
+            player.closeInventory();
+            return;
+        }
+
+        if (slot == 10) {
+            startRtp(player, World.Environment.NORMAL);
+        } else if (slot == 13) {
+            startRtp(player, World.Environment.NETHER);
+        } else if (slot == 16) {
+            startRtp(player, World.Environment.THE_END);
+        }
+    }
+
+    private void startRtp(Player player, World.Environment environment) {
+        World world = findWorld(environment);
+
+        if (world == null) {
+            player.sendMessage(ChatColor.RED + "☀ That dimension is not available on this server.");
+            return;
+        }
+
+        player.closeInventory();
         player.sendMessage(ChatColor.GOLD + "☀ " + ChatColor.YELLOW + "Finding a safe random location in the " + dimensionName(world) + "...");
 
         new BukkitRunnable() {
@@ -44,7 +133,7 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor {
                 if (target != null && isSafe(target, world)) {
                     player.teleport(target);
                     player.sendMessage(ChatColor.GREEN + "☀ RTP successful! Teleported " + ChatColor.YELLOW + "15,000 blocks" + ChatColor.GREEN + " away.");
-                    player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
+                    player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
                     cancel();
                     return;
                 }
@@ -55,29 +144,19 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor {
                 }
             }
         }.runTaskTimer(plugin, 1L, 2L);
+    }
 
-        return true;
+    private World findWorld(World.Environment environment) {
+        for (World world : Bukkit.getWorlds()) {
+            if (world.getEnvironment() == environment) return world;
+        }
+        return null;
     }
 
     private Location randomLocation(World world) {
         double angle = random.nextDouble() * Math.PI * 2.0;
-        double distance = 15_000;
-
-        int x = (int) Math.round(Math.cos(angle) * distance);
-        int z = (int) Math.round(Math.sin(angle) * distance);
-
-        if (world.getEnvironment() == World.Environment.NETHER) {
-            // Nether RTP is 15,000 Nether blocks from 0,0.
-            // It does not use the Overworld coordinate conversion.
-            int y = world.getHighestBlockYAt(x, z);
-            return new Location(world, x + 0.5, y + 1.0, z + 0.5);
-        }
-
-        if (world.getEnvironment() == World.Environment.THE_END) {
-            int y = world.getHighestBlockYAt(x, z);
-            return new Location(world, x + 0.5, y + 1.0, z + 0.5);
-        }
-
+        int x = (int) Math.round(Math.cos(angle) * 15_000);
+        int z = (int) Math.round(Math.sin(angle) * 15_000);
         int y = world.getHighestBlockYAt(x, z);
         return new Location(world, x + 0.5, y + 1.0, z + 0.5);
     }
@@ -111,7 +190,7 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor {
         return switch (world.getEnvironment()) {
             case NORMAL -> "Overworld";
             case NETHER -> "Nether";
-            case THE_END -> "End";
+            case THE_END -> "The End";
             default -> "world";
         };
     }
