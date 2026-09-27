@@ -3,12 +3,16 @@ version: 1.1.1
 main: net.sunlightsmp.playersettings.SunlightPlayerSettings
 api-version: '1.21'
 author: Sunlight SMP
-description: Sunlight SMP player settings, TPA and native crates
+description: Sunlight SMP player settings, TPA and native Auction House
 commands:
   settings:
     description: Open your personal Sunlight SMP settings
     usage: /settings
     aliases: [setting, options]
+  ah:
+    description: Open the Sunlight SMP Auction House
+    usage: /ah
+    aliases: [auction, auctionhouse]
   tpa:
     description: Request to teleport to a player
     usage: /tpa <player>
@@ -28,4 +32,6 @@ permissions:
   sunlightsmp.settings:
     default: true
   sunlightsmp.tpa:
+    default: true
+  sunlightsmp.ah:
     default: true
