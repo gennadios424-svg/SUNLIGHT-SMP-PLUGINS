@@ -29,7 +29,7 @@ public final class AuctionHouseCommand implements CommandExecutor,TabCompleter{
         }
         if(a[0].equalsIgnoreCase("listings")||a[0].equalsIgnoreCase("selling")){menu.openSelling(p);return true;}
         if(a[0].equalsIgnoreCase("cancel")&&a.length==2){try{long id=Long.parseLong(a[1]);p.sendMessage(manager.cancel(p,id)?ChatColor.YELLOW+"Listing cancelled and item returned.":ChatColor.RED+"Listing not found or not yours.");}catch(Exception e){p.sendMessage(ChatColor.RED+"Invalid listing ID.");}return true;}
-        if(a[0].equalsIgnoreCase("search")){p.sendMessage(ChatColor.GRAY+"Search is available through the item listings. Use /ah to browse.");return true;}
+        if(a[0].equalsIgnoreCase("search")){if(a.length<2){p.sendMessage(ChatColor.YELLOW+"Usage: /ah search <item>");return true;}String query=String.join(" ",Arrays.copyOfRange(a,1,a.length));menu.openSearch(p,query);return true;}
         p.sendMessage(ChatColor.YELLOW+"☀ /ah  |  /ah sell <price>  |  /ah listings  |  /ah cancel <id>");return true;
     }
     public List<String> onTabComplete(CommandSender s,Command c,String a,String[] args){
