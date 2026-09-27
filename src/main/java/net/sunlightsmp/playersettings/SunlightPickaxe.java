@@ -9,9 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 public final class SunlightPickaxe implements Listener {
@@ -19,7 +17,6 @@ public final class SunlightPickaxe implements Listener {
     private final NamespacedKey expiryKey;
     private final NamespacedKey pickaxeKey;
     private final NamespacedKey uniqueKey;
-    private final Set<UUID> processing = new HashSet<>();
 
     public SunlightPickaxe(SunlightPlayerSettings plugin) {
         this.plugin = plugin;
@@ -32,8 +29,7 @@ public final class SunlightPickaxe implements Listener {
         ItemStack item = new ItemStack(Material.NETHERITE_PICKAXE);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(ChatColor.GOLD + "☀ Sunlight Pickaxe");
-        meta.setLore(List.of(ChatColor.YELLOW + "3x3 Mining", ChatColor.GRAY + "Breaks a 3x3 area at once.", "",
-                ChatColor.GREEN + "UNBREAKABLE", ChatColor.RED + "Expires in 2 days", ChatColor.DARK_GRAY + "Temporary Sunlight tool"));
+        meta.setLore(List.of(ChatColor.YELLOW + "3x3 Mining", ChatColor.GRAY + "Breaks a 3x3 area at once.", "", ChatColor.GREEN + "UNBREAKABLE", ChatColor.RED + "Expires in 2 days", ChatColor.DARK_GRAY + "Temporary Sunlight tool"));
         meta.setUnbreakable(true);
         meta.getPersistentDataContainer().set(pickaxeKey, PersistentDataType.BYTE, (byte) 1);
         meta.getPersistentDataContainer().set(uniqueKey, PersistentDataType.STRING, UUID.randomUUID().toString());
@@ -62,8 +58,6 @@ public final class SunlightPickaxe implements Listener {
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = false)
     public void onBreak(BlockBreakEvent event) {
         Player p = event.getPlayer();
-        if (processing.contains(p.getUniqueId())) return;
-
         ItemStack tool = p.getInventory().getItemInMainHand();
         if (!isPickaxe(tool)) return;
         if (expired(tool)) {
@@ -100,16 +94,10 @@ public final class SunlightPickaxe implements Listener {
         }
 
         event.setCancelled(true);
-        processing.add(p.getUniqueId());
-        try {
-            for (Block b : blocks) {
-                BlockBreakEvent breakEvent = new BlockBreakEvent(b, p);
-                plugin.getServer().getPluginManager().callEvent(breakEvent);
-                if (breakEvent.isCancelled()) continue;
-                b.breakNaturally(tool);
-            }
-        } finally {
-            processing.remove(p.getUniqueId());
+        // Do NOT fire another BlockBreakEvent here: that re-enters this listener
+        // and causes infinite recursion. The original event already passed protection.
+        for (Block b : blocks) {
+            b.breakNaturally(tool);
         }
     }
 }
