@@ -10,6 +10,8 @@ public final class SunlightPlayerSettings extends JavaPlugin {
     private PlayerSettingsManager settings;
     private final Map<UUID, Location> tpaStartLocations = new ConcurrentHashMap<>();
     private TPAManager tpaManager;
+    private AuctionHouseManager auctionManager;
+    private AuctionHouseMenu auctionMenu;
 
     @Override
     public void onEnable() {
@@ -37,6 +39,12 @@ public final class SunlightPlayerSettings extends JavaPlugin {
 
         if (getCommand("settings") != null) getCommand("settings").setExecutor(new SettingsCommand(settingsListener));
 
+        auctionManager = new AuctionHouseManager(this);
+        auctionMenu = new AuctionHouseMenu(this, auctionManager);
+        getServer().getPluginManager().registerEvents(auctionMenu, this);
+        AuctionHouseCommand auctionCommand = new AuctionHouseCommand(this, auctionManager, auctionMenu);
+        if (getCommand("ah") != null) { getCommand("ah").setExecutor(auctionCommand); getCommand("ah").setTabCompleter(auctionCommand); }
+
         TPACommand tpaCommand = new TPACommand(tpaManager);
         for (String command : new String[]{"tpa", "tpahere", "tpaccept", "tpdeny", "tpacancel"}) {
             if (getCommand(command) != null) {
@@ -46,7 +54,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         }
 
 
-        getLogger().info("Sunlight Player Settings + TPA enabled.");
+        getLogger().info("Sunlight Player Settings + TPA + Auction House enabled.");
     }
 
     @Override
@@ -55,6 +63,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) tpaManager.cleanup(player);
         }
         if (settings != null) settings.save();
+        if (auctionManager != null) auctionManager.save();
     }
 
     public PlayerSettingsManager getSettings() { return settings; }
