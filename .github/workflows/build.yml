@@ -1,20 +1,47 @@
-name: Build Sunlight Player Settings
+name: Build and Release Sunlight Player Settings
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - run: mvn -B package
-      - uses: actions/upload-artifact@v4
+
+      - name: Build plugin
+        run: mvn -B clean package
+
+      - name: Verify JAR
+        run: |
+          test -f target/SunlightPlayerSettings.jar
+          echo "Built target/SunlightPlayerSettings.jar successfully."
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: SunlightPlayerSettings
-          path: target/SunlightPlayerSettings.jar
+          tag_name: latest
+          name: Sunlight Player Settings - Latest
+          body: |
+            Latest build of Sunlight Player Settings for Paper 1.21.11.
+
+            Download SunlightPlayerSettings.jar below and upload it directly to your server's plugins folder.
+          files: target/SunlightPlayerSettings.jar
+          make_latest: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
