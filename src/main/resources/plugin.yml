@@ -32,6 +32,9 @@ commands:
   shop:
     description: Open the Sunlight Shop
     usage: /shop
+  rtp:
+    description: Teleport to a random safe location
+    usage: /rtp
   tpa:
     description: Request to teleport to a player
     usage: /tpa <player>
@@ -55,4 +58,6 @@ permissions:
   sunlightsmp.ah:
     default: true
   sunlightsmp.pickaxe:
+    default: true
+  sunlightsmp.rtp:
     default: true
