@@ -10,6 +10,6 @@ settings:
 tpa:
   request-timeout-seconds: 30
   teleport-delay-seconds: 5
-  cooldown-seconds: 3
+  cooldown-seconds: 30
   cancel-on-move: true
   cancel-on-damage: true
