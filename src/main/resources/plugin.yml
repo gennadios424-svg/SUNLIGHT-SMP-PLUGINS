@@ -51,7 +51,6 @@ commands:
   tpacancel:
     description: Cancel your outgoing TPA request
     usage: /tpacancel
-
   sunlightsellaxe:
     description: Give a Sunlight Sellaxe
     usage: /sunlightsellaxe
@@ -70,7 +69,12 @@ commands:
   sunflowerspawner:
     description: Buy a Sunlight Spawner for 1,500 Sunflowers
     usage: /sunflowerspawner <skeleton|zombie|witch|iron_golem|spider|creeper>
-
+  crates:
+    description: Open the Sunlight Crates menu
+    usage: /crates
+  crate:
+    description: Open a Sunlight crate
+    usage: /crate <common|spawner|sunlight|crimson|sunset>
 permissions:
   sunlightsmp.settings:
     default: true
@@ -82,3 +86,5 @@ permissions:
     default: true
   sunlightsmp.rtp:
     default: true
+  sunlightsmp.crates.admin:
+    default: op
