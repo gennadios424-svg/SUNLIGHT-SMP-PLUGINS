@@ -10,7 +10,6 @@ public final class SunlightPlayerSettings extends JavaPlugin {
     private PlayerSettingsManager settings;
     private final Map<UUID, Location> tpaStartLocations = new ConcurrentHashMap<>();
     private TPAManager tpaManager;
-    private CrateManager crateManager;
 
     @Override
     public void onEnable() {
@@ -24,10 +23,6 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         getServer().getPluginManager().registerEvents(tpaManager, this);
         getServer().getPluginManager().registerEvents(new TPAPlayerListener(tpaManager), this);
 
-        crateManager = new CrateManager(this);
-        CrateMenu crateMenu = new CrateMenu(crateManager);
-        getServer().getPluginManager().registerEvents(new CrateListener(crateManager), this);
-        getServer().getPluginManager().registerEvents(crateMenu, this);
 
         getServer().getPluginManager().registerEvents(new org.bukkit.event.Listener() {
             @org.bukkit.event.EventHandler
@@ -50,13 +45,8 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             }
         }
 
-        CrateCommand crateCommand = new CrateCommand(this, crateManager, crateMenu);
-        if (getCommand("crate") != null) {
-            getCommand("crate").setExecutor(crateCommand);
-            getCommand("crate").setTabCompleter(crateCommand);
-        }
 
-        getLogger().info("Sunlight Player Settings + TPA + Crates enabled.");
+        getLogger().info("Sunlight Player Settings + TPA enabled.");
     }
 
     @Override
@@ -64,7 +54,6 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         if (tpaManager != null) {
             for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) tpaManager.cleanup(player);
         }
-        if (crateManager != null) crateManager.shutdown();
         if (settings != null) settings.save();
     }
 
