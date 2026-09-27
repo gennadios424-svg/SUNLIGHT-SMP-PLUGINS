@@ -26,12 +26,12 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         getServer().getPluginManager().registerEvents(tpaManager, this);
         getServer().getPluginManager().registerEvents(new TPAPlayerListener(tpaManager), this);
 
-
         getServer().getPluginManager().registerEvents(new org.bukkit.event.Listener() {
             @org.bukkit.event.EventHandler
             public void onJoin(org.bukkit.event.player.PlayerJoinEvent event) {
                 org.bukkit.entity.Player player = event.getPlayer();
                 player.sendMessage(org.bukkit.ChatColor.GOLD + "✦ " + org.bukkit.ChatColor.YELLOW + "Welcome to Sunlight SMP!" + org.bukkit.ChatColor.GOLD + " ✦");
+                player.sendMessage(org.bukkit.ChatColor.GRAY + "☀ Discord: " + org.bukkit.ChatColor.YELLOW + "/discord" + org.bukkit.ChatColor.DARK_GRAY + " | " + org.bukkit.ChatColor.GRAY + "Store: " + org.bukkit.ChatColor.YELLOW + "/store");
                 player.sendTitle(org.bukkit.ChatColor.GOLD + "Welcome to Sunlight SMP!", "", 10, 60, 20);
                 player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
                 player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 8.0f, 1.2f);
@@ -39,6 +39,10 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         }, this);
 
         if (getCommand("settings") != null) getCommand("settings").setExecutor(new SettingsCommand(settingsListener));
+
+        sunlightPickaxe = new SunlightPickaxe(this);
+        getServer().getPluginManager().registerEvents(sunlightPickaxe, this);
+
         if (getCommand("sunlightpickaxe") != null) getCommand("sunlightpickaxe").setExecutor((sender, command, label, args) -> {
             if (!(sender instanceof org.bukkit.entity.Player player)) { sender.sendMessage("Only players can use this command."); return true; }
             if (!player.hasPermission("sunlightsmp.pickaxe")) { player.sendMessage(org.bukkit.ChatColor.RED+"No permission."); return true; }
@@ -48,9 +52,6 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.3f);
             return true;
         });
-
-        sunlightPickaxe = new SunlightPickaxe(this);
-        getServer().getPluginManager().registerEvents(sunlightPickaxe, this);
 
         auctionManager = new AuctionHouseManager(this);
         auctionMenu = new AuctionHouseMenu(this, auctionManager);
@@ -66,8 +67,19 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             }
         }
 
+        if (getCommand("discord") != null) getCommand("discord").setExecutor((sender, command, label, args) -> {
+            sender.sendMessage(org.bukkit.ChatColor.GOLD + "☀ " + org.bukkit.ChatColor.YELLOW + "Sunlight SMP Discord");
+            sender.sendMessage(org.bukkit.ChatColor.GRAY + "Join the community: " + org.bukkit.ChatColor.AQUA + "https://discord.gg/9a9THhwDT");
+            return true;
+        });
 
-        getLogger().info("Sunlight Player Settings + TPA + Auction House enabled.");
+        if (getCommand("store") != null) getCommand("store").setExecutor((sender, command, label, args) -> {
+            sender.sendMessage(org.bukkit.ChatColor.GOLD + "☀ " + org.bukkit.ChatColor.YELLOW + "Sunlight SMP Store");
+            sender.sendMessage(org.bukkit.ChatColor.GRAY + "Shop here: " + org.bukkit.ChatColor.YELLOW + "https://sunlight-dawn-shop.lovable.app/");
+            return true;
+        });
+
+        getLogger().info("Sunlight Player Settings + TPA + Auction House + Discord/Store enabled.");
     }
 
     @Override
