@@ -4,6 +4,7 @@ public enum Setting {
   MOB_SPAWNS("mob-spawns","Mob Spawns",Material.ZOMBIE_HEAD),
   FAST_CRYSTAL("fast-crystal","Fast Crystal",Material.END_CRYSTAL),
   TP_REQUESTS("tp-requests","TP Requests",Material.ENDER_PEARL),
+  TPA_HERE_NOTIFICATIONS("tpa-here-notifications","TPAHere Notifications",Material.ENDER_EYE),
   NOTIFICATIONS("notifications","Notifications",Material.BELL),
   CHAT_MESSAGES("chat-messages","Chat Messages",Material.PAPER),
   COMBAT_ALERTS("combat-alerts","Combat Alerts",Material.IRON_SWORD),
