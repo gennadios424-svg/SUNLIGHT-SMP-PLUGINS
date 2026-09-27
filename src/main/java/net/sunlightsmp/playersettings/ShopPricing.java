@@ -46,7 +46,7 @@ public final class ShopPricing {
                 Material.BEETROOT_SEEDS, Material.SUGAR_CANE, Material.BAMBOO,
                 Material.CACTUS, Material.KELP, Material.MELON, Material.PUMPKIN,
                 Material.COCOA_BEANS, Material.NETHER_WART, Material.BONE_MEAL,
-                Material.OAK_SAPLING, Material.COMPOSTER
+                Material.OAK_SAPLING, Material.COMPOSTER, Material.WATER_BUCKET, Material.LAVA_BUCKET, Material.CHEST, Material.BARREL
             );
 
             case "food" -> List.of(
