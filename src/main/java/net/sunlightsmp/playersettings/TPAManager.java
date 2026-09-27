@@ -30,8 +30,15 @@ public final class TPAManager implements Listener {
         if (requester.equals(target)) {
             requester.sendMessage(Component.text("You cannot send a TPA request to yourself.", NamedTextColor.RED)); return;
         }
-        if (!plugin.getSettings().get(target, Setting.TP_REQUESTS)) {
-            requester.sendMessage(Component.text("That player has TPA requests disabled.", NamedTextColor.RED)); return;
+
+        if (tpHere) {
+            if (!plugin.getSettings().get(target, Setting.TPA_HERE_NOTIFICATIONS)) {
+                requester.sendMessage(Component.text("That player has TPAHere notifications disabled.", NamedTextColor.RED));
+                return;
+            }
+        } else if (!plugin.getSettings().get(target, Setting.TP_REQUESTS)) {
+            requester.sendMessage(Component.text("That player has TPA requests disabled.", NamedTextColor.RED));
+            return;
         }
 
         TPARequest old = outgoing.remove(requester.getUniqueId());
