@@ -1,6 +1,7 @@
 package net.sunlightsmp.playersettings;
 
 import org.bukkit.event.*;
+import org.bukkit.entity.Player;
 import org.bukkit.event.player.*;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
