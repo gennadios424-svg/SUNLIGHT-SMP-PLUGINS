@@ -41,7 +41,7 @@ public final class KeyAllManager {
         plugin.getServer().getScheduler().runTaskLater(plugin,()->{
             for(Player p:plugin.getServer().getOnlinePlayers()){
                 p.sendTitle(ChatColor.GOLD+"☀ KEY ALL! ☀",ChatColor.YELLOW+"+"+finalAmount+" "+pretty(t)+" Key"+(finalAmount==1?"":"s"),5,35,10);
-                p.sendActionBar(ChatColor.YELLOW+"☀ Everyone received "+amount+"x "+pretty(t)+" Key!");
+                p.sendActionBar(ChatColor.YELLOW+"☀ Everyone received "+finalAmount+"x "+pretty(t)+" Key!");
                 p.playSound(p.getLocation(),org.bukkit.Sound.ENTITY_PLAYER_LEVELUP,1f,1.3f);
             }
         },32L);
