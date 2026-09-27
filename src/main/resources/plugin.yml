@@ -1,14 +1,31 @@
 name: SunlightPlayerSettings
-version: 1.0.0
+version: 1.1.0
 main: net.sunlightsmp.playersettings.SunlightPlayerSettings
 api-version: '1.21'
 author: Sunlight SMP
-description: Per-player settings GUI for Sunlight SMP
+description: Sunlight SMP player settings and built-in TPA system
 commands:
   settings:
     description: Open your personal Sunlight SMP settings
     usage: /settings
     aliases: [setting, options]
+  tpa:
+    description: Request to teleport to a player
+    usage: /tpa <player>
+  tpahere:
+    description: Request a player to teleport to you
+    usage: /tpahere <player>
+  tpaccept:
+    description: Accept your latest TPA request
+    usage: /tpaccept
+  tpdeny:
+    description: Deny your latest TPA request
+    usage: /tpdeny
+  tpacancel:
+    description: Cancel your outgoing TPA request
+    usage: /tpacancel
 permissions:
   sunlightsmp.settings:
+    default: true
+  sunlightsmp.tpa:
     default: true
