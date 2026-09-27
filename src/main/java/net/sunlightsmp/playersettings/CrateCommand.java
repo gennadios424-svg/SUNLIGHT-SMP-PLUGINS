@@ -15,7 +15,7 @@ public final class CrateCommand implements CommandExecutor, TabCompleter {
 
     @Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player p)) { sender.sendMessage("Only players can use crate commands."); return true; }
-        if (args.length == 0) { p.sendMessage(ChatColor.GOLD + "✦ Sunlight Crates"); p.sendMessage(ChatColor.YELLOW + "/crates preview <crate>"); p.sendMessage(ChatColor.YELLOW + "/crates set <crate>"); p.sendMessage(ChatColor.YELLOW + "/crates remove"); p.sendMessage(ChatColor.YELLOW + "/crates give <player> <crate> <amount>"); p.sendMessage(ChatColor.YELLOW + "/crates key <player> <crate> <amount>"); p.sendMessage(ChatColor.YELLOW + "/crates reload"); return true; }
+        if (args.length == 0) { p.sendMessage(ChatColor.GOLD + "✦ Sunlight Crates"); p.sendMessage(ChatColor.YELLOW + "/crates"); p.sendMessage(ChatColor.GRAY + "Open the crate menu."); p.sendMessage(ChatColor.YELLOW + "/crates preview <crate>"); p.sendMessage(ChatColor.YELLOW + "/crates set <crate>"); p.sendMessage(ChatColor.YELLOW + "/crates remove"); p.sendMessage(ChatColor.YELLOW + "/crates give <player> <crate> <amount>"); p.sendMessage(ChatColor.YELLOW + "/crates key <player> <crate> <amount>"); p.sendMessage(ChatColor.YELLOW + "/crates reload"); return true; }
         String sub = args[0].toLowerCase(Locale.ROOT);
         if (sub.equals("preview")) {
             CrateType type = type(args, 1); if (type == null) { p.sendMessage(ChatColor.RED + "Unknown crate."); return true; }
