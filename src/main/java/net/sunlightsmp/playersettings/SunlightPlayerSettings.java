@@ -13,7 +13,8 @@ public final class SunlightPlayerSettings extends JavaPlugin {
     private AuctionHouseManager auctionManager;
     private AuctionHouseMenu auctionMenu;
     private SunlightPickaxe sunlightPickaxe;
-    private SellMenu sellMenu;\n    private ShopMenu shopMenu;
+    private SellMenu sellMenu;
+    private ShopMenu shopMenu;
 
     @Override
     public void onEnable() {
@@ -58,7 +59,11 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         getServer().getPluginManager().registerEvents(sellMenu, this);
         if (getCommand("sell") != null) getCommand("sell").setExecutor(new SellCommand(sellMenu));
         if (getCommand("worth") != null) getCommand("worth").setExecutor(new WorthCommand());
-        if (getCommand("worth") != null) getCommand("worth").setTabCompleter(new WorthCommand());\n\n        shopMenu = new ShopMenu(this);\n        getServer().getPluginManager().registerEvents(shopMenu, this);\n        if (getCommand("shop") != null) getCommand("shop").setExecutor(new ShopCommand(shopMenu));
+        if (getCommand("worth") != null) getCommand("worth").setTabCompleter(new WorthCommand());
+
+        shopMenu = new ShopMenu(this);
+        getServer().getPluginManager().registerEvents(shopMenu, this);
+        if (getCommand("shop") != null) getCommand("shop").setExecutor(new ShopCommand(shopMenu));
 
         auctionManager = new AuctionHouseManager(this);
         auctionMenu = new AuctionHouseMenu(this, auctionManager);
