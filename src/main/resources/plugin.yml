@@ -29,6 +29,9 @@ commands:
   worth:
     description: Check the Sunlight sell price of an item
     usage: /worth [item] [amount]
+  shop:
+    description: Open the Sunlight Shop
+    usage: /shop
   tpa:
     description: Request to teleport to a player
     usage: /tpa <player>
