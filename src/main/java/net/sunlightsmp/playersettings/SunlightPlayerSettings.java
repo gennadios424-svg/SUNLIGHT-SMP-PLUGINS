@@ -53,5 +53,5 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         getServer().getScheduler().runTaskTimer(this,()->{for(org.bukkit.entity.Player p:getServer().getOnlinePlayers()){if(!settings.get(p,Setting.NOTIFICATIONS))continue;p.sendMessage(org.bukkit.ChatColor.GOLD+"━━━━━━━━━━━━━━━━━━━━━━━━━━━━");p.sendMessage(org.bukkit.ChatColor.GOLD+"☀ "+org.bukkit.ChatColor.YELLOW+"SUNLIGHT SMP");p.sendMessage(org.bukkit.ChatColor.GRAY+"Discord: "+org.bukkit.ChatColor.AQUA+"https://discord.gg/9a9THhwDT");p.sendMessage(org.bukkit.ChatColor.GRAY+"Store: "+org.bukkit.ChatColor.YELLOW+"https://sunlight-dawn-shop.lovable.app/");p.sendMessage(org.bukkit.ChatColor.GOLD+"━━━━━━━━━━━━━━━━━━━━━━━━━━━━");}},3600L,3600L);
     }
     @Override public void onDisable(){if(tpaManager!=null)for(org.bukkit.entity.Player p:getServer().getOnlinePlayers())tpaManager.cleanup(p);if(settings!=null)settings.save();if(sunflowerManager!=null)sunflowerManager.save();if(auctionManager!=null)auctionManager.save();}
-    public PlayerSettingsManager getSettings(){return settings;} public Map<UUID,Location> getTpaStartLocations(){return tpaStartLocations;}
+    public PlayerSettingsManager getSettings(){return settings;} public Map<UUID,Location> getTpaStartLocations(){return tpaStartLocations;} public SunflowerManager getSunflowerManager(){return sunflowerManager;}
 }
