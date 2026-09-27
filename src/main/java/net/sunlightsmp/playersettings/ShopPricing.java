@@ -12,7 +12,18 @@ public final class ShopPricing {
         if (m == Material.SHULKER_BOX) return 250;
         if (m == Material.END_CRYSTAL) return 1_000;
         if (m == Material.CARROT) return 15_000;
-        return Math.max(1, Math.ceil(SellPricing.price(m) * 2.5));
+        double base = Math.max(1, Math.ceil(SellPricing.price(m) * 2.5));
+        if (isPvpItem(m)) return Math.ceil(base * 1.25);
+        return base;
+    }
+
+    private static boolean isPvpItem(Material m) {
+        return switch (m) {
+            case OBSIDIAN, CRYING_OBSIDIAN, END_CRYSTAL, RESPAWN_ANCHOR,
+                 GLOWSTONE, TNT, COBWEB, ENDER_PEARL,
+                 EXPERIENCE_BOTTLE, TOTEM_OF_UNDYING -> true;
+            default -> false;
+        };
     }
 
     private static boolean isSurvivalObtainable(Material m) {
