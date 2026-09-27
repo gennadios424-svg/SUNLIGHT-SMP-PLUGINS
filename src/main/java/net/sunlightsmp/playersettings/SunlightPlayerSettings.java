@@ -13,6 +13,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
     private AuctionHouseManager auctionManager;
     private AuctionHouseMenu auctionMenu;
     private SunlightPickaxe sunlightPickaxe;
+    private SellMenu sellMenu;
 
     @Override
     public void onEnable() {
@@ -52,6 +53,12 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.3f);
             return true;
         });
+
+        sellMenu = new SellMenu(this);
+        getServer().getPluginManager().registerEvents(sellMenu, this);
+        if (getCommand("sell") != null) getCommand("sell").setExecutor(new SellCommand(sellMenu));
+        if (getCommand("worth") != null) getCommand("worth").setExecutor(new WorthCommand());
+        if (getCommand("worth") != null) getCommand("worth").setTabCompleter(new WorthCommand());
 
         auctionManager = new AuctionHouseManager(this);
         auctionMenu = new AuctionHouseMenu(this, auctionManager);
