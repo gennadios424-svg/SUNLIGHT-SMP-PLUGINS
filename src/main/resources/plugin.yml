@@ -64,6 +64,12 @@ commands:
   sunlightbucket:
     description: Give a Sunlight Bucket
     usage: /sunlightbucket
+  sunflower:
+    description: Check and claim Sunflowers
+    usage: /sunflower [claim]
+  sunflowerspawner:
+    description: Buy a Sunlight Spawner for 1,500 Sunflowers
+    usage: /sunflowerspawner <skeleton|zombie|witch|iron_golem|spider|creeper>
 
 permissions:
   sunlightsmp.settings:
