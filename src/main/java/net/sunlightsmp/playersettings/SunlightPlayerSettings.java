@@ -28,8 +28,10 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             @org.bukkit.event.EventHandler
             public void onJoin(org.bukkit.event.player.PlayerJoinEvent event) {
                 org.bukkit.entity.Player player = event.getPlayer();
+                player.sendMessage(org.bukkit.ChatColor.GOLD + "✦ " + org.bukkit.ChatColor.YELLOW + "Welcome to Sunlight SMP!" + org.bukkit.ChatColor.GOLD + " ✦");
                 player.sendTitle(org.bukkit.ChatColor.GOLD + "Welcome to Sunlight SMP!", "", 10, 60, 20);
                 player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
+                player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 8.0f, 1.2f);
             }
         }, this);
 
