@@ -9,7 +9,7 @@ public final class ShopPricing {
     public static double buyPrice(Material m) {
         if (m == null || !m.isItem()) return 0;
         if (m == Material.SPAWNER) return 2_000_000;
-        if (m == Material.END_CRYSTAL) return 7_500;
+        if (m == Material.END_CRYSTAL) return 1_000;
         return Math.max(1, Math.ceil(SellPricing.price(m) * 2.5));
     }
 
