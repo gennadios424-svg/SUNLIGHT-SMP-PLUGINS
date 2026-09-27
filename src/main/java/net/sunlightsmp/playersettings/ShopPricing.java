@@ -10,8 +10,6 @@ public final class ShopPricing {
         if (m == null || !m.isItem()) return 0;
         return switch (m) {
             case SPAWNER -> 2_000_000;
-
-            // PvP
             case OBSIDIAN -> 250;
             case CRYING_OBSIDIAN -> 350;
             case END_CRYSTAL -> 1_250;
@@ -22,8 +20,6 @@ public final class ShopPricing {
             case ENDER_PEARL -> 500;
             case EXPERIENCE_BOTTLE -> 350;
             case TOTEM_OF_UNDYING -> 25_000;
-
-            // Storage / utility
             case SHULKER_BOX -> 1_500;
             case CHEST -> 150;
             case TRAPPED_CHEST -> 250;
@@ -31,8 +27,6 @@ public final class ShopPricing {
             case ENDER_CHEST -> 2_500;
             case HOPPER -> 1_500;
             case CRAFTER -> 2_500;
-
-            // Farm
             case CARROT -> 15_000;
             case WHEAT_SEEDS, BEETROOT_SEEDS -> 25;
             case POTATO -> 75;
@@ -47,8 +41,6 @@ public final class ShopPricing {
             case BONE_MEAL -> 40;
             case OAK_SAPLING -> 50;
             case COMPOSTER -> 500;
-
-            // Redstone
             case REDSTONE -> 75;
             case REDSTONE_TORCH -> 125;
             case NOTE_BLOCK -> 250;
@@ -61,11 +53,10 @@ public final class ShopPricing {
             case LEVER -> 50;
             case STONE_BUTTON -> 40;
             case STONE_PRESSURE_PLATE -> 60;
+            case SMOKER -> 600;
             case WATER_BUCKET -> 1_000;
             case LAVA_BUCKET -> 1_500;
             case RAIL -> 100;
-
-            // Food
             case APPLE -> 100;
             case BREAD -> 75;
             case COOKED_BEEF, COOKED_PORKCHOP, COOKED_MUTTON, COOKED_SALMON -> 125;
@@ -77,8 +68,6 @@ public final class ShopPricing {
             case PUMPKIN_PIE -> 100;
             case MELON_SLICE -> 40;
             case CHORUS_FRUIT -> 100;
-
-            // Useful blocks
             case STONE, COBBLESTONE, DEEPSLATE, COBBLED_DEEPSLATE -> 20;
             case NETHERRACK, BLACKSTONE, BASALT -> 25;
             case END_STONE -> 40;
@@ -88,7 +77,6 @@ public final class ShopPricing {
             case PRISMARINE, PURPUR_BLOCK -> 150;
             case WHITE_WOOL, BLACK_WOOL, RED_WOOL, BLUE_WOOL, GREEN_WOOL, YELLOW_WOOL -> 75;
             case WHITE_CONCRETE, BLACK_CONCRETE, RED_CONCRETE, BLUE_CONCRETE, GREEN_CONCRETE, YELLOW_CONCRETE -> 100;
-
             default -> Math.max(1, Math.ceil(SellPricing.price(m) * 2.0));
         };
     }
@@ -114,50 +102,17 @@ public final class ShopPricing {
                 Material.PISTON, Material.STICKY_PISTON, Material.OBSERVER,
                 Material.DISPENSER, Material.DROPPER, Material.HOPPER, Material.CRAFTER,
                 Material.REPEATER, Material.COMPARATOR, Material.LEVER,
-                Material.STONE_BUTTON, Material.STONE_PRESSURE_PLATE,
+                Material.STONE_BUTTON, Material.STONE_PRESSURE_PLATE, Material.SMOKER,
                 Material.WATER_BUCKET, Material.LAVA_BUCKET, Material.RAIL, Material.TNT
             );
-            case "farm" -> List.of(
-                Material.WHEAT_SEEDS, Material.CARROT, Material.POTATO,
-                Material.BEETROOT_SEEDS, Material.SUGAR_CANE, Material.BAMBOO,
-                Material.CACTUS, Material.KELP, Material.MELON, Material.PUMPKIN,
-                Material.COCOA_BEANS, Material.NETHER_WART, Material.BONE_MEAL,
-                Material.OAK_SAPLING, Material.COMPOSTER
-            );
-            case "food" -> List.of(
-                Material.APPLE, Material.BREAD, Material.COOKED_BEEF,
-                Material.COOKED_PORKCHOP, Material.COOKED_CHICKEN,
-                Material.COOKED_MUTTON, Material.COOKED_COD, Material.COOKED_SALMON,
-                Material.GOLDEN_CARROT, Material.GOLDEN_APPLE, Material.BAKED_POTATO,
-                Material.COOKIE, Material.PUMPKIN_PIE, Material.MELON_SLICE,
-                Material.CHORUS_FRUIT
-            );
-            case "pvp" -> List.of(
-                Material.OBSIDIAN, Material.CRYING_OBSIDIAN, Material.END_CRYSTAL,
-                Material.RESPAWN_ANCHOR, Material.GLOWSTONE, Material.TNT,
-                Material.COBWEB, Material.ENDER_PEARL, Material.EXPERIENCE_BOTTLE,
-                Material.TOTEM_OF_UNDYING
-            );
-            case "blocks" -> List.of(
-                Material.STONE, Material.COBBLESTONE, Material.DEEPSLATE,
-                Material.COBBLED_DEEPSLATE, Material.NETHERRACK, Material.BLACKSTONE,
-                Material.BASALT, Material.END_STONE, Material.SAND, Material.GRAVEL,
-                Material.DIRT, Material.CLAY, Material.GLASS, Material.BRICKS,
-                Material.PRISMARINE, Material.PURPUR_BLOCK, Material.OBSIDIAN,
-                Material.CRYING_OBSIDIAN, Material.CHEST, Material.TRAPPED_CHEST,
-                Material.BARREL, Material.SHULKER_BOX, Material.ENDER_CHEST,
-                Material.WHITE_WOOL, Material.BLACK_WOOL, Material.RED_WOOL,
-                Material.BLUE_WOOL, Material.GREEN_WOOL, Material.YELLOW_WOOL,
-                Material.WHITE_CONCRETE, Material.BLACK_CONCRETE, Material.RED_CONCRETE,
-                Material.BLUE_CONCRETE, Material.GREEN_CONCRETE, Material.YELLOW_CONCRETE
-            );
+            case "farm" -> List.of(Material.WHEAT_SEEDS, Material.CARROT, Material.POTATO, Material.BEETROOT_SEEDS, Material.SUGAR_CANE, Material.BAMBOO, Material.CACTUS, Material.KELP, Material.MELON, Material.PUMPKIN, Material.COCOA_BEANS, Material.NETHER_WART, Material.BONE_MEAL, Material.OAK_SAPLING, Material.COMPOSTER);
+            case "food" -> List.of(Material.APPLE, Material.BREAD, Material.COOKED_BEEF, Material.COOKED_PORKCHOP, Material.COOKED_CHICKEN, Material.COOKED_MUTTON, Material.COOKED_COD, Material.COOKED_SALMON, Material.GOLDEN_CARROT, Material.GOLDEN_APPLE, Material.BAKED_POTATO, Material.COOKIE, Material.PUMPKIN_PIE, Material.MELON_SLICE, Material.CHORUS_FRUIT);
+            case "pvp" -> List.of(Material.OBSIDIAN, Material.CRYING_OBSIDIAN, Material.END_CRYSTAL, Material.RESPAWN_ANCHOR, Material.GLOWSTONE, Material.TNT, Material.COBWEB, Material.ENDER_PEARL, Material.EXPERIENCE_BOTTLE, Material.TOTEM_OF_UNDYING);
+            case "blocks" -> List.of(Material.STONE, Material.COBBLESTONE, Material.DEEPSLATE, Material.COBBLED_DEEPSLATE, Material.NETHERRACK, Material.BLACKSTONE, Material.BASALT, Material.END_STONE, Material.SAND, Material.GRAVEL, Material.DIRT, Material.CLAY, Material.GLASS, Material.BRICKS, Material.PRISMARINE, Material.PURPUR_BLOCK, Material.OBSIDIAN, Material.CRYING_OBSIDIAN, Material.CHEST, Material.TRAPPED_CHEST, Material.BARREL, Material.SHULKER_BOX, Material.ENDER_CHEST, Material.WHITE_WOOL, Material.BLACK_WOOL, Material.RED_WOOL, Material.BLUE_WOOL, Material.GREEN_WOOL, Material.YELLOW_WOOL, Material.WHITE_CONCRETE, Material.BLACK_CONCRETE, Material.RED_CONCRETE, Material.BLUE_CONCRETE, Material.GREEN_CONCRETE, Material.YELLOW_CONCRETE);
             default -> List.of();
         };
-
         List<Material> out = new ArrayList<>();
-        for (Material m : items) {
-            if (m != Material.AIR && m.isItem() && isSurvivalObtainable(m)) out.add(m);
-        }
+        for (Material m : items) if (m != Material.AIR && m.isItem() && isSurvivalObtainable(m)) out.add(m);
         return out;
     }
 }
