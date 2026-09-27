@@ -76,6 +76,8 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         getServer().getPluginManager().registerEvents(shopMenu, this);
         if (getCommand("shop") != null) getCommand("shop").setExecutor(new ShopCommand(shopMenu));
 
+        if (getCommand("rtp") != null) getCommand("rtp").setExecutor(new RTPCommand(this));
+
         auctionManager = new AuctionHouseManager(this);
         auctionMenu = new AuctionHouseMenu(this, auctionManager);
         getServer().getPluginManager().registerEvents(auctionMenu, this);
