@@ -14,7 +14,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -90,7 +89,6 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
         int x = (int) Math.round(Math.cos(angle) * 15_000);
         int z = (int) Math.round(Math.sin(angle) * 15_000);
 
-        // Load the destination chunk, then place the player directly above its highest block.
         world.getChunkAtAsync(x >> 4, z >> 4, true).whenComplete((chunk, error) -> {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (!player.isOnline()) return;
@@ -124,44 +122,14 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
         int highest = world.getHighestBlockYAt(x, z);
         if (highest > world.getMaxHeight() - 1) highest = world.getMaxHeight() - 1;
 
-        // Walk downward until we find a real solid block.
-        // This prevents RTP from placing players in air, water, or a void column.
+        // Never RTP onto bedrock. Search downward for the highest non-bedrock solid block.
         for (int y = highest; y >= world.getMinHeight(); y--) {
             Material type = world.getBlockAt(x, y, z).getType();
-            if (type.isSolid()) {
+            if (type.isSolid() && type != Material.BEDROCK && type != Material.END_PORTAL_FRAME) {
                 return y;
             }
         }
         return Integer.MIN_VALUE;
-    }
-
-    private int randomCoordinate() {
-        double angle = random.nextDouble() * Math.PI * 2.0;
-        return (int) Math.round(Math.cos(angle) * 15_000);
-    }
-
-    private Location randomLocation(World world, int x, int z) {
-        int y = world.getHighestBlockYAt(x, z);
-        return new Location(world, x + 0.5, y + 1.0, z + 0.5);
-    }
-
-    private boolean isSafe(Location location, World world) {
-        int x = location.getBlockX();
-        int y = location.getBlockY();
-        int z = location.getBlockZ();
-        if (y <= world.getMinHeight() || y >= world.getMaxHeight() - 2) return false;
-        Material floor = world.getBlockAt(x, y - 1, z).getType();
-        Material feet = world.getBlockAt(x, y, z).getType();
-        Material head = world.getBlockAt(x, y + 1, z).getType();
-        if (!floor.isSolid() || !feet.isAir() || !head.isAir()) return false;
-        return !isDangerous(floor);
-    }
-
-    private boolean isDangerous(Material material) {
-        return switch (material) {
-            case LAVA, MAGMA_BLOCK, FIRE, SOUL_FIRE, CACTUS, CAMPFIRE, SOUL_CAMPFIRE, POWDER_SNOW -> true;
-            default -> false;
-        };
     }
 
     private World findWorld(World.Environment environment) {
