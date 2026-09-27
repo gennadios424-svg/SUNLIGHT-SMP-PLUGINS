@@ -23,6 +23,12 @@ commands:
   store:
     description: Get the Sunlight SMP Store link
     usage: /store
+  sell:
+    description: Open the Sunlight Sell menu
+    usage: /sell
+  worth:
+    description: Check the Sunlight sell price of an item
+    usage: /worth [item] [amount]
   tpa:
     description: Request to teleport to a player
     usage: /tpa <player>
