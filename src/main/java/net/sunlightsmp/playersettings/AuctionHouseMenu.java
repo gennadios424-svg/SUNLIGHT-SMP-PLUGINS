@@ -16,7 +16,7 @@ public final class AuctionHouseMenu implements Listener {
     private static final String CONFIRM=ChatColor.GOLD+"☀ Confirm Purchase";
     private static final String SELLING=ChatColor.GOLD+"☀ Your Listings";
     private final SunlightPlayerSettings plugin; private final AuctionHouseManager manager; private final Map<UUID,Long> pending=new HashMap<>();
-    private final Map<UUID,Integer> pages=new HashMap<>(); private final Map<UUID,String> searchQueries=new HashMap<>(); private final Set<UUID> awaitingPrice=new HashSet<>(); private final Set<UUID> awaitingSearch=new HashSet<>();
+    private final Map<UUID,Integer> pages=new HashMap<>(); private final Map<UUID,String> searchQueries=new HashMap<>(); private final Map<UUID,Integer> sortModes=new HashMap<>(); private final Set<UUID> awaitingPrice=new HashSet<>(); private final Set<UUID> awaitingSearch=new HashSet<>();
     public AuctionHouseMenu(SunlightPlayerSettings plugin,AuctionHouseManager manager){this.plugin=plugin;this.manager=manager;}
     private ItemStack item(Material m,String name,String... lore){ItemStack i=new ItemStack(m);ItemMeta x=i.getItemMeta();x.setDisplayName(name);x.setLore(Arrays.asList(lore));i.setItemMeta(x);return i;}
     private String money(double n){return NumberFormat.getNumberInstance(Locale.US).format(n);}
@@ -31,7 +31,7 @@ public final class AuctionHouseMenu implements Listener {
         if(!Double.isFinite(value))throw new NumberFormatException();
         return value;
     }
-    public void open(Player p){searchQueries.remove(p.getUniqueId());open(p,0);}
+    public void open(Player p){searchQueries.remove(p.getUniqueId());sortModes.put(p.getUniqueId(),0);open(p,0);}
 
     public void openSearch(Player p,String query){
         String q=query.trim();
@@ -58,6 +58,10 @@ public final class AuctionHouseMenu implements Listener {
                 if(type.contains(q)||display.contains(q)||seller.contains(q)) ls.add(listing);
             }
         }
+        int sort=sortModes.getOrDefault(p.getUniqueId(),0);
+        if(sort==1) ls.sort(Comparator.comparingDouble(AuctionListing::price));
+        else if(sort==2) ls.sort(Comparator.comparingDouble(AuctionListing::price).reversed());
+
         int start=page*45;
         for(int i=start;i<Math.min(start+45,ls.size());i++){AuctionListing l=ls.get(i);ItemStack x=l.item();ItemMeta m=x.getItemMeta();List<String> lore=m!=null&&m.getLore()!=null?new ArrayList<>(m.getLore()):new ArrayList<>();lore.add("");lore.add(ChatColor.YELLOW+"Price: "+ChatColor.GOLD+"$"+money(l.price()));lore.add(ChatColor.GRAY+"Seller: "+l.sellerName());lore.add(ChatColor.DARK_GRAY+"ID: "+l.id());lore.add(ChatColor.GREEN+"Click to view");if(m==null){m=x.getItemMeta();}m.setLore(lore);x.setItemMeta(m);inv.setItem(i-start,x);}
         inv.setItem(45,item(Material.CHEST,ChatColor.YELLOW+"Your Listings","",ChatColor.GRAY+"Manage your active auctions."));
@@ -81,7 +85,9 @@ public final class AuctionHouseMenu implements Listener {
     @EventHandler public void click(InventoryClickEvent e){
         if(!(e.getWhoClicked() instanceof Player p))return;String t=e.getView().getTitle();if(!t.equals(TITLE)&&!t.equals(CONFIRM)&&!t.equals(SELLING))return;
         e.setCancelled(true);int s=e.getRawSlot();if(s<0||s>=e.getInventory().getSize())return;
-        if(t.equals(TITLE)){if(s==52){
+        if(t.equals(TITLE)){if(s==46){open(p,pages.getOrDefault(p.getUniqueId(),0),searchQueries.get(p.getUniqueId()));return;}
+        if(s==47){int next=(sortModes.getOrDefault(p.getUniqueId(),0)+1)%3;sortModes.put(p.getUniqueId(),next);open(p,0,searchQueries.get(p.getUniqueId()));return;}
+        if(s==52){
             p.closeInventory(); awaitingSearch.add(p.getUniqueId());
             p.sendMessage(ChatColor.YELLOW+"☀ Type what you want to search for in chat, or type "+ChatColor.RED+"cancel"+ChatColor.YELLOW+" to stop.");
             return;
