@@ -93,21 +93,35 @@ public final class CrateManager {
     }
 
     public void openCrate(Player player, CrateType type) {
-        if (openings.containsKey(player.getUniqueId())) { player.sendMessage(ChatColor.RED + "You are already opening a crate."); return; }
+        if (openings.containsKey(player.getUniqueId())) {
+            player.sendMessage(ChatColor.RED + "You are already opening a crate.");
+            return;
+        }
         ItemStack hand = player.getInventory().getItemInMainHand();
-        if (getKeyType(hand) != type) { player.sendMessage(ChatColor.RED + "You need a " + type.displayName() + " Key."); return; }
+        if (getKeyType(hand) != type) {
+            player.sendMessage(ChatColor.RED + "You need a " + type.displayName() + " Key.");
+            return;
+        }
 
         List<CrateReward> rewards = rewards(type);
-        if (rewards.isEmpty()) { player.sendMessage(ChatColor.RED + "This crate has no rewards configured."); return; }
+        if (rewards.isEmpty()) {
+            player.sendMessage(ChatColor.RED + "This crate has no rewards configured.");
+            return;
+        }
 
-        if (hand.getAmount() > 1) hand.setAmount(hand.getAmount() - 1); else player.getInventory().setItemInMainHand(null);
+        if (hand.getAmount() > 1) hand.setAmount(hand.getAmount() - 1);
+        else player.getInventory().setItemInMainHand(null);
 
         Inventory inv = Bukkit.createInventory(null, 27, ChatColor.DARK_AQUA + "✦ " + type.displayName() + " Crate");
         player.openInventory(inv);
         Random random = new Random();
         final int[] ticks = {0};
+
         BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (!player.isOnline()) { stopOpening(player); return; }
+            if (!player.isOnline()) {
+                stopOpening(player);
+                return;
+            }
             ticks[0]++;
             if (ticks[0] <= 50) {
                 fillSpin(inv, rewards, random);
@@ -116,29 +130,48 @@ public final class CrateManager {
             }
             finishOpening(player, type, inv, chooseReward(rewards, random));
         }, 0L, 2L);
+
         openings.put(player.getUniqueId(), task);
     }
 
     private void fillSpin(Inventory inv, List<CrateReward> rewards, Random random) {
-        for (int i = 0; i < 9; i++) inv.setItem(9 + i, displayItem(rewards.get(random.nextInt(rewards.size())), false));
+        for (int i = 0; i < 9; i++) {
+            inv.setItem(9 + i, displayItem(rewards.get(random.nextInt(rewards.size())), false));
+        }
     }
 
     private void finishOpening(Player player, CrateType type, Inventory inv, CrateReward reward) {
         BukkitTask task = openings.remove(player.getUniqueId());
         if (task != null) task.cancel();
+
         for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, null);
         inv.setItem(13, displayItem(reward, true));
-        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, type == CrateType.SUNLIGHT ? 0.7f : 1.1f);
-        player.spawnParticle(Particle.TOTEM_OF_UNDYING, player.getLocation().add(0, 1, 0), type == CrateType.SUNLIGHT ? 100 : 35, 0.5, 0.8, 0.5, 0.05);
+
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f,
+                type == CrateType.SUNLIGHT ? 0.7f : 1.1f);
+        player.spawnParticle(Particle.TOTEM_OF_UNDYING, player.getLocation().add(0, 1, 0),
+                type == CrateType.SUNLIGHT ? 100 : 35, 0.5, 0.8, 0.5, 0.05);
+
         giveReward(player, reward);
-        player.sendMessage(ChatColor.GOLD + "✦ " + ChatColor.YELLOW + "You won " + ChatColor.WHITE + reward.name() + ChatColor.YELLOW + " from the " + type.displayName() + " Crate!");
-        if (type == CrateType.SUNLIGHT || reward.chance() <= 2.0)
-            Bukkit.broadcastMessage(ChatColor.GOLD + "✦ " + ChatColor.YELLOW + player.getName() + " won " + ChatColor.WHITE + reward.name() + ChatColor.YELLOW + " from the " + type.displayName() + " Crate!");
-        Bukkit.getScheduler().runTaskLater(plugin, () -> { if (player.isOnline()) player.closeInventory(); }, 40L);
+
+        player.sendMessage(ChatColor.GOLD + "✦ " + ChatColor.YELLOW + "You won "
+                + ChatColor.WHITE + reward.name() + ChatColor.YELLOW + " from the "
+                + type.displayName() + " Crate!");
+
+        if (type == CrateType.SUNLIGHT || reward.chance() <= 2.0) {
+            Bukkit.broadcastMessage(ChatColor.GOLD + "✦ " + ChatColor.YELLOW + player.getName()
+                    + " won " + ChatColor.WHITE + reward.name() + ChatColor.YELLOW
+                    + " from the " + type.displayName() + " Crate!");
+        }
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (player.isOnline()) player.closeInventory();
+        }, 40L);
     }
 
     private ItemStack displayItem(CrateReward reward, boolean winner) {
-        ItemStack item = new ItemStack(reward.material(), Math.max(1, Math.min(64, reward.amount())));
+        Material material = reward.material() == Material.AIR ? Material.PAPER : reward.material();
+        ItemStack item = new ItemStack(material, Math.max(1, Math.min(64, reward.amount())));
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName((winner ? ChatColor.GOLD + "✦ " : ChatColor.YELLOW + "") + reward.name());
         meta.setLore(List.of(ChatColor.GRAY + "Chance: " + reward.chance() + "%"));
@@ -148,11 +181,15 @@ public final class CrateManager {
 
     private void giveReward(Player player, CrateReward reward) {
         if (reward.material() != Material.AIR && reward.amount() > 0) {
-            HashMap<Integer, ItemStack> left = player.getInventory().addItem(new ItemStack(reward.material(), reward.amount()));
+            HashMap<Integer, ItemStack> left = player.getInventory().addItem(
+                    new ItemStack(reward.material(), reward.amount()));
             left.values().forEach(i -> player.getWorld().dropItemNaturally(player.getLocation(), i));
         }
-        for (String command : reward.commands())
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("%player%", player.getName()));
+
+        for (String command : reward.commands()) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                    command.replace("%player%", player.getName()));
+        }
     }
 
     public List<CrateReward> rewards(CrateType type) {
@@ -160,16 +197,18 @@ public final class CrateManager {
         String base = "crates." + type.name().toLowerCase(Locale.ROOT) + ".rewards";
         ConfigurationSection section = plugin.getConfig().getConfigurationSection(base);
         if (section == null) return result;
+
         for (String id : section.getKeys(false)) {
             String path = base + "." + id;
             Material mat = Material.matchMaterial(plugin.getConfig().getString(path + ".material", "STONE"));
             if (mat == null) continue;
+
             result.add(new CrateReward(
-                plugin.getConfig().getString(path + ".name", mat.name()),
-                mat,
-                plugin.getConfig().getInt(path + ".amount", 1),
-                plugin.getConfig().getDouble(path + ".chance", 1),
-                plugin.getConfig().getStringList(path + ".commands")
+                    plugin.getConfig().getString(path + ".name", mat.name()),
+                    mat,
+                    plugin.getConfig().getInt(path + ".amount", 1),
+                    plugin.getConfig().getDouble(path + ".chance", 1),
+                    plugin.getConfig().getStringList(path + ".commands")
             ));
         }
         return result;
@@ -177,8 +216,11 @@ public final class CrateManager {
 
     public void preview(Player player, CrateType type) {
         List<CrateReward> rewards = rewards(type);
-        Inventory inv = Bukkit.createInventory(null, 54, ChatColor.DARK_AQUA + "✦ " + type.displayName() + " Rewards");
-        for (int i = 0; i < rewards.size() && i < 54; i++) inv.setItem(i, displayItem(rewards.get(i), false));
+        Inventory inv = Bukkit.createInventory(null, 54,
+                ChatColor.DARK_AQUA + "✦ " + type.displayName() + " Rewards");
+        for (int i = 0; i < rewards.size() && i < 54; i++) {
+            inv.setItem(i, displayItem(rewards.get(i), false));
+        }
         player.openInventory(inv);
     }
 
@@ -187,15 +229,41 @@ public final class CrateManager {
         if (task != null) task.cancel();
     }
 
-    public boolean isOpening(Player player) { return openings.containsKey(player.getUniqueId()); }
+    public boolean isOpening(Player player) {
+        return openings.containsKey(player.getUniqueId());
+    }
 
     public void shutdown() {
         openings.values().forEach(BukkitTask::cancel);
         openings.clear();
     }
 
-    private CrateReward chooseReward(List<CrateReward> rewards, Random random) {\n        double total = rewards.stream().mapToDouble(CrateReward::chance).filter(v -> v > 0).sum();\n        if (total <= 0) return rewards.get(random.nextInt(rewards.size()));\n        double roll = random.nextDouble() * total;\n        double cursor = 0;\n        for (CrateReward reward : rewards) {\n            if (reward.chance() <= 0) continue;\n            cursor += reward.chance();\n            if (roll < cursor) return reward;\n        }\n        return rewards.get(rewards.size() - 1);\n    }\n\n    private CrateType parse(String value) {
+    private CrateReward chooseReward(List<CrateReward> rewards, Random random) {
+        double total = rewards.stream()
+                .mapToDouble(CrateReward::chance)
+                .filter(v -> v > 0)
+                .sum();
+
+        if (total <= 0) return rewards.get(random.nextInt(rewards.size()));
+
+        double roll = random.nextDouble() * total;
+        double cursor = 0;
+
+        for (CrateReward reward : rewards) {
+            if (reward.chance() <= 0) continue;
+            cursor += reward.chance();
+            if (roll < cursor) return reward;
+        }
+
+        return rewards.get(rewards.size() - 1);
+    }
+
+    private CrateType parse(String value) {
         if (value == null) return null;
-        try { return CrateType.valueOf(value.toUpperCase(Locale.ROOT)); } catch (IllegalArgumentException e) { return null; }
+        try {
+            return CrateType.valueOf(value.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }
