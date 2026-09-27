@@ -1,0 +1,8 @@
+settings:
+  mob-spawns: true
+  fast-crystal: true
+  tp-requests: true
+  notifications: true
+  chat-messages: true
+  combat-alerts: true
+  server-announcements: true
