@@ -22,18 +22,47 @@ public final class ShopPricing {
     }
 
     public static List<Material> category(String name) {
+        String c=name.toLowerCase(Locale.ROOT);
+        List<Material> items=switch(c) {
+            case "redstone" -> List.of(
+                Material.REDSTONE, Material.REDSTONE_TORCH, Material.PISTON, Material.STICKY_PISTON,
+                Material.OBSERVER, Material.DISPENSER, Material.DROPPER, Material.HOPPER,
+                Material.REPEATER, Material.COMPARATOR, Material.LEVER, Material.STONE_BUTTON,
+                Material.STONE_PRESSURE_PLATE, Material.RAIL, Material.TNT
+            );
+            case "farm" -> List.of(
+                Material.WHEAT_SEEDS, Material.CARROT, Material.POTATO, Material.BEETROOT_SEEDS,
+                Material.SUGAR_CANE, Material.BAMBOO, Material.CACTUS, Material.KELP,
+                Material.MELON, Material.PUMPKIN, Material.COCOA_BEANS, Material.NETHER_WART,
+                Material.BONE_MEAL, Material.OAK_SAPLING, Material.COMPOSTER
+            );
+            case "food" -> List.of(
+                Material.APPLE, Material.BREAD, Material.COOKED_BEEF, Material.COOKED_PORKCHOP,
+                Material.COOKED_CHICKEN, Material.COOKED_MUTTON, Material.COOKED_COD,
+                Material.COOKED_SALMON, Material.GOLDEN_CARROT, Material.GOLDEN_APPLE,
+                Material.BAKED_POTATO, Material.COOKIE, Material.PUMPKIN_PIE, Material.MELON_SLICE,
+                Material.CHORUS_FRUIT
+            );
+            case "pvp" -> List.of(
+                Material.OBSIDIAN, Material.CRYING_OBSIDIAN, Material.END_CRYSTAL,
+                Material.RESPAWN_ANCHOR, Material.GLOWSTONE, Material.TNT, Material.COBWEB,
+                Material.ENDER_PEARL, Material.EXPERIENCE_BOTTLE, Material.TOTEM_OF_UNDYING
+            );
+            case "blocks" -> List.of(
+                Material.OBSIDIAN, Material.CRYING_OBSIDIAN, Material.STONE, Material.COBBLESTONE,
+                Material.DEEPSLATE, Material.COBBLED_DEEPSLATE, Material.NETHERRACK,
+                Material.BLACKSTONE, Material.BASALT, Material.END_STONE, Material.SAND,
+                Material.GRAVEL, Material.DIRT, Material.CLAY, Material.GLASS,
+                Material.WHITE_CONCRETE, Material.WHITE_WOOL, Material.BRICKS, Material.PRISMARINE,
+                Material.PURPUR_BLOCK, Material.AMETHYST_BLOCK, Material.IRON_BLOCK,
+                Material.GOLD_BLOCK, Material.DIAMOND_BLOCK, Material.EMERALD_BLOCK,
+                Material.NETHERITE_BLOCK, Material.COPPER_BLOCK, Material.REDSTONE_BLOCK,
+                Material.LAPIS_BLOCK
+            );
+            default -> List.of();
+        };
         List<Material> out=new ArrayList<>();
-        for(Material m:Material.values()){
-            if(!m.isItem()||m==Material.AIR||m==Material.SPAWNER||!isSurvivalObtainable(m))continue;
-            String n=m.name(); boolean add=switch(name.toLowerCase(Locale.ROOT)){
-                case "redstone"->n.contains("REDSTONE")||n.contains("PISTON")||n.contains("OBSERVER")||n.contains("DISPENSER")||n.contains("DROPPER")||n.contains("HOPPER")||n.contains("REPEATER")||n.contains("COMPARATOR")||n.contains("NOTE_BLOCK")||n.contains("TARGET")||n.contains("RAIL")||n.contains("TNT")||n.contains("LEVER")||n.contains("BUTTON")||n.contains("PRESSURE_PLATE");
-                case "farm"->n.contains("SEED")||n.contains("SAPLING")||n.contains("WHEAT")||n.contains("CARROT")||n.contains("POTATO")||n.contains("BEETROOT")||n.contains("MELON")||n.contains("PUMPKIN")||n.contains("SUGAR_CANE")||n.contains("BAMBOO")||n.contains("CACTUS")||n.contains("KELP")||n.contains("VINE")||n.contains("MOSS")||n.contains("BONE_MEAL")||n.contains("BONE")||n.contains("HAY_BLOCK")||n.contains("COMPOSTER");
-                case "food"->n.contains("APPLE")||n.contains("BREAD")||n.contains("CARROT")||n.contains("POTATO")||n.contains("BEETROOT")||n.contains("BEEF")||n.contains("PORKCHOP")||n.contains("CHICKEN")||n.contains("MUTTON")||n.contains("RABBIT")||n.contains("COD")||n.contains("SALMON")||n.contains("TROPICAL_FISH")||n.contains("PUFFERFISH")||n.contains("MELON_SLICE")||n.contains("COOKIE")||n.contains("PUMPKIN_PIE")||n.contains("CAKE")||n.contains("GOLDEN_APPLE")||n.contains("GOLDEN_CARROT")||n.contains("BERRIES")||n.contains("STEW")||n.contains("SOUP")||n.contains("CHORUS_FRUIT");
-                case "pvp"->n.contains("OBSIDIAN")||n.contains("CRYING_OBSIDIAN")||n.contains("END_CRYSTAL")||n.contains("RESPAWN_ANCHOR")||n.contains("GLOWSTONE")||n.contains("TNT")||n.contains("COBWEB")||n.contains("ENDER_PEARL")||n.contains("EXPERIENCE_BOTTLE")||n.contains("TOTEM");
-                case "blocks"->m.isBlock();
-                default->false;};
-            if(add)out.add(m);
-        }
-        out.sort(Comparator.comparing(Material::name)); return out;
+        for(Material m:items) if(m!=Material.AIR && m.isItem() && isSurvivalObtainable(m)) out.add(m);
+        return out;
     }
 }
