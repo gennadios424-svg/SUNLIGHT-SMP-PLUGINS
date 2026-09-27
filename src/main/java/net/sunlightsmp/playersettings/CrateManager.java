@@ -92,6 +92,15 @@ public final class CrateManager {
         return parse(item.getItemMeta().getPersistentDataContainer().get(keyTag, PersistentDataType.STRING));
     }
 
+    public ItemStack createCrateItem(CrateType type, int amount) {
+        ItemStack item = new ItemStack(type.icon(), Math.max(1, amount));
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(ChatColor.GOLD + "✦ " + type.displayName() + " Crate");
+        meta.setLore(List.of(ChatColor.GRAY + "Place this block, then use /crate set " + type.name().toLowerCase(Locale.ROOT) + "."));
+        item.setItemMeta(meta);
+        return item;
+    }
+
     public void openCrate(Player player, CrateType type) {
         if (openings.containsKey(player.getUniqueId())) {
             player.sendMessage(ChatColor.RED + "You are already opening a crate.");
