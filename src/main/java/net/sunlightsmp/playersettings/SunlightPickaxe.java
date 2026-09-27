@@ -18,11 +18,13 @@ public final class SunlightPickaxe implements Listener {
     private final SunlightPlayerSettings plugin;
     private final NamespacedKey expiryKey;
     private final NamespacedKey pickaxeKey;
+    private final NamespacedKey uniqueKey;
 
     public SunlightPickaxe(SunlightPlayerSettings plugin){
         this.plugin=plugin;
         expiryKey=new NamespacedKey(plugin,"sunlight_pickaxe_expiry");
         pickaxeKey=new NamespacedKey(plugin,"sunlight_pickaxe");
+        uniqueKey=new NamespacedKey(plugin,"sunlight_pickaxe_uuid");
     }
 
     public ItemStack create(){
@@ -39,6 +41,7 @@ public final class SunlightPickaxe implements Listener {
         ));
         meta.setUnbreakable(true);
         meta.getPersistentDataContainer().set(pickaxeKey,PersistentDataType.BYTE,(byte)1);
+        meta.getPersistentDataContainer().set(uniqueKey,PersistentDataType.STRING,java.util.UUID.randomUUID().toString());
         meta.getPersistentDataContainer().set(expiryKey,PersistentDataType.LONG,System.currentTimeMillis()+172800000L);
         item.setItemMeta(meta);
         return item;
