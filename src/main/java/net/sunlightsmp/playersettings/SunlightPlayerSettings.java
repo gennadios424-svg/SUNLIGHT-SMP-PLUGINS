@@ -15,6 +15,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
     private SunlightPickaxe sunlightPickaxe;
     private SellMenu sellMenu;
     private ShopMenu shopMenu;
+    private WorthCommand worthCommand;
 
     @Override
     public void onEnable() {
@@ -58,8 +59,13 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         sellMenu = new SellMenu(this);
         getServer().getPluginManager().registerEvents(sellMenu, this);
         if (getCommand("sell") != null) getCommand("sell").setExecutor(new SellCommand(sellMenu));
-        if (getCommand("worth") != null) getCommand("worth").setExecutor(new WorthCommand());
-        if (getCommand("worth") != null) getCommand("worth").setTabCompleter(new WorthCommand());
+
+        worthCommand = new WorthCommand(this);
+        getServer().getPluginManager().registerEvents(worthCommand, this);
+        if (getCommand("worth") != null) {
+            getCommand("worth").setExecutor(worthCommand);
+            getCommand("worth").setTabCompleter(worthCommand);
+        }
 
         shopMenu = new ShopMenu(this);
         getServer().getPluginManager().registerEvents(shopMenu, this);
@@ -91,7 +97,6 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             return true;
         });
 
-        // Discord + Store reminder every 3 minutes. Players can disable it with Notifications in /settings.
         getServer().getScheduler().runTaskTimer(this, () -> {
             for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
                 if (!settings.get(player, Setting.NOTIFICATIONS)) continue;
@@ -103,7 +108,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             }
         }, 3600L, 3600L);
 
-        getLogger().info("Sunlight Player Settings + TPA + Auction House + Discord/Store enabled.");
+        getLogger().info("Sunlight Player Settings + TPA + Auction House + Sell/Worth/Shop enabled.");
     }
 
     @Override
