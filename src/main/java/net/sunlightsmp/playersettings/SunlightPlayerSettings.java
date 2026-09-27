@@ -79,6 +79,18 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             return true;
         });
 
+        // Discord + Store reminder every 3 minutes. Players can disable it with Notifications in /settings.
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
+                if (!settings.get(player, Setting.NOTIFICATIONS)) continue;
+                player.sendMessage(org.bukkit.ChatColor.GOLD + "━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                player.sendMessage(org.bukkit.ChatColor.GOLD + "☀ " + org.bukkit.ChatColor.YELLOW + "SUNLIGHT SMP");
+                player.sendMessage(org.bukkit.ChatColor.GRAY + "Discord: " + org.bukkit.ChatColor.AQUA + "https://discord.gg/9a9THhwDT");
+                player.sendMessage(org.bukkit.ChatColor.GRAY + "Store: " + org.bukkit.ChatColor.YELLOW + "https://sunlight-dawn-shop.lovable.app/");
+                player.sendMessage(org.bukkit.ChatColor.GOLD + "━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            }
+        }, 3600L, 3600L);
+
         getLogger().info("Sunlight Player Settings + TPA + Auction House + Discord/Store enabled.");
     }
 
