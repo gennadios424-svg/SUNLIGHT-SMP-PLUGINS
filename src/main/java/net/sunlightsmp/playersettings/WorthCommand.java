@@ -24,6 +24,27 @@ public final class WorthCommand implements CommandExecutor, Listener, TabComplet
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player p)) { sender.sendMessage("Only players can use /worth."); return true; }
+        if (args.length > 0) {
+            String query = String.join(" ", args).replace("_", " ").trim().toLowerCase(Locale.ROOT);
+            List<Material> matches = new ArrayList<>();
+            for (Material m : obtainableItems()) {
+                String name = pretty(m).toLowerCase(Locale.ROOT);
+                String raw = m.name().toLowerCase(Locale.ROOT).replace("_", " ");
+                if (name.contains(query) || raw.contains(query)) matches.add(m);
+            }
+            if (matches.isEmpty()) {
+                p.sendMessage(ChatColor.RED + "☀ No obtainable items matched: " + String.join(" ", args));
+                return true;
+            }
+            p.sendMessage(ChatColor.GOLD + "☀ Worth: " + ChatColor.YELLOW + String.join(" ", args));
+            for (Material m : matches) {
+                double each = SellPricing.price(m);
+                p.sendMessage(ChatColor.GRAY + "• " + ChatColor.WHITE + pretty(m) + ChatColor.GRAY + " — " + ChatColor.GREEN + "$" + money(each) + ChatColor.GRAY + " each");
+            }
+            p.sendMessage(ChatColor.DARK_GRAY + "Showing " + matches.size() + " matching obtainable item(s).");
+            return true;
+        }
+
         open(p);
         return true;
     }
