@@ -1,0 +1,9 @@
+package net.sunlightsmp.playersettings;
+import org.bukkit.*;import org.bukkit.entity.Player;import org.bukkit.event.*;import org.bukkit.inventory.*;import org.bukkit.inventory.meta.ItemMeta;import org.bukkit.persistence.PersistentDataType;import java.util.*;
+public final class SunlightShardBooster implements Listener{
+ private final NamespacedKey marker,expiry;public SunlightShardBooster(SunlightPlayerSettings p){marker=new NamespacedKey(p,"sunlight_shard_booster");expiry=new NamespacedKey(p,"sunlight_shard_booster_expiry");}
+ public ItemStack create(){ItemStack i=new ItemStack(Material.GLASS_BOTTLE);ItemMeta m=i.getItemMeta();m.setDisplayName(ChatColor.GOLD+"☀ Sunlight Shard Booster");m.setLore(List.of(ChatColor.GREEN+"4x Shard Gains",ChatColor.GRAY+"4x from player kills and AFK gains.",ChatColor.RED+"Expires in 24 hours"));m.setUnbreakable(true);m.getPersistentDataContainer().set(marker,PersistentDataType.BYTE,(byte)1);m.getPersistentDataContainer().set(expiry,PersistentDataType.LONG,System.currentTimeMillis()+24L*60*60*1000);i.setItemMeta(m);return i;}
+ public boolean hasBooster(Player p){for(ItemStack i:p.getInventory().getContents())if(isBooster(i)&&!expired(i))return true;return false;}
+ private boolean isBooster(ItemStack i){if(i==null||i.getType()!=Material.GLASS_BOTTLE||!i.hasItemMeta())return false;Byte b=i.getItemMeta().getPersistentDataContainer().get(marker,PersistentDataType.BYTE);return b!=null&&b==1;}
+ private boolean expired(ItemStack i){Long t=i.getItemMeta().getPersistentDataContainer().get(expiry,PersistentDataType.LONG);return t==null||System.currentTimeMillis()>=t;}
+}
