@@ -3,7 +3,7 @@ version: 1.3.0
 main: net.sunlightsmp.playersettings.SunlightPlayerSettings
 api-version: '1.21'
 author: Sunlight SMP
-description: Sunlight SMP player settings, TPA and native Auction House
+description: Sunlight SMP player settings, TPA, native Auction House, Discord and Store commands
 commands:
   settings:
     description: Open your personal Sunlight SMP settings
@@ -17,6 +17,12 @@ commands:
     description: Get a temporary 3x3 Sunlight Pickaxe
     usage: /sunlightpickaxe
     aliases: [spickaxe]
+  discord:
+    description: Get the Sunlight SMP Discord link
+    usage: /discord
+  store:
+    description: Get the Sunlight SMP Store link
+    usage: /store
   tpa:
     description: Request to teleport to a player
     usage: /tpa <player>
