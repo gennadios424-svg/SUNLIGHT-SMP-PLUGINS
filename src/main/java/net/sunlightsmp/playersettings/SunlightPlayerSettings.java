@@ -20,6 +20,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
     private SunlightTreeChopper treeChopper;
     private SunlightShardBooster shardBooster;
     private SunlightBucket sunlightBucket;
+    private SunflowerManager sunflowerManager;
 
     @Override
     public void onEnable() {
@@ -55,6 +56,8 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         treeChopper = new SunlightTreeChopper(this);
         shardBooster = new SunlightShardBooster(this);
         sunlightBucket = new SunlightBucket(this);
+        sunflowerManager = new SunflowerManager(this);
+        getServer().getPluginManager().registerEvents(new SunflowerListener(sunflowerManager), this);
         getServer().getPluginManager().registerEvents(sellaxe, this);
         getServer().getPluginManager().registerEvents(treeChopper, this);
         getServer().getPluginManager().registerEvents(shardBooster, this);
@@ -88,6 +91,9 @@ public final class SunlightPlayerSettings extends JavaPlugin {
             player.sendMessage(org.bukkit.ChatColor.GOLD + "☀ Sunlight Bucket received! " + org.bukkit.ChatColor.GRAY + "Expires in 5 days.");
             return true;
         });
+        if (getCommand("sunflower") != null) getCommand("sunflower").setExecutor(new SunflowerCommand(this, sunflowerManager));
+        if (getCommand("sunflowerspawner") != null) getCommand("sunflowerspawner").setExecutor(new SunflowerSpawnerCommand(this, sunflowerManager));
+
 
         if (getCommand("sunlightpickaxe") != null) getCommand("sunlightpickaxe").setExecutor((sender, command, label, args) -> {
             if (!(sender instanceof org.bukkit.entity.Player player)) { sender.sendMessage("Only players can use this command."); return true; }
@@ -151,6 +157,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
     @Override public void onDisable() {
         if (tpaManager != null) for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) tpaManager.cleanup(player);
         if (settings != null) settings.save();
+        if (sunflowerManager != null) sunflowerManager.save();
         if (auctionManager != null) auctionManager.save();
     }
     public PlayerSettingsManager getSettings() { return settings; }
