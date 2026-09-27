@@ -38,7 +38,7 @@ public final class TPAManager implements Listener {
             return;
         }
         long now = System.currentTimeMillis();
-        long cooldown = plugin.getConfig().getLong("tpa.cooldown-seconds", 3) * 1000L;
+        long cooldown = plugin.getConfig().getLong("tpa.cooldown-seconds", 30) * 1000L;
         if (now < cooldowns.getOrDefault(requester.getUniqueId(), 0L)) {
             long left = Math.max(1, (cooldowns.get(requester.getUniqueId()) - now + 999) / 1000);
             requester.sendMessage(Component.text("Please wait " + left + "s before sending another TPA request.", NamedTextColor.RED));
@@ -125,8 +125,10 @@ public final class TPAManager implements Listener {
         cancelTeleport(teleporter);
         int delay = plugin.getConfig().getInt("tpa.teleport-delay-seconds", 5);
         Location start = teleporter.getLocation().clone();
-        teleporter.sendMessage(Component.text("Teleport started. Don't move!", NamedTextColor.GREEN));
-        teleporter.playSound(teleporter.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
+        teleporter.sendMessage(Component.text("✦ Teleport initiated — stay still!", NamedTextColor.YELLOW));
+        teleporter.sendTitle(Component.text("TELEPORTING", NamedTextColor.YELLOW),
+                Component.text("Stay still for " + delay + " seconds", NamedTextColor.GRAY), 0, 25, 5);
+        teleporter.playSound(teleporter.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 0.7f, 1.2f);
 
         UUID id = teleporter.getUniqueId();
         BukkitTask countdownTask = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
@@ -137,7 +139,13 @@ public final class TPAManager implements Listener {
                     if (self != null) self.cancel();
                     return;
                 }
-                teleporter.sendActionBar(Component.text("Teleporting in " + secondsLeft + "s", NamedTextColor.GREEN));
+                NamedTextColor yellow = NamedTextColor.YELLOW;
+                teleporter.sendActionBar(Component.text("✦ ", yellow)
+                        .append(Component.text("Teleporting in ", yellow))
+                        .append(Component.text(secondsLeft + "s", yellow))
+                        .append(Component.text(" ✦", yellow)));
+                float pitch = secondsLeft == 1 ? 1.8f : 1.4f;
+                teleporter.playSound(teleporter.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, pitch);
                 secondsLeft--;
             }
         }, 0L, 20L);
@@ -149,8 +157,8 @@ public final class TPAManager implements Listener {
             teleports.remove(id);
             if (!teleporter.isOnline() || !destination.isOnline()) return;
             teleporter.teleport(destination.getLocation());
-            teleporter.sendMessage(Component.text("Teleported successfully.", NamedTextColor.GREEN));
-            teleporter.playSound(teleporter.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+            teleporter.sendActionBar(Component.text("✦ Teleported successfully!", NamedTextColor.YELLOW));
+            teleporter.playSound(teleporter.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
         }, delay * 20L);
         teleports.put(teleporter.getUniqueId(), task);
         plugin.getTpaStartLocations().put(teleporter.getUniqueId(), start);
@@ -176,6 +184,7 @@ public final class TPAManager implements Listener {
         Location to = event.getTo();
         if (from.getBlockX() != to.getBlockX() || from.getBlockY() != to.getBlockY() || from.getBlockZ() != to.getBlockZ()) {
             cancelTeleport(p);
+            p.sendActionBar(Component.text("✦ Teleport cancelled — you moved.", NamedTextColor.RED));
             p.sendMessage(Component.text("Teleport cancelled because you moved.", NamedTextColor.RED));
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
         }
@@ -185,6 +194,7 @@ public final class TPAManager implements Listener {
     public void onDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player p && teleports.containsKey(p.getUniqueId())) {
             cancelTeleport(p);
+            p.sendActionBar(Component.text("✦ Teleport cancelled — you took damage.", NamedTextColor.RED));
             p.sendMessage(Component.text("Teleport cancelled because you took damage.", NamedTextColor.RED));
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
         }
