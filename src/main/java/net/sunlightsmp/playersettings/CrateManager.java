@@ -194,7 +194,7 @@ public final class CrateManager {
         openings.clear();
     }
 
-    private CrateType parse(String value) {
+    private CrateReward chooseReward(List<CrateReward> rewards, Random random) {\n        double total = rewards.stream().mapToDouble(CrateReward::chance).filter(v -> v > 0).sum();\n        if (total <= 0) return rewards.get(random.nextInt(rewards.size()));\n        double roll = random.nextDouble() * total;\n        double cursor = 0;\n        for (CrateReward reward : rewards) {\n            if (reward.chance() <= 0) continue;\n            cursor += reward.chance();\n            if (roll < cursor) return reward;\n        }\n        return rewards.get(rewards.size() - 1);\n    }\n\n    private CrateType parse(String value) {
         if (value == null) return null;
         try { return CrateType.valueOf(value.toUpperCase(Locale.ROOT)); } catch (IllegalArgumentException e) { return null; }
     }
