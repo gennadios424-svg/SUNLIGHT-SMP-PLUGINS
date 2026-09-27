@@ -12,6 +12,7 @@ public final class SunlightPlayerSettings extends JavaPlugin {
     private TPAManager tpaManager;
     private AuctionHouseManager auctionManager;
     private AuctionHouseMenu auctionMenu;
+    private SunlightPickaxe sunlightPickaxe;
 
     @Override
     public void onEnable() {
@@ -38,6 +39,18 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         }, this);
 
         if (getCommand("settings") != null) getCommand("settings").setExecutor(new SettingsCommand(settingsListener));
+        if (getCommand("sunlightpickaxe") != null) getCommand("sunlightpickaxe").setExecutor((sender, command, label, args) -> {
+            if (!(sender instanceof org.bukkit.entity.Player player)) { sender.sendMessage("Only players can use this command."); return true; }
+            if (!player.hasPermission("sunlightsmp.pickaxe")) { player.sendMessage(org.bukkit.ChatColor.RED+"No permission."); return true; }
+            java.util.Map<Integer, org.bukkit.inventory.ItemStack> left = player.getInventory().addItem(sunlightPickaxe.create());
+            left.values().forEach(i -> player.getWorld().dropItemNaturally(player.getLocation(), i));
+            player.sendMessage(org.bukkit.ChatColor.GOLD+"☀ "+org.bukkit.ChatColor.YELLOW+"Sunlight Pickaxe received! "+org.bukkit.ChatColor.GRAY+"It expires in 2 days.");
+            player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.3f);
+            return true;
+        });
+
+        sunlightPickaxe = new SunlightPickaxe(this);
+        getServer().getPluginManager().registerEvents(sunlightPickaxe, this);
 
         auctionManager = new AuctionHouseManager(this);
         auctionMenu = new AuctionHouseMenu(this, auctionManager);
