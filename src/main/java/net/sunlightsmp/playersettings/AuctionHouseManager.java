@@ -16,16 +16,16 @@ public final class AuctionHouseManager {
     private YamlConfiguration data;
     private final Map<Long,AuctionListing> listings=new LinkedHashMap<>();
     private long nextId=1;
-    private Economy economy;
+    
 
     public AuctionHouseManager(SunlightPlayerSettings plugin){
         this.plugin=plugin; file=new File(plugin.getDataFolder(),"auction.yml"); load();
-        economy=setupEconomy();
     }
     private Economy setupEconomy(){
         var rsp=plugin.getServer().getServicesManager().getRegistration(Economy.class);
         return rsp==null?null:rsp.getProvider();
     }
+    private Economy economy(){ return setupEconomy(); }
     public synchronized void load(){
         if(!file.exists()) try{plugin.getDataFolder().mkdirs();file.createNewFile();}catch(IOException e){plugin.getLogger().severe(e.getMessage());}
         data=YamlConfiguration.loadConfiguration(file); nextId=data.getLong("next-id",1);
@@ -47,15 +47,15 @@ public final class AuctionHouseManager {
     }
     public synchronized void cleanupExpired(){
         boolean changed=false; Iterator<AuctionListing> it=listings.values().iterator();
-        while(it.hasNext()){AuctionListing l=it.next(); if(l.expired()){giveItem(l.seller(),l.item());it.remove();changed=true;}}
+        while(it.hasNext()){AuctionListing l=it.next(); if(l.expired() && Bukkit.getPlayer(l.seller())!=null){giveItem(l.seller(),l.item());it.remove();changed=true;}}
         if(changed)save();
     }
     private void giveItem(UUID uuid,ItemStack item){
         Player p=Bukkit.getPlayer(uuid);
         if(p!=null&&p.isOnline()){Map<Integer,ItemStack> left=p.getInventory().addItem(item);left.values().forEach(i->p.getWorld().dropItemNaturally(p.getLocation(),i));}
-        else data.set("returns."+uuid+"."+UUID.randomUUID(),item);
+        else return;
     }
-    public synchronized List<AuctionListing> all(){cleanupExpired();return new ArrayList<>(listings.values());}
+    public synchronized List<AuctionListing> all(){cleanupExpired(); List<AuctionListing> out=new ArrayList<>(); for(AuctionListing l:listings.values()) if(!l.expired()) out.add(l); return out;}
     public synchronized AuctionListing get(long id){return listings.get(id);}
     public synchronized AuctionListing create(Player seller,double price){
         ItemStack hand=seller.getInventory().getItemInMainHand(); if(hand.getType().isAir())return null;
@@ -71,7 +71,7 @@ public final class AuctionHouseManager {
     }
     public synchronized boolean buy(Player buyer,long id){
         AuctionListing l=listings.get(id); if(l==null||l.expired()||l.seller().equals(buyer.getUniqueId()))return false;
-        if(economy==null||!economy.has(buyer,l.price()))return false;
+        Economy economy=economy(); if(economy==null||!economy.has(buyer,l.price()))return false;
         if(buyer.getInventory().firstEmpty()==-1)return false;
         if(!economy.withdrawPlayer(buyer,l.price()).transactionSuccess())return false;
         if(!listings.remove(id,l)){economy.depositPlayer(buyer,l.price());return false;}
