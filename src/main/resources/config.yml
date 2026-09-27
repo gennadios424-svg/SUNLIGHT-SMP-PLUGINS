@@ -6,3 +6,10 @@ settings:
   chat-messages: true
   combat-alerts: true
   server-announcements: true
+
+tpa:
+  request-timeout-seconds: 30
+  teleport-delay-seconds: 5
+  cooldown-seconds: 3
+  cancel-on-move: true
+  cancel-on-damage: true
