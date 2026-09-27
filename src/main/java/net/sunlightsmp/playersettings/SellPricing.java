@@ -26,9 +26,8 @@ public final class SellPricing {
         if (n.contains("AMETHYST")) return 1_200;
         if (n.contains("SPAWNER")) return 75_000;
         if (n.contains("BEACON")) return 75_000;
-        if (n.contains("END_CRYSTAL")) return 5_000;
+        if (n.contains("END_CRYSTAL")) return 400;
         if (n.contains("ELYTRA")) return 100_000;
-        if (n.contains("SHULKER")) return 20_000;
         if (n.contains("DRAGON_EGG")) return 1_000_000;
 
         if (n.contains("LOG") || n.endsWith("_WOOD") || n.endsWith("_STEM") || n.endsWith("_HYPHAE") || n.endsWith("_PLANKS")) return 16;
@@ -41,7 +40,7 @@ public final class SellPricing {
         if (n.contains("STONE") || n.contains("DEEPSLATE") || n.contains("COBBLE")) return 8;
         if (n.contains("NETHERRACK") || n.contains("BASALT") || n.contains("BLACKSTONE")) return 10;
         if (n.contains("END_STONE")) return 15;
-        if (n.contains("OBSIDIAN") || n.contains("CRYING_OBSIDIAN")) return 1_500;
+        if (n.contains("OBSIDIAN") || n.contains("CRYING_OBSIDIAN")) return 100;
         if (n.contains("ICE") || n.contains("SNOW")) return 12;
         if (n.contains("CORAL")) return 80;
         if (n.contains("SUGAR_CANE") || n.contains("BAMBOO")) return 35;
@@ -57,6 +56,8 @@ public final class SellPricing {
         if (n.contains("BRICK")) return 45;
         if (n.contains("PRISMARINE")) return 120;
         if (n.contains("PURPUR")) return 100;
+        if (n.contains("SHULKER_BOX")) return 100;
+        if (n.contains("NOTE_BLOCK")) return 50;
         if (n.contains("ENCHANTING_TABLE")) return 10_000;
         if (n.contains("ANVIL")) return 3_000;
         if (n.contains("BREWING_STAND")) return 500;
@@ -85,6 +86,7 @@ public final class SellPricing {
         m.put("COAL_BLOCK",350D); m.put("IRON_BLOCK",3_000D); m.put("GOLD_BLOCK",12_000D);
         m.put("REDSTONE_BLOCK",1_000D); m.put("LAPIS_BLOCK",1_500D); m.put("COPPER_BLOCK",900D);
         m.put("AMETHYST_BLOCK",1_200D); m.put("ANCIENT_DEBRIS",8_000D); m.put("OBSIDIAN",100D);
+        m.put("SHULKER_BOX",100D); m.put("END_CRYSTAL",400D); m.put("NOTE_BLOCK",50D);
         return Collections.unmodifiableMap(m);
     }
 }
