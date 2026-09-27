@@ -20,6 +20,17 @@ public final class AuctionHouseMenu implements Listener {
     public AuctionHouseMenu(SunlightPlayerSettings plugin,AuctionHouseManager manager){this.plugin=plugin;this.manager=manager;}
     private ItemStack item(Material m,String name,String... lore){ItemStack i=new ItemStack(m);ItemMeta x=i.getItemMeta();x.setDisplayName(name);x.setLore(Arrays.asList(lore));i.setItemMeta(x);return i;}
     private String money(double n){return NumberFormat.getNumberInstance(Locale.US).format(n);}
+    private double parsePrice(String input){
+        String s=input.trim().toLowerCase(Locale.ROOT).replace(",", "").replace("$", "");
+        if(s.isEmpty())throw new NumberFormatException();
+        double multiplier=1D;
+        if(s.endsWith("k")){multiplier=1_000D;s=s.substring(0,s.length()-1);}
+        else if(s.endsWith("m")){multiplier=1_000_000D;s=s.substring(0,s.length()-1);}
+        else if(s.endsWith("b")){multiplier=1_000_000_000D;s=s.substring(0,s.length()-1);}
+        double value=Double.parseDouble(s)*multiplier;
+        if(!Double.isFinite(value))throw new NumberFormatException();
+        return value;
+    }
     public void open(Player p){open(p,0);}
     private void open(Player p,int page){
         pages.put(p.getUniqueId(),page); Inventory inv=Bukkit.createInventory(null,54,TITLE);
@@ -51,7 +62,7 @@ public final class AuctionHouseMenu implements Listener {
         else if(t.equals(CONFIRM)){if(s==11){ItemStack shown=e.getInventory().getItem(13);long id=findId(p);AuctionListing l=manager.get(id);if(l!=null&&manager.buy(p,id)){p.closeInventory();p.sendMessage(ChatColor.GREEN+"☀ Purchase complete!");p.playSound(p.getLocation(),org.bukkit.Sound.ENTITY_PLAYER_LEVELUP,1f,1.2f);}else{p.sendMessage(ChatColor.RED+"Purchase failed: listing changed, insufficient funds, or inventory full.");}}else if(s==15)p.closeInventory();}
         else {if(s==49){open(p);return;}if(s<45){List<AuctionListing> mine=manager.all().stream().filter(x->x.seller().equals(p.getUniqueId())).toList();if(s<mine.size()){long id=mine.get(s).id();if(manager.cancel(p,id)){p.sendMessage(ChatColor.YELLOW+"Listing cancelled and item returned.");p.playSound(p.getLocation(),org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING,1f,1.4f);openSelling(p);}}}}
     }
-    @EventHandler public void chat(org.bukkit.event.player.AsyncPlayerChatEvent e){Player p=e.getPlayer();if(!awaitingPrice.remove(p.getUniqueId()))return;e.setCancelled(true);String msg=e.getMessage().trim();if(msg.equalsIgnoreCase("cancel")){p.sendMessage(ChatColor.GRAY+"Sell cancelled.");return;}try{double price=Double.parseDouble(msg);Bukkit.getScheduler().runTask(plugin,()->{AuctionListing x=manager.create(p,price);if(x==null)p.sendMessage(ChatColor.RED+"Could not list item. Check that you are holding an item and the price is valid.");else{p.sendMessage(ChatColor.GREEN+"☀ Listed "+x.item().getAmount()+"x "+x.item().getType()+" for $"+money(price)+"!");open(p);}});}catch(NumberFormatException ex){p.sendMessage(ChatColor.RED+"Invalid price. Sell cancelled.");}}
+    @EventHandler public void chat(org.bukkit.event.player.AsyncPlayerChatEvent e){Player p=e.getPlayer();if(!awaitingPrice.remove(p.getUniqueId()))return;e.setCancelled(true);String msg=e.getMessage().trim();if(msg.equalsIgnoreCase("cancel")){p.sendMessage(ChatColor.GRAY+"Sell cancelled.");return;}try{double price=parsePrice(msg);Bukkit.getScheduler().runTask(plugin,()->{AuctionListing x=manager.create(p,price);if(x==null)p.sendMessage(ChatColor.RED+"Could not list item. Check that you are holding an item and the price is valid.");else{p.sendMessage(ChatColor.GREEN+"☀ Listed "+x.item().getAmount()+"x "+x.item().getType()+" for $"+money(price)+"!");open(p);}});}catch(NumberFormatException ex){p.sendMessage(ChatColor.RED+"Invalid price. Sell cancelled.");}}
     private long findId(Player p){ // confirmation inventories are opened directly from a listing; identify by stored holder
         return pending.getOrDefault(p.getUniqueId(),-1L);
     }
