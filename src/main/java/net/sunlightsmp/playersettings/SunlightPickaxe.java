@@ -5,14 +5,12 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.inventory.*;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import java.util.ArrayList;
 import java.util.List;
-import org.bukkit.util.Vector;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.UUID;
 
 public final class SunlightPickaxe implements Listener {
     private final SunlightPlayerSettings plugin;
@@ -20,88 +18,126 @@ public final class SunlightPickaxe implements Listener {
     private final NamespacedKey pickaxeKey;
     private final NamespacedKey uniqueKey;
 
-    public SunlightPickaxe(SunlightPlayerSettings plugin){
-        this.plugin=plugin;
-        expiryKey=new NamespacedKey(plugin,"sunlight_pickaxe_expiry");
-        pickaxeKey=new NamespacedKey(plugin,"sunlight_pickaxe");
-        uniqueKey=new NamespacedKey(plugin,"sunlight_pickaxe_uuid");
+    public SunlightPickaxe(SunlightPlayerSettings plugin) {
+        this.plugin = plugin;
+        expiryKey = new NamespacedKey(plugin, "sunlight_pickaxe_expiry");
+        pickaxeKey = new NamespacedKey(plugin, "sunlight_pickaxe");
+        uniqueKey = new NamespacedKey(plugin, "sunlight_pickaxe_uuid");
     }
 
-    public ItemStack create(){
-        ItemStack item=new ItemStack(Material.NETHERITE_PICKAXE);
-        ItemMeta meta=item.getItemMeta();
-        meta.setDisplayName(ChatColor.GOLD+"☀ Sunlight Pickaxe");
+    public ItemStack create() {
+        ItemStack item = new ItemStack(Material.NETHERITE_PICKAXE);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(ChatColor.GOLD + "☀ Sunlight Pickaxe");
         meta.setLore(List.of(
-            ChatColor.YELLOW+"3x3 Mining",
-            ChatColor.GRAY+"Breaks a 3x3 area at once.",
-            "",
-            ChatColor.GREEN+"UNBREAKABLE",
-            ChatColor.RED+"Expires in 2 days",
-            ChatColor.DARK_GRAY+"Temporary Sunlight tool"
+                ChatColor.YELLOW + "3x3 Mining",
+                ChatColor.GRAY + "Breaks a 3x3 area at once.",
+                "",
+                ChatColor.GREEN + "UNBREAKABLE",
+                ChatColor.RED + "Expires in 2 days",
+                ChatColor.DARK_GRAY + "Temporary Sunlight tool"
         ));
         meta.setUnbreakable(true);
-        meta.getPersistentDataContainer().set(pickaxeKey,PersistentDataType.BYTE,(byte)1);
-        meta.getPersistentDataContainer().set(uniqueKey,PersistentDataType.STRING,java.util.UUID.randomUUID().toString());
-        meta.getPersistentDataContainer().set(expiryKey,PersistentDataType.LONG,System.currentTimeMillis()+172800000L);
+        meta.getPersistentDataContainer().set(pickaxeKey, PersistentDataType.BYTE, (byte) 1);
+        meta.getPersistentDataContainer().set(uniqueKey, PersistentDataType.STRING, UUID.randomUUID().toString());
+        meta.getPersistentDataContainer().set(expiryKey, PersistentDataType.LONG, System.currentTimeMillis() + 172800000L);
         item.setItemMeta(meta);
         return item;
     }
 
-    private boolean isPickaxe(ItemStack item){
-        if(item==null||item.getType()!=Material.NETHERITE_PICKAXE||!item.hasItemMeta())return false;
-        Byte marker=item.getItemMeta().getPersistentDataContainer().get(pickaxeKey,PersistentDataType.BYTE);
-        return marker!=null&&marker==1;
+    private boolean isPickaxe(ItemStack item) {
+        if (item == null || item.getType() != Material.NETHERITE_PICKAXE || !item.hasItemMeta()) return false;
+        Byte marker = item.getItemMeta().getPersistentDataContainer().get(pickaxeKey, PersistentDataType.BYTE);
+        return marker != null && marker == 1;
     }
 
-    private boolean expired(ItemStack item){
-        Long time=item.getItemMeta().getPersistentDataContainer().get(expiryKey,PersistentDataType.LONG);
-        return time==null||System.currentTimeMillis()>=time;
+    private boolean expired(ItemStack item) {
+        Long time = item.getItemMeta().getPersistentDataContainer().get(expiryKey, PersistentDataType.LONG);
+        return time == null || System.currentTimeMillis() >= time;
     }
 
-    private void expire(Player p){
+    private void expire(Player p) {
         p.getInventory().setItemInMainHand(null);
-        p.sendMessage(ChatColor.RED+"☀ Your Sunlight Pickaxe has expired.");
-        p.playSound(p.getLocation(),Sound.ENTITY_ITEM_BREAK,1f,0.8f);
+        p.sendMessage(ChatColor.RED + "☀ Your Sunlight Pickaxe has expired.");
+        p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1f, 0.8f);
     }
 
-    @EventHandler(priority=EventPriority.HIGH,ignoreCancelled=true)
-    public void onBreak(BlockBreakEvent event){
-        Player p=event.getPlayer();
-        ItemStack tool=p.getInventory().getItemInMainHand();
-        if(!isPickaxe(tool))return;
-        if(expired(tool)){event.setCancelled(true);expire(p);return;}
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = false)
+    public void onBreak(BlockBreakEvent event) {
+        Player p = event.getPlayer();
+        ItemStack tool = p.getInventory().getItemInMainHand();
+        if (!isPickaxe(tool)) return;
 
-        Block center=event.getBlock();
-        Vector dir=p.getLocation().getDirection();
-        int minX=center.getX(),maxX=center.getX(),minY=center.getY(),maxY=center.getY(),minZ=center.getZ(),maxZ=center.getZ();
-
-        if(Math.abs(dir.getY())>0.7){
-            minX=center.getX()-1; maxX=center.getX()+1;
-            minZ=center.getZ()-1; maxZ=center.getZ()+1;
-        }else if(Math.abs(dir.getX())>Math.abs(dir.getZ())){
-            minY=center.getY()-1; maxY=center.getY()+1;
-            minZ=center.getZ()-1; maxZ=center.getZ()+1;
-        }else{
-            minX=center.getX()-1; maxX=center.getX()+1;
-            minY=center.getY()-1; maxY=center.getY()+1;
+        if (expired(tool)) {
+            event.setCancelled(true);
+            expire(p);
+            return;
         }
 
-        List<Block> blocks=new ArrayList<>();
-        for(int x=minX;x<=maxX;x++)for(int y=minY;y<=maxY;y++)for(int z=minZ;z<=maxZ;z++){
-            Block b=center.getWorld().getBlockAt(x,y,z);
-            if(b.getType().isAir()||b.isLiquid()||b.getType()==Material.BEDROCK)continue;
-            if(!b.equals(center)&&!b.getType().isOccluding())continue;
-            if(!b.getWorld().equals(center.getWorld()))continue;
-            blocks.add(b);
+        // Let protection plugins decide first. If another plugin cancelled the
+        // original break, do not bypass its protection.
+        if (event.isCancelled()) return;
+
+        Block center = event.getBlock();
+        VectorDirection direction = VectorDirection.from(p);
+
+        int minX = center.getX(), maxX = center.getX();
+        int minY = center.getY(), maxY = center.getY();
+        int minZ = center.getZ(), maxZ = center.getZ();
+
+        if (direction == VectorDirection.HORIZONTAL_XZ) {
+            minX--; maxX++;
+            minZ--; maxZ++;
+        } else if (direction == VectorDirection.VERTICAL_YZ) {
+            minY--; maxY++;
+            minZ--; maxZ++;
+        } else {
+            minX--; maxX++;
+            minY--; maxY++;
         }
-        Set<Block> processed=new HashSet<>();
-        processed.add(center);
-        for(Block b:blocks){
-            if(b.equals(center)||!processed.add(b))continue;
-            BlockBreakEvent extra=new BlockBreakEvent(b,p);
-            plugin.getServer().getPluginManager().callEvent(extra);
-            if(extra.isCancelled())continue;
+
+        List<Block> blocks = new ArrayList<>();
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    Block b = center.getWorld().getBlockAt(x, y, z);
+                    if (b.getType().isAir() || b.isLiquid() || b.getType() == Material.BEDROCK) continue;
+                    if (!b.equals(center) && !b.getType().isOccluding()) continue;
+                    blocks.add(b);
+                }
+            }
+        }
+
+        // Cancel the vanilla single-block break and handle the entire 3x3
+        // ourselves. This fixes the pickaxe relying on the vanilla break path.
+        event.setCancelled(true);
+
+        for (Block b : blocks) {
+            if (b.equals(center)) {
+                // Fire a fresh event so protection/plugins can still block it.
+                BlockBreakEvent centerEvent = new BlockBreakEvent(b, p);
+                plugin.getServer().getPluginManager().callEvent(centerEvent);
+                if (centerEvent.isCancelled()) return;
+            } else {
+                BlockBreakEvent extraEvent = new BlockBreakEvent(b, p);
+                plugin.getServer().getPluginManager().callEvent(extraEvent);
+                if (extraEvent.isCancelled()) continue;
+            }
+
             b.breakNaturally(tool);
+        }
+    }
+
+    private enum VectorDirection {
+        HORIZONTAL_XZ,
+        VERTICAL_YZ,
+        VERTICAL_XY;
+
+        static VectorDirection from(Player p) {
+            org.bukkit.util.Vector dir = p.getLocation().getDirection();
+            if (Math.abs(dir.getY()) > 0.7) return HORIZONTAL_XZ;
+            if (Math.abs(dir.getX()) > Math.abs(dir.getZ())) return VERTICAL_YZ;
+            return VERTICAL_XY;
         }
     }
 }
