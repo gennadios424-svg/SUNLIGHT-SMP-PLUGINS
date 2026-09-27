@@ -32,11 +32,11 @@ public final class ShopMenu implements Listener {
             inv.setItem(14,item(Material.COOKED_BEEF,ChatColor.GOLD+"Food","",ChatColor.GRAY+"Food & consumables"));
             inv.setItem(16,item(Material.END_CRYSTAL,ChatColor.LIGHT_PURPLE+"PvP","",ChatColor.GRAY+"Crystal PvP supplies — no armor/weapons"));
             inv.setItem(20,item(Material.BRICKS,ChatColor.YELLOW+"Blocks","",ChatColor.GRAY+"Building blocks"));
-            inv.setItem(24,item(Material.SPAWNER,ChatColor.AQUA+"Spawners","",ChatColor.GRAY+"2,000,000 each"));
+            inv.setItem(24,item(Material.SPAWNER,ChatColor.AQUA+"Spawners","",ChatColor.GRAY+"$2,000,000 each"));
             inv.setItem(49,item(Material.SUNFLOWER,ChatColor.GOLD+"☀ Sunlight Shop","",ChatColor.GRAY+"Choose a category"));
         }else{
             List<Material> list=c.equals("spawners")?List.of(Material.SPAWNER):ShopPricing.category(c); int pg=pages.getOrDefault(p.getUniqueId(),0),start=pg*45;
-            for(int i=0;i<45&&start+i<list.size();i++){Material m=list.get(start+i);String price=m==Material.SPAWNER?"1,500 Shards":"$"+money(ShopPricing.buyPrice(m));inv.setItem(i,item(m,ChatColor.WHITE+pretty(m),"",ChatColor.GREEN+"Buy: "+price,ChatColor.GRAY+"Left-click: Buy 1",ChatColor.GRAY+"Shift-click: Buy 16"));}
+            for(int i=0;i<45&&start+i<list.size();i++){Material m=list.get(start+i);String price=m==Material.SPAWNER?"$2,000,000":"$"+money(ShopPricing.buyPrice(m));inv.setItem(i,item(m,ChatColor.WHITE+pretty(m),"",ChatColor.GREEN+"Buy: "+price,ChatColor.GRAY+"Left-click: Buy 1",ChatColor.GRAY+"Shift-click: Buy 16"));}
             inv.setItem(45,item(Material.ARROW,ChatColor.YELLOW+"Previous"));inv.setItem(49,item(Material.BARRIER,ChatColor.RED+"Back"));inv.setItem(53,item(Material.ARROW,ChatColor.YELLOW+"Next"));
         }
         p.openInventory(inv);
