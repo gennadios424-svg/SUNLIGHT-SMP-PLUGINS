@@ -46,6 +46,8 @@ public final class SunlightPlayerSettings extends JavaPlugin {
         sunlightPickaxe = new SunlightPickaxe(this);
         getServer().getPluginManager().registerEvents(sunlightPickaxe, this);
 
+        getServer().getPluginManager().registerEvents(new SunlightAntiDupe(this), this);
+
         if (getCommand("sunlightpickaxe") != null) getCommand("sunlightpickaxe").setExecutor((sender, command, label, args) -> {
             if (!(sender instanceof org.bukkit.entity.Player player)) { sender.sendMessage("Only players can use this command."); return true; }
             if (!player.hasPermission("sunlightsmp.pickaxe")) { player.sendMessage(org.bukkit.ChatColor.RED+"No permission."); return true; }
