@@ -107,8 +107,9 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
 
                 if (!searching && elapsed < searchSeconds) {
                     searching = true;
-                    int x = randomCoordinate();
-                    int z = randomCoordinate();
+                    double angle = random.nextDouble() * Math.PI * 2.0;
+                    int x = (int) Math.round(Math.cos(angle) * 15_000);
+                    int z = (int) Math.round(Math.sin(angle) * 15_000);
                     world.getChunkAtAsync(x >> 4, z >> 4, true).whenComplete((chunk, error) -> {
                         Bukkit.getScheduler().runTask(plugin, () -> {
                             searching = false;
