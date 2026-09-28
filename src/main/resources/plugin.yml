@@ -71,9 +71,9 @@ commands:
     description: Buy a Sunlight Spawner for 1,500 Sunflowers
     usage: /sunflowerspawner <skeleton|zombie|witch|iron_golem|spider|creeper>
   coinflip:
-    description: Open the Sunlight Coinflip
-    usage: /coinflip
-    aliases: [flip]
+    description: Create or join a player vs player coinflip
+    usage: /cf <amount>
+    aliases: [cf, flip]
   sunkeyall:
     description: Give every online player crate keys with an animation
     usage: /sunkeyall <crate> <amount> | /sunkeyall reload
