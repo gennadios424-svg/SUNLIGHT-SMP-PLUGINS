@@ -23,7 +23,48 @@ public final class SunlightCrateManager implements Listener{
  @EventHandler public void place(BlockPlaceEvent e){ItemStack x=e.getItemInHand();if(!x.hasItemMeta())return;String t=x.getItemMeta().getPersistentDataContainer().get(crateKey,PersistentDataType.STRING);if(t==null||!valid(t))return;if(e.getBlockPlaced().getState() instanceof TileState state){state.getPersistentDataContainer().set(crateKey,PersistentDataType.STRING,t);state.update(true,false);}}
  @EventHandler(priority=EventPriority.HIGH,ignoreCancelled=true) public void interact(PlayerInteractEvent e){if(e.getAction()!=Action.RIGHT_CLICK_BLOCK||e.getClickedBlock()==null)return;if(!(e.getClickedBlock().getState() instanceof TileState state))return;String t=state.getPersistentDataContainer().get(crateKey,PersistentDataType.STRING);if(t==null||!valid(t))return;e.setCancelled(true);openPreview(e.getPlayer(),t);}
  @EventHandler(priority=EventPriority.HIGH,ignoreCancelled=true) public void breakCrate(BlockBreakEvent e){if(!(e.getBlock().getState() instanceof TileState state))return;String t=state.getPersistentDataContainer().get(crateKey,PersistentDataType.STRING);if(t==null||!valid(t))return;e.setDropItems(false);e.getBlock().setType(Material.AIR,false);ItemStack x=createCrate(t);e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(),x);}
- @EventHandler public void drag(InventoryDragEvent e){String t=e.getView().getTitle();if(t.startsWith(ChatColor.DARK_AQUA+"✎ Edit ")){for(int s:e.getRawSlots())if(s>=0&&s<54&&(s<10||s>=44)){e.setCancelled(true);return;}}}
- @EventHandler public void click(InventoryClickEvent e){String t=e.getView().getTitle();if(t.equals(MENU)){e.setCancelled(true);if(!(e.getWhoClicked() instanceof Player p)||e.getClickedInventory()!=e.getView().getTopInventory())return;for(int n=0;n<5;n++)if(e.getRawSlot()==10+n*7){openPreview(p,types[n]);return;}}else if(t.contains(" Crate Rewards")){e.setCancelled(true);if(!(e.getWhoClicked() instanceof Player p))return;if(e.getRawSlot()==49){String type=previewing.remove(p.getUniqueId());if(type!=null)openCrate(p,type);}else if(e.getRawSlot()==53){previewing.remove(p.getUniqueId());p.closeInventory();}}else if(t.startsWith(ChatColor.DARK_AQUA+"✎ Edit ")){int s=e.getRawSlot();if(s==49){e.setCancelled(true);saveEditor((Player)e.getWhoClicked());}else if(s==53){e.setCancelled(true);editing.remove(e.getWhoClicked().getUniqueId());e.getWhoClicked().closeInventory();}else if(s>=0&&s<54&&(s<10||s>=44))e.setCancelled(true);}else if(t.endsWith(" Crate"))e.setCancelled(true);}
- @EventHandler public void close(InventoryCloseEvent e){String t=e.getView().getTitle();if(t.contains(" Crate Rewards"))previewing.remove(e.getPlayer().getUniqueId());}
+ @EventHandler public void drag(InventoryDragEvent e){
+  String t=e.getView().getTitle();
+  if(!t.startsWith(ChatColor.DARK_AQUA+"✎ Edit ")) return;
+  for(int s:e.getRawSlots()){
+    if(s<0||s>=54) continue;
+    int row=s/9,col=s%9;
+    boolean rewardSlot=row>=1&&row<=4&&col>=1&&col<=7;
+    if(!rewardSlot){e.setCancelled(true);return;}
+  }
+}
+ @EventHandler public void click(InventoryClickEvent e){
+  String t=e.getView().getTitle();
+  if(t.equals(MENU)){
+    e.setCancelled(true);
+    if(!(e.getWhoClicked() instanceof Player p)||e.getClickedInventory()!=e.getView().getTopInventory())return;
+    for(int n=0;n<5;n++)if(e.getRawSlot()==10+n*7){openPreview(p,types[n]);return;}
+  }else if(t.contains(" Crate Rewards")){
+    e.setCancelled(true);
+    if(!(e.getWhoClicked() instanceof Player p))return;
+    if(e.getRawSlot()==49){String type=previewing.remove(p.getUniqueId());if(type!=null)openCrate(p,type);}
+    else if(e.getRawSlot()==53){previewing.remove(p.getUniqueId());p.closeInventory();}
+  }else if(t.startsWith(ChatColor.DARK_AQUA+"✎ Edit ")){
+    int s=e.getRawSlot();
+    if(s==49){e.setCancelled(true);saveEditor((Player)e.getWhoClicked());return;}
+    if(s==53){e.setCancelled(true);editing.remove(e.getWhoClicked().getUniqueId());pClose(e.getWhoClicked());return;}
+    if(e.getClick()==ClickType.SHIFT_LEFT||e.getClick()==ClickType.SHIFT_RIGHT){
+      if(e.getClickedInventory()!=e.getView().getBottomInventory())e.setCancelled(true);
+      else e.setCancelled(true);
+      return;
+    }
+    if(s>=0&&s<54){
+      int row=s/9,col=s%9;
+      boolean rewardSlot=row>=1&&row<=4&&col>=1&&col<=7;
+      if(!rewardSlot)e.setCancelled(true);
+    }
+  }else if(t.endsWith(" Crate"))e.setCancelled(true);
+}
+private void pClose(org.bukkit.inventory.InventoryHolder h){if(h instanceof Player p)p.closeInventory();}
+ @EventHandler public void close(InventoryCloseEvent e){
+  String t=e.getView().getTitle();
+  UUID id=e.getPlayer().getUniqueId();
+  if(t.contains(" Crate Rewards"))previewing.remove(id);
+  if(t.startsWith(ChatColor.DARK_AQUA+"✎ Edit ")) editing.remove(id);
+}
 }
