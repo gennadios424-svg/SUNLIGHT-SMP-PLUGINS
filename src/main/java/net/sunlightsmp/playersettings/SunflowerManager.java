@@ -24,10 +24,24 @@ public final class SunflowerManager {
     }
 
     public long get(Player p) { return balances.getOrDefault(p.getUniqueId(), 0L); }
+    public long get(UUID id) { return balances.getOrDefault(id, 0L); }
+
+    public Map<UUID, Long> topBalances(int limit) {
+        List<Map.Entry<UUID, Long>> entries = new ArrayList<>(balances.entrySet());
+        entries.sort(Map.Entry.<UUID, Long>comparingByValue().reversed());
+        Map<UUID, Long> out = new LinkedHashMap<>();
+        for (Map.Entry<UUID, Long> e : entries) {
+            if (out.size() >= Math.max(1, limit)) break;
+            out.put(e.getKey(), e.getValue());
+        }
+        return out;
+    }
+
     public void add(Player p, long amount) {
         if (amount <= 0) return;
         balances.merge(p.getUniqueId(), amount, Long::sum);
     }
+
     public boolean remove(Player p, long amount) {
         if (amount <= 0 || get(p) < amount) return false;
         balances.put(p.getUniqueId(), get(p) - amount);
@@ -62,12 +76,10 @@ public final class SunflowerManager {
                     .get(new NamespacedKey(plugin, "sunlight_shard_booster"), org.bukkit.persistence.PersistentDataType.BYTE);
             Long expiry = i.getItemMeta().getPersistentDataContainer()
                     .get(new NamespacedKey(plugin, "sunlight_shard_booster_expiry"), org.bukkit.persistence.PersistentDataType.LONG);
-            if (b != null && b == 1 && expiry != null && now() < expiry) return true;
+            if (b != null && b == 1 && expiry != null && System.currentTimeMillis() < expiry) return true;
         }
         return false;
     }
-
-    private long now() { return System.currentTimeMillis(); }
 
     private void tick() {
         long now = System.currentTimeMillis();
