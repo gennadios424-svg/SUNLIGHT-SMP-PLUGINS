@@ -39,6 +39,8 @@ crimson:
     amount: 2-8
 
 sunset:
+  - material: SUNSET_ELYTRA
+    amount: 1
   - material: GOLDEN_APPLE
     amount: 1-3
   - material: ENDER_PEARL
