@@ -145,7 +145,9 @@ public final class TPAManager implements Listener {
             teleports.remove(id);
             plugin.getTpaStartLocations().remove(id);
             if (!teleporter.isOnline() || !destination.isOnline()) return;
-            teleporter.teleport(destination.getLocation());
+            Location safe = findSafeOverworldSurface(destination.getLocation());
+            if (safe == null) { teleporter.sendMessage(Component.text("✦ Could not find a safe surface location near " + destination.getName() + ".", NamedTextColor.RED)); return; }
+            teleporter.teleport(safe);
             teleporter.sendActionBar(Component.text("✦ TELEPORTED SUCCESSFULLY! ✦", NamedTextColor.YELLOW));
             destination.sendActionBar(Component.text("✦ " + teleporter.getName() + " HAS ARRIVED! ✦", NamedTextColor.GREEN));
             teleporter.playSound(teleporter.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
