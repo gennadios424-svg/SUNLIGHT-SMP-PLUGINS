@@ -97,7 +97,7 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
                     return;
                 }
 
-                int y = findSolidGroundY(world, x, z);
+                int y = findSolidGroundY(world, x, z, environment);
                 if (y == Integer.MIN_VALUE) {
                     player.sendActionBar(ChatColor.RED + "☀ RTP failed. Try again.");
                     return;
@@ -118,17 +118,37 @@ public final class RTPCommand implements org.bukkit.command.CommandExecutor, Lis
         });
     }
 
-    private int findSolidGroundY(World world, int x, int z) {
+    private int findSolidGroundY(World world, int x, int z, World.Environment environment) {
         int highest = world.getHighestBlockYAt(x, z);
-        if (highest > world.getMaxHeight() - 1) highest = world.getMaxHeight() - 1;
 
-        // Never RTP onto bedrock. Search downward for the highest non-bedrock solid block.
+        // Nether roof is around Y=127/128. Never use the roof as RTP ground.
+        // Keep a generous ceiling so the player is always below the bedrock roof.
+        if (environment == World.Environment.NETHER) {
+            highest = Math.min(highest, 120);
+        } else {
+            highest = Math.min(highest, world.getMaxHeight() - 1);
+        }
+
         for (int y = highest; y >= world.getMinHeight(); y--) {
             Material type = world.getBlockAt(x, y, z).getType();
-            if (type.isSolid() && type != Material.BEDROCK && type != Material.END_PORTAL_FRAME) {
+
+            if (!type.isSolid()
+                    || type == Material.BEDROCK
+                    || type == Material.END_PORTAL_FRAME
+                    || type == Material.LAVA
+                    || type == Material.WATER) {
+                continue;
+            }
+
+            // Make sure there is enough space for the player above the ground.
+            Material feet = world.getBlockAt(x, y + 1, z).getType();
+            Material head = world.getBlockAt(x, y + 2, z).getType();
+
+            if (feet.isAir() && head.isAir()) {
                 return y;
             }
         }
+
         return Integer.MIN_VALUE;
     }
 
