@@ -1,171 +1,34 @@
 package net.sunlightsmp.playersettings;
 
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.event.*;
+import org.bukkit.event.inventory.*;
+import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
-
+import org.bukkit.plugin.RegisteredServiceProvider;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class CoinflipCommand implements org.bukkit.command.CommandExecutor, Listener {
-    private static final String TITLE = ChatColor.GOLD + "☀ Coinflip";
-    private static final String ROLLING = ChatColor.GOLD + "☀ Coinflip • Rolling...";
-    private final SunlightPlayerSettings plugin;
-    private final CoinflipManager manager;
-    private final Set<UUID> rolling = new HashSet<>();
-
-    public CoinflipCommand(SunlightPlayerSettings plugin, CoinflipManager manager) {
-        this.plugin = plugin;
-        this.manager = manager;
-    }
-
-    private ItemStack item(Material material, String name, String... lore) {
-        ItemStack i = new ItemStack(material);
-        ItemMeta m = i.getItemMeta();
-        m.setDisplayName(name);
-        m.setLore(Arrays.asList(lore));
-        i.setItemMeta(m);
-        return i;
-    }
-
-    private String pct(long part, long total) {
-        if (total <= 0) return "0.0%";
-        return String.format(Locale.US, "%.1f%%", (part * 100.0) / total);
-    }
-
-    private void fill(org.bukkit.inventory.Inventory inv) {
-        for (int i = 0; i < inv.getSize(); i++)
-            inv.setItem(i, item(Material.BLACK_STAINED_GLASS_PANE, " "));
-    }
-
-    public void open(Player p) {
-        org.bukkit.inventory.Inventory inv = Bukkit.createInventory(null, 45, TITLE);
-        fill(inv);
-
-        CoinflipManager.Stats s = manager.get(p.getUniqueId());
-        inv.setItem(13, item(Material.SUNFLOWER,
-                ChatColor.GOLD + "☀ Coinflip",
-                "",
-                ChatColor.GRAY + "Flip the coin and see what you get",
-                ChatColor.DARK_GRAY + "No items are consumed"));
-
-        inv.setItem(20, item(Material.PLAYER_HEAD,
-                ChatColor.YELLOW + "Your Stats",
-                "",
-                ChatColor.GRAY + "Total flips: " + ChatColor.WHITE + s.flips,
-                ChatColor.GRAY + "Heads: " + ChatColor.WHITE + s.heads + ChatColor.DARK_GRAY + " (" + pct(s.heads, s.flips) + ")",
-                ChatColor.GRAY + "Tails: " + ChatColor.WHITE + s.tails + ChatColor.DARK_GRAY + " (" + pct(s.tails, s.flips) + ")"));
-
-        inv.setItem(24, item(Material.SUNFLOWER,
-                ChatColor.YELLOW + "Start Flip",
-                "",
-                ChatColor.GRAY + "Click to flip the coin",
-                ChatColor.DARK_GRAY + "The result is shown after the roll"));
-
-        inv.setItem(31, item(Material.GOLD_NUGGET,
-                ChatColor.GOLD + "Coin Stats",
-                "",
-                ChatColor.GRAY + "Heads: " + ChatColor.WHITE + s.heads,
-                ChatColor.GRAY + "Tails: " + ChatColor.WHITE + s.tails,
-                ChatColor.GRAY + "Total: " + ChatColor.WHITE + s.flips));
-
-        inv.setItem(40, item(Material.BARRIER, ChatColor.RED + "Close"));
-        p.openInventory(inv);
-    }
-
-    private void openRolling(Player p) {
-        org.bukkit.inventory.Inventory inv = Bukkit.createInventory(null, 45, ROLLING);
-        fill(inv);
-        inv.setItem(13, item(Material.SUNFLOWER, ChatColor.GOLD + "☀ FLIPPING...",
-                "", ChatColor.GRAY + "The coin is rolling"));
-        inv.setItem(20, item(Material.IRON_NUGGET, ChatColor.WHITE + "HEADS"));
-        inv.setItem(24, item(Material.GOLD_NUGGET, ChatColor.GOLD + "TAILS"));
-        inv.setItem(31, item(Material.CLOCK, ChatColor.AQUA + "Please wait...",
-                "", ChatColor.GRAY + "The result will appear shortly"));
-        p.openInventory(inv);
-    }
-
-    private void finish(Player p) {
-        rolling.remove(p.getUniqueId());
-        boolean heads = ThreadLocalRandom.current().nextBoolean();
-        manager.record(p.getUniqueId(), heads);
-
-        p.closeInventory();
-        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, heads ? 1.4f : 0.8f);
-        p.sendTitle(
-                heads ? ChatColor.WHITE + "HEADS" : ChatColor.GOLD + "TAILS",
-                ChatColor.GRAY + "☀ Coinflip result",
-                5, 35, 10
-        );
-        Bukkit.getScheduler().runTaskLater(plugin, () -> open(p), 45L);
-    }
-
-    private void animate(Player p) {
-        final UUID id = p.getUniqueId();
-        rolling.add(id);
-        openRolling(p);
-
-        Material[] faces = {Material.GOLD_NUGGET, Material.IRON_NUGGET, Material.GOLD_NUGGET, Material.IRON_NUGGET,
-                Material.GOLD_NUGGET, Material.IRON_NUGGET, Material.GOLD_NUGGET, Material.IRON_NUGGET};
-        String[] names = {ChatColor.GOLD + "TAILS", ChatColor.WHITE + "HEADS", ChatColor.GOLD + "TAILS", ChatColor.WHITE + "HEADS",
-                ChatColor.GOLD + "TAILS", ChatColor.WHITE + "HEADS", ChatColor.GOLD + "TAILS", ChatColor.WHITE + "HEADS"};
-
-        for (int i = 0; i < faces.length; i++) {
-            final int step = i;
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                if (!rolling.contains(id) || !p.isOnline()) return;
-                org.bukkit.inventory.Inventory inv = p.getOpenInventory().getTopInventory();
-                if (!p.getOpenInventory().getTitle().equals(ROLLING)) return;
-                inv.setItem(13, item(faces[step], names[step], "",
-                        ChatColor.GRAY + "Rolling...",
-                        ChatColor.DARK_GRAY + "Flip #" + (step + 1)));
-                p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.55f, 1.0f + (step * 0.05f));
-            }, 8L + (i * 6L));
-        }
-
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (rolling.contains(id) && p.isOnline()) finish(p);
-        }, 62L);
-    }
-
-    @Override
-    public boolean onCommand(org.bukkit.command.CommandSender sender, org.bukkit.command.Command command, String label, String[] args) {
-        if (!(sender instanceof Player p)) {
-            sender.sendMessage("Only players can use this command.");
-            return true;
-        }
-        if (rolling.contains(p.getUniqueId())) return true;
-        open(p);
-        return true;
-    }
-
-    @EventHandler
-    public void click(InventoryClickEvent e) {
-        if (!(e.getWhoClicked() instanceof Player p)) return;
-        String title = e.getView().getTitle();
-        if (!title.equals(TITLE) && !title.equals(ROLLING)) return;
-        e.setCancelled(true);
-        if (title.equals(ROLLING)) return;
-
-        int slot = e.getRawSlot();
-        if (slot == 24) {
-            animate(p);
-        } else if (slot == 40) {
-            p.closeInventory();
-        } else if (slot == 20) {
-            open(p);
-        }
-    }
-
-    @EventHandler
-    public void close(org.bukkit.event.inventory.InventoryCloseEvent e) {
-        if (!(e.getPlayer() instanceof Player p)) return;
-        if (e.getView().getTitle().equals(ROLLING)) {
-            rolling.remove(p.getUniqueId());
-        }
-    }
+ private final SunlightPlayerSettings plugin; private final CoinflipManager manager; private final Map<UUID,Game> games=new LinkedHashMap<>(); private final Map<UUID,Game> active=new HashMap<>(); private Economy eco;
+ private static final String MENU=ChatColor.DARK_GRAY+"☀ "+ChatColor.GOLD+"Coinflip"; private static final String QUEUE=ChatColor.DARK_GRAY+"☀ "+ChatColor.GOLD+"Coinflip Queue"; private static final String ROLL=ChatColor.DARK_GRAY+"☀ "+ChatColor.GOLD+"Coinflip • "+ChatColor.YELLOW+"Rolling";
+ private static final class Game { UUID host,join; double amount; Game(UUID h,double a){host=h;amount=a;} }
+ public CoinflipCommand(SunlightPlayerSettings p,CoinflipManager m){plugin=p;manager=m; RegisteredServiceProvider<Economy> rsp=Bukkit.getServicesManager().getRegistration(Economy.class); if(rsp!=null)eco=rsp.getProvider();}
+ private ItemStack item(Material mat,String name,String... lore){ItemStack i=new ItemStack(mat);ItemMeta m=i.getItemMeta();m.setDisplayName(name);m.setLore(Arrays.asList(lore));i.setItemMeta(m);return i;}
+ private void frame(Inventory inv){for(int i=0;i<inv.getSize();i++)inv.setItem(i,item(Material.BLACK_STAINED_GLASS_PANE,ChatColor.DARK_GRAY+" "));int[] s={0,1,7,8,9,17,27,35,36,37,43,44};for(int x:s)inv.setItem(x,item(Material.YELLOW_STAINED_GLASS_PANE,ChatColor.GOLD+"☀"));}
+ private String money(double n){return String.format(Locale.US,"%,.0f",n);}
+ private double parse(String s){s=s.toLowerCase(Locale.US).replace(",","");double mult=1;if(s.endsWith("k")){mult=1e3;s=s.substring(0,s.length()-1);}else if(s.endsWith("m")){mult=1e6;s=s.substring(0,s.length()-1);}else if(s.endsWith("b")){mult=1e9;s=s.substring(0,s.length()-1);}return Double.parseDouble(s)*mult;}
+ private void open(Player p){Inventory inv=Bukkit.createInventory(null,45,MENU);frame(inv);inv.setItem(13,item(Material.GOLD_NUGGET,ChatColor.YELLOW+"☀ COINFLIP",ChatColor.GRAY+"Player vs Player",ChatColor.DARK_GRAY+"Create a wager and wait for an opponent"));inv.setItem(20,item(Material.GOLD_INGOT,ChatColor.GOLD+"Create Coinflip",ChatColor.GRAY+"/cf 10k",ChatColor.DARK_GRAY+"Your money is held until the game starts"));inv.setItem(24,item(Material.CHEST,ChatColor.YELLOW+"Open Queue",ChatColor.GRAY+"See waiting coinflips",ChatColor.DARK_GRAY+"Click to browse games"));CoinflipManager.Stats s=manager.get(p.getUniqueId());inv.setItem(31,item(Material.PLAYER_HEAD,ChatColor.WHITE+"Your Stats",ChatColor.GRAY+"Flips: "+s.flips,ChatColor.GRAY+"Heads: "+s.heads,ChatColor.GRAY+"Tails: "+s.tails));inv.setItem(40,item(Material.BARRIER,ChatColor.RED+"Close"));p.openInventory(inv);}
+ private void queue(Player p){Inventory inv=Bukkit.createInventory(null,54,QUEUE);frame(inv);int slot=10;for(Game g:games.values()){if(g.join!=null||g.host.equals(p.getUniqueId()))continue;String n=Bukkit.getOfflinePlayer(g.host).getName();inv.setItem(slot,item(Material.GOLD_NUGGET,ChatColor.YELLOW+"☀ "+(n==null?"Player":n)+"'s Coinflip",ChatColor.GRAY+"Wager: "+ChatColor.WHITE+money(g.amount),ChatColor.GRAY+"1v1 • Random Heads/Tails",ChatColor.YELLOW+"Click to join"));slot++;if(slot==44)break;}if(slot==10)inv.setItem(22,item(Material.PAPER,ChatColor.GRAY+"Queue is empty",ChatColor.DARK_GRAY+"Use /cf <amount> to create one"));inv.setItem(49,item(Material.BARRIER,ChatColor.RED+"Back"));p.openInventory(inv);}
+ private void create(Player p,double amount){if(eco==null){p.sendMessage(ChatColor.RED+"Vault economy is unavailable.");return;}if(amount<=0||Double.isInfinite(amount)){p.sendMessage(ChatColor.RED+"Invalid coinflip amount.");return;}if(eco.getBalance(p)<amount){p.sendMessage(ChatColor.RED+"You need "+money(amount)+" money.");return;}eco.withdrawPlayer(p,amount);Game g=new Game(p.getUniqueId(),amount);games.put(p.getUniqueId(),g);p.sendMessage(ChatColor.YELLOW+"☀ Coinflip created for "+money(amount)+"! Waiting for an opponent.");queue(p);}
+ private void join(Player p,Game g){if(eco==null||g.join!=null)return;if(g.host.equals(p.getUniqueId()))return;if(eco.getBalance(p)<g.amount){p.sendMessage(ChatColor.RED+"You need "+money(g.amount)+" money to join.");return;}eco.withdrawPlayer(p,g.amount);g.join=p.getUniqueId();active.put(g.host,g);active.put(g.join,g);games.remove(g.host);start(g);}
+ private void start(Game g){Player a=Bukkit.getPlayer(g.host),b=Bukkit.getPlayer(g.join);if(a==null||b==null){if(a!=null)eco.depositPlayer(a,g.amount);if(b!=null)eco.depositPlayer(b,g.amount);active.remove(g.host);active.remove(g.join);return;}openRoll(a);openRoll(b);for(int i=0;i<16;i++){final int x=i;Bukkit.getScheduler().runTaskLater(plugin,()->{if(a.isOnline()&&b.isOnline()){boolean h=x%2==0;pulse(a,h,x);pulse(b,h,x);}},6L+i*4L);}Bukkit.getScheduler().runTaskLater(plugin,()->finish(g,a,b),72L);}
+ private void openRoll(Player p){Inventory inv=Bukkit.createInventory(null,45,ROLL);frame(inv);inv.setItem(13,item(Material.GOLD_NUGGET,ChatColor.YELLOW+"FLIPPING",ChatColor.GRAY+"Player vs Player",ChatColor.DARK_GRAY+"The coin is deciding..."));inv.setItem(20,item(Material.PLAYER_HEAD,ChatColor.WHITE+"Opponent",ChatColor.GRAY+"Waiting for result"));inv.setItem(24,item(Material.GOLD_INGOT,ChatColor.GOLD+"WAGER",ChatColor.WHITE+"Coinflip"));p.openInventory(inv);}
+ private void pulse(Player p,boolean heads,int x){if(!p.isOnline()||!p.getOpenInventory().getTitle().equals(ROLL))return;p.getOpenInventory().getTopInventory().setItem(13,item(heads?Material.IRON_NUGGET:Material.GOLD_NUGGET,heads?ChatColor.WHITE+"HEADS":ChatColor.GOLD+"TAILS","",ChatColor.GRAY+"Rolling • "+(x+1)+"/16"));p.playSound(p.getLocation(),Sound.BLOCK_NOTE_BLOCK_PLING,.55f,0.7f+x*.035f);p.sendActionBar(ChatColor.GOLD+"☀ "+ChatColor.YELLOW+"COINFLIP "+ChatColor.DARK_GRAY+"» "+(heads?ChatColor.WHITE+"HEADS":ChatColor.GOLD+"TAILS"));}
+ private void finish(Game g,Player a,Player b){boolean heads=ThreadLocalRandom.current().nextBoolean();Player winner=heads?a:b;Player loser=heads?b:a;eco.depositPlayer(winner,g.amount*2);manager.record(a.getUniqueId(),heads);manager.record(b.getUniqueId(),!heads);active.remove(a.getUniqueId());active.remove(b.getUniqueId());for(Player p:new Player[]{a,b}){if(p.isOnline()){p.closeInventory();p.sendTitle(heads?(p==a?ChatColor.WHITE+"HEADS":ChatColor.GOLD+"TAILS"):(p==a?ChatColor.GOLD+"TAILS":ChatColor.WHITE+"HEADS"),ChatColor.YELLOW+"☀ "+money(g.amount*2)+" pot",5,40,10);p.playSound(p.getLocation(),Sound.ENTITY_PLAYER_LEVELUP,1f,1.25f);Bukkit.getScheduler().runTaskLater(plugin,()->open(p),45L);}}}
+ @Override public boolean onCommand(org.bukkit.command.CommandSender s,org.bukkit.command.Command c,String l,String[] a){if(!(s instanceof Player p))return true;if(a.length==0){open(p);return true;}if(!a[0].equalsIgnoreCase("10k")&&a.length<1){}try{double n=parse(a[0]);create(p,n);}catch(Exception e){p.sendMessage(ChatColor.YELLOW+"☀ Usage: /cf <amount>  (examples: 10k, 500k, 1m)");}return true;}
+ @EventHandler public void click(InventoryClickEvent e){if(!(e.getWhoClicked() instanceof Player p))return;String t=e.getView().getTitle();if(!t.equals(MENU)&&!t.equals(QUEUE)&&!t.equals(ROLL))return;e.setCancelled(true);if(t.equals(ROLL))return;if(t.equals(MENU)){if(e.getRawSlot()==40)p.closeInventory();else if(e.getRawSlot()==24)queue(p);else if(e.getRawSlot()==20)p.sendMessage(ChatColor.YELLOW+"☀ Use /cf <amount> to create a Player vs Player coinflip.");}else if(t.equals(QUEUE)){if(e.getRawSlot()==49){open(p);return;}ItemStack clicked=e.getCurrentItem();if(clicked==null)return;for(Game g:new ArrayList<>(games.values())){if(g.join==null&&!g.host.equals(p.getUniqueId())&&clicked.getItemMeta()!=null&&clicked.getItemMeta().getDisplayName().contains(Bukkit.getOfflinePlayer(g.host).getName()==null?"":Bukkit.getOfflinePlayer(g.host).getName())){join(p,g);break;}}}}
+ @EventHandler public void close(InventoryCloseEvent e){if(!(e.getPlayer() instanceof Player p))return;if(e.getView().getTitle().equals(ROLL)){if(active.containsKey(p.getUniqueId())){p.openInventory(e.getView().getTopInventory());}}}
 }
