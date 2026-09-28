@@ -111,7 +111,20 @@ public final class SunflowerCommand implements org.bukkit.command.CommandExecuto
     @Override
     public boolean onCommand(org.bukkit.command.CommandSender sender, org.bukkit.command.Command command, String label, String[] args) {
         if (!(sender instanceof Player p)) { sender.sendMessage("Only players can use this command."); return true; }
-        if (args.length > 0 && args[0].equalsIgnoreCase("give")) {\n            if (!p.hasPermission("sunlightsmp.sunflower.admin")) { p.sendMessage(ChatColor.RED + "No permission."); return true; }\n            if (args.length < 3) { p.sendMessage(ChatColor.YELLOW + "☀ /sunflower give <player> <amount>"); return true; }\n            Player target = plugin.getServer().getPlayerExact(args[1]);\n            if (target == null) { p.sendMessage(ChatColor.RED + "Player not found or offline."); return true; }\n            long amount; try { amount = Long.parseLong(args[2].replace(",", "")); } catch (Exception ex) { p.sendMessage(ChatColor.RED + "Amount must be a number."); return true; }\n            if (amount <= 0) { p.sendMessage(ChatColor.RED + "Amount must be greater than 0."); return true; }\n            if (amount > 1_000_000_000L) { p.sendMessage(ChatColor.RED + "Amount is too large."); return true; }\n            manager.add(target, amount);\n            p.sendMessage(ChatColor.GREEN + "☀ Gave " + ChatColor.YELLOW + fmt(amount) + ChatColor.GREEN + " Sunflowers to " + ChatColor.YELLOW + target.getName() + ChatColor.GREEN + ".");\n            target.sendMessage(ChatColor.GOLD + "☀ You received " + ChatColor.YELLOW + fmt(amount) + ChatColor.GOLD + " Sunflowers.");\n            return true;\n        }\n        if (args.length > 0 && args[0].equalsIgnoreCase("claim")) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("give")) {
+            if (!p.hasPermission("sunlightsmp.sunflower.admin")) { p.sendMessage(ChatColor.RED + "No permission."); return true; }
+            if (args.length < 3) { p.sendMessage(ChatColor.YELLOW + "☀ /sunflower give <player> <amount>"); return true; }
+            Player target = plugin.getServer().getPlayerExact(args[1]);
+            if (target == null) { p.sendMessage(ChatColor.RED + "Player not found or offline."); return true; }
+            long amount; try { amount = Long.parseLong(args[2].replace(",", "")); } catch (Exception ex) { p.sendMessage(ChatColor.RED + "Amount must be a number."); return true; }
+            if (amount <= 0) { p.sendMessage(ChatColor.RED + "Amount must be greater than 0."); return true; }
+            if (amount > 1_000_000_000L) { p.sendMessage(ChatColor.RED + "Amount is too large."); return true; }
+            manager.add(target, amount);
+            p.sendMessage(ChatColor.GREEN + "☀ Gave " + ChatColor.YELLOW + fmt(amount) + ChatColor.GREEN + " Sunflowers to " + ChatColor.YELLOW + target.getName() + ChatColor.GREEN + ".");
+            target.sendMessage(ChatColor.GOLD + "☀ You received " + ChatColor.YELLOW + fmt(amount) + ChatColor.GOLD + " Sunflowers.");
+            return true;
+        }
+        if (args.length > 0 && args[0].equalsIgnoreCase("claim")) {
             if (!manager.claim(p)) {
                 p.sendMessage(ChatColor.RED + "☀ You can claim Sunflowers once every 5 minutes.");
                 return true;
