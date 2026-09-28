@@ -16,76 +16,17 @@ import java.util.Locale;
 
 public final class SunlightTabList implements Listener {
     private final SunlightPlayerSettings plugin;
-
-    public SunlightTabList(SunlightPlayerSettings plugin) {
-        this.plugin = plugin;
-        refresh();
-        new BukkitRunnable() {
-            @Override public void run() { refresh(); }
-        }.runTaskTimer(plugin, 20L, 20L);
-    }
-
-    @EventHandler public void onJoin(PlayerJoinEvent e) { refresh(); }
-    @EventHandler public void onQuit(PlayerQuitEvent e) { Bukkit.getScheduler().runTask(plugin, this::refresh); }
-
-    private Economy economy() {
-        var registration = plugin.getServer().getServicesManager().getRegistration(Economy.class);
-        return registration == null ? null : registration.getProvider();
-    }
-
-    private String money(Player p) {
-        Economy eco = economy();
-        return eco == null ? "0" : NumberFormat.getNumberInstance(Locale.US).format(eco.getBalance(p));
-    }
-
-    private String playtime(Player p) {
-        long minutes = p.getStatistic(org.bukkit.Statistic.PLAY_ONE_MINUTE) / 1200L;
-        long days = minutes / 1440L;
-        long hours = (minutes % 1440L) / 60L;
-        long mins = minutes % 60L;
-        if (days > 0) return days + "d " + hours + "h";
-        if (hours > 0) return hours + "h " + mins + "m";
-        return mins + "m";
-    }
-
-    private String team(Player p) {
-        var team = p.getScoreboard().getEntryTeam(p.getName());
-        if (team == null || team.getName().isBlank()) return "No Team";
-        String prefix = ChatColor.stripColor(team.getPrefix());
-        if (prefix != null && !prefix.isBlank()) return prefix.trim();
-        return team.getName();
-    }
-
-    private void refresh() {
-        List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
-        for (Player viewer : players) {
-            StringBuilder header = new StringBuilder();
-            header.append("\n").append(ChatColor.GOLD).append("☀ ").append(ChatColor.YELLOW).append("SUNLIGHT SMP").append("\n")
-                    .append(ChatColor.DARK_GRAY).append("━━━━━━━━━━━━━━━━━━━━━━━━").append("\n")
-                    .append(ChatColor.GRAY).append("Online ").append(ChatColor.YELLOW).append(players.size())
-                    .append(ChatColor.DARK_GRAY).append("  •  ").append(ChatColor.GRAY).append("Ping ")
-                    .append(ChatColor.GREEN).append(viewer.getPing()).append("ms").append("\n")
-                    .append(ChatColor.DARK_GRAY).append("━━━━━━━━━━━━━━━━━━━━━━━━").append("\n")
-                    .append(ChatColor.GOLD).append("💰 $").append(ChatColor.WHITE).append(money(viewer))
-                    .append(ChatColor.DARK_GRAY).append("  •  ").append(ChatColor.YELLOW).append("🌻 ")
-                    .append(ChatColor.WHITE).append(plugin.getSunflowerManager().get(viewer)).append("\n")
-                    .append(ChatColor.AQUA).append("⚔ Team: ").append(ChatColor.WHITE).append(team(viewer))
-                    .append(ChatColor.DARK_GRAY).append("  •  ").append(ChatColor.LIGHT_PURPLE).append("⏱ ")
-                    .append(ChatColor.WHITE).append(playtime(viewer)).append("\n");
-
-            StringBuilder footer = new StringBuilder();
-            footer.append("\n").append(ChatColor.GOLD).append("☀ ").append(ChatColor.YELLOW).append("SUNLIGHT SMP")
-                    .append(ChatColor.GRAY).append("  •  ").append(ChatColor.YELLOW).append("play.sunlight-smp.net").append("\n")
-                    .append(ChatColor.DARK_GRAY).append("━━━━━━━━━━━━━━━━━━━━━━━━").append("\n")
-                    .append(ChatColor.GRAY).append("Your Ping: ").append(ChatColor.GREEN).append(viewer.getPing()).append(" ms")
-                    .append(ChatColor.DARK_GRAY).append("  •  ").append(ChatColor.GRAY).append("Stay bright ☀").append("\n");
-
-            viewer.setPlayerListHeaderFooter(header.toString(), footer.toString());
-            for (Player target : players) {
-                target.setPlayerListName(ChatColor.YELLOW + target.getName()
-                        + ChatColor.DARK_GRAY + "  •  " + ChatColor.AQUA + team(target)
-                        + ChatColor.DARK_GRAY + "  •  " + ChatColor.GREEN + target.getPing() + "ms");
-            }
-        }
-    }
+    public SunlightTabList(SunlightPlayerSettings plugin){this.plugin=plugin;refresh();new BukkitRunnable(){@Override public void run(){refresh();}}.runTaskTimer(plugin,20L,20L);}
+    @EventHandler public void onJoin(PlayerJoinEvent e){refresh();}
+    @EventHandler public void onQuit(PlayerQuitEvent e){Bukkit.getScheduler().runTask(plugin,this::refresh);}
+    private Economy economy(){var r=plugin.getServer().getServicesManager().getRegistration(Economy.class);return r==null?null:r.getProvider();}
+    private String money(Player p){Economy e=economy();return e==null?"0":NumberFormat.getNumberInstance(Locale.US).format(e.getBalance(p));}
+    private String playtime(Player p){long m=p.getStatistic(org.bukkit.Statistic.PLAY_ONE_MINUTE)/1200L,d=m/1440L,h=(m%1440L)/60L,min=m%60L;return d>0?d+"d "+h+"h":h>0?h+"h "+min+"m":min+"m";}
+    private String team(Player p){var t=p.getScoreboard().getEntryTeam(p.getName());if(t==null||t.getName().isBlank())return "No Team";String s=ChatColor.stripColor(t.getPrefix());return s==null||s.isBlank()?t.getName():s.trim();}
+    private void refresh(){List<Player> players=new ArrayList<>(Bukkit.getOnlinePlayers());for(Player viewer:players){
+        String header="\n"+ChatColor.GOLD+"☀ "+ChatColor.YELLOW+"SUNLIGHT SMP\n"+ChatColor.DARK_GRAY+"━━━━━━━━━━━━━━━━━━━━━━━━\n"+ChatColor.GRAY+"Online "+ChatColor.YELLOW+players.size()+ChatColor.DARK_GRAY+"  •  "+ChatColor.GRAY+"Ping "+ChatColor.GREEN+viewer.getPing()+"ms\n"+ChatColor.DARK_GRAY+"━━━━━━━━━━━━━━━━━━━━━━━━\n"+ChatColor.GOLD+"💰 $"+ChatColor.WHITE+money(viewer)+ChatColor.DARK_GRAY+"  •  "+ChatColor.YELLOW+"🌻 "+ChatColor.WHITE+plugin.getSunflowerManager().get(viewer)+"\n"+ChatColor.AQUA+"⚔ Team: "+ChatColor.WHITE+team(viewer)+ChatColor.DARK_GRAY+"  •  "+ChatColor.LIGHT_PURPLE+"⏱ "+ChatColor.WHITE+playtime(viewer)+"\n";
+        String footer="\n"+ChatColor.GOLD+"☀ "+ChatColor.YELLOW+"SUNLIGHT SMP"+ChatColor.GRAY+"  •  "+ChatColor.YELLOW+"s1.seranodes.com:25638\n"+ChatColor.DARK_GRAY+"━━━━━━━━━━━━━━━━━━━━━━━━\n"+ChatColor.GRAY+"Online: "+ChatColor.GREEN+players.size()+ChatColor.DARK_GRAY+"  •  "+ChatColor.GRAY+"Sunlight SMP\n";
+        viewer.setPlayerListHeaderFooter(header,footer);
+        for(Player target:players)target.setPlayerListName(ChatColor.YELLOW+target.getName()+ChatColor.DARK_GRAY+"  •  "+ChatColor.AQUA+team(target)+ChatColor.DARK_GRAY+"  •  "+ChatColor.GREEN+target.getPing()+"ms");
+    }}
 }
