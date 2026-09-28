@@ -31,8 +31,8 @@ jobs:
 
       - name: Verify JAR
         run: |
-          test -f auth-target/SunlightAuth.jar
-          echo "Built SunlightAuth.jar successfully."
+          test -f target/SunlightAuth.jar
+          echo "Built target/SunlightAuth.jar successfully."
 
       - name: Create SunlightAuth release
         uses: softprops/action-gh-release@v2
@@ -41,10 +41,10 @@ jobs:
           name: SunlightAuth - Latest
           body: |
             Separate authentication plugin for Sunlight SMP.
-            
+
             Premium players can bypass authentication when the server is configured behind Velocity with secure modern forwarding.
             Cracked/offline players use /register and /login.
-          files: auth-target/SunlightAuth.jar
+          files: target/SunlightAuth.jar
           make_latest: false
           prerelease: false
         env:
