@@ -168,6 +168,26 @@ public final class TPAManager implements Listener {
         }
     }
 
+    private Location findSafeOverworldSurface(Location target) {
+        if (target.getWorld() == null || target.getWorld().getEnvironment() != org.bukkit.World.Environment.NORMAL) return target.clone();
+        for (int radius = 0; radius <= 6; radius++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) continue;
+                    int x = target.getBlockX() + dx, z = target.getBlockZ() + dz;
+                    int y = target.getWorld().getHighestBlockYAt(x, z);
+                    if (y <= target.getWorld().getMinHeight()) continue;
+                    org.bukkit.block.Block ground = target.getWorld().getBlockAt(x, y - 1, z);
+                    org.bukkit.block.Block feet = target.getWorld().getBlockAt(x, y, z);
+                    org.bukkit.block.Block head = target.getWorld().getBlockAt(x, y + 1, z);
+                    if (!ground.getType().isSolid() || !feet.isEmpty() || !head.isEmpty()) continue;
+                    return new Location(target.getWorld(), x + 0.5, y, z + 0.5, target.getYaw(), target.getPitch());
+                }
+            }
+        }
+        return null;
+    }
+
     @EventHandler public void onMove(PlayerMoveEvent event) {
         Player p = event.getPlayer();
         if (!teleports.containsKey(p.getUniqueId()) || event.getTo() == null) return;
