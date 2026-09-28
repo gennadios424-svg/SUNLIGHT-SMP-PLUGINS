@@ -123,6 +123,7 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
             return;
         }
 
+        sendAuthTitle(p);
         if (registered(p)) send(p, "login");
         else send(p, "register");
 
@@ -136,6 +137,18 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
         }, Math.max(20L, getConfig().getLong("login-timeout-seconds", 60) * 20L));
         BukkitTask old = timeouts.put(p.getUniqueId(), task);
         if (old != null) old.cancel();
+    }
+
+    private void sendAuthTitle(Player p) {
+        String action = registered(p) ? "LOGIN" : "REGISTER";
+        p.sendTitle(ChatColor.GOLD + "☀ SUNLIGHT SMP", ChatColor.YELLOW + "You must " + action + " to play", 10, 100, 20);
+        p.sendMessage("");
+        p.sendMessage(ChatColor.GOLD + "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        p.sendMessage(ChatColor.YELLOW + "        ☀ AUTHENTICATION REQUIRED ☀");
+        p.sendMessage(registered(p) ? ChatColor.WHITE + "  Please login with " + ChatColor.GOLD + "/login <password>" : ChatColor.WHITE + "  Please register with " + ChatColor.GOLD + "/register <password> <password>");
+        p.sendMessage(ChatColor.GRAY + "  You cannot play until you authenticate.");
+        p.sendMessage(ChatColor.GOLD + "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        p.sendMessage("");
     }
 
     private void authenticate(Player p) {
