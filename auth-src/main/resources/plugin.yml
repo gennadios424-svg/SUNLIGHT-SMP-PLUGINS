@@ -1,0 +1,30 @@
+name: SunlightAuth
+version: 1.0.0
+main: net.sunlightsmp.auth.SunlightAuth
+api-version: '1.21'
+description: Secure cracked-player authentication for Sunlight SMP
+author: Sunlight SMP
+
+commands:
+  register:
+    description: Register your Sunlight SMP account
+    usage: /register <password> <password>
+    aliases: [reg]
+  login:
+    description: Log into your Sunlight SMP account
+    usage: /login <password>
+    aliases: [l]
+  changepassword:
+    description: Change your Sunlight SMP password
+    usage: /changepassword <old> <new>
+    aliases: [changepass]
+  logout:
+    description: End your current authentication session
+  sunauth:
+    description: SunlightAuth administration
+    permission: sunlightsmp.auth.admin
+
+permissions:
+  sunlightsmp.auth.admin:
+    description: Manage SunlightAuth
+    default: op
