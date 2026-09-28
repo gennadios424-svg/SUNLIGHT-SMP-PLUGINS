@@ -1,0 +1,51 @@
+name: Build SunlightAuth
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'auth-pom.xml'
+      - 'auth-src/**'
+      - '.github/workflows/auth-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build SunlightAuth
+        run: mvn -B -f auth-pom.xml clean package
+
+      - name: Verify JAR
+        run: |
+          test -f auth-target/SunlightAuth.jar
+          echo "Built SunlightAuth.jar successfully."
+
+      - name: Create SunlightAuth release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: sunlight-auth-latest
+          name: SunlightAuth - Latest
+          body: |
+            Separate authentication plugin for Sunlight SMP.
+            
+            Premium players can bypass authentication when the server is configured behind Velocity with secure modern forwarding.
+            Cracked/offline players use /register and /login.
+          files: auth-target/SunlightAuth.jar
+          make_latest: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
