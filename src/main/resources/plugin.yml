@@ -82,7 +82,7 @@ commands:
     usage: /suncrates
   suncrate:
     description: Open a Sunlight crate
-    usage: /suncrate <crate> | /suncrate elytra | /suncrate give <crate> [amount] | /suncrate edit <crate> | /suncrate reload
+    usage: /suncrate <crate> | /suncrate give <crate> [amount] | /suncrate edit <crate> | /suncrate reload
 permissions:
   sunlightsmp.settings:
     default: true
