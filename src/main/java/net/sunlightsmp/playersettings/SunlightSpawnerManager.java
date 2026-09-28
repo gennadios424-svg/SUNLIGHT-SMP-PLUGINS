@@ -1,0 +1,15 @@
+package net.sunlightsmp.playersettings;
+
+import org.bukkit.*;import org.bukkit.block.*;import org.bukkit.entity.*;import org.bukkit.event.*;import org.bukkit.event.block.*;import org.bukkit.event.player.*;import org.bukkit.inventory.*;import org.bukkit.inventory.meta.BlockStateMeta;import org.bukkit.persistence.PersistentDataType;import org.bukkit.scheduler.BukkitRunnable;import java.util.*;
+
+public final class SunlightSpawnerManager implements Listener{
+ private final SunlightPlayerSettings plugin;private final NamespacedKey marker;private final Set<Location> active=new HashSet<>();
+ public SunlightSpawnerManager(SunlightPlayerSettings p){plugin=p;marker=new NamespacedKey(p,"sunlight_spawner");new BukkitRunnable(){public void run(){tick();}}.runTaskTimer(plugin,500L,500L);}
+ @EventHandler public void place(BlockPlaceEvent e){if(e.getBlockPlaced().getType()!=Material.SPAWNER)return;CreatureSpawner s=(CreatureSpawner)e.getBlockPlaced().getState();EntityType t=s.getSpawnedType();if(t==null)return;s.getPersistentDataContainer().set(marker,PersistentDataType.STRING,t.name());s.update(true,false);active.add(e.getBlockPlaced().getLocation());}
+ @EventHandler public void breakBlock(BlockBreakEvent e){if(e.getBlock().getType()!=Material.SPAWNER)return;active.remove(e.getBlock().getLocation());}
+ private void tick(){Iterator<Location> it=active.iterator();while(it.hasNext()){Location l=it.next();if(l.getWorld()==null||l.getBlock().getType()!=Material.SPAWNER){it.remove();continue;}CreatureSpawner s=(CreatureSpawner)l.getBlock().getState();EntityType t=s.getSpawnedType();if(t==null)continue;Material drop=dropFor(t);if(drop==null)continue;int amount=1+plugin.getServer().getOnlinePlayers().stream().filter(p->p.getWorld().equals(l.getWorld())&&p.getLocation().distanceSquared(l)<4096).findAny().map(p->0).orElse(0);l.getWorld().dropItemNaturally(l.clone().add(.5,1,.5),new ItemStack(drop,amount));l.getWorld().spawn(l.clone().add(.5,1,.5),ExperienceOrb.class,orb->orb.setExperience(xpFor(t)));}}
+ private Material dropFor(EntityType t){return switch(t){case SKELETON->Material.BONE;case ZOMBIE->Material.ROTTEN_FLESH;case WITCH->Material.GLOWSTONE_DUST;case IRON_GOLEM->Material.IRON_INGOT;case SPIDER->Material.STRING;case CREEPER->Material.GUNPOWDER;default->null;};}
+ private int xpFor(EntityType t){return switch(t){case SKELETON,ZOMBIE,SPIDER,CREEPER->5;case WITCH->8;case IRON_GOLEM->12;default->0;};}
+ @EventHandler public void rightClick(PlayerInteractEvent e){if(e.getAction()!=org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK||e.getClickedBlock()==null||e.getClickedBlock().getType()!=Material.SPAWNER)return;CreatureSpawner s=(CreatureSpawner)e.getClickedBlock().getState();if(s.getPersistentDataContainer().get(marker,PersistentDataType.STRING)==null)return;e.setCancelled(true);Player p=e.getPlayer();p.sendActionBar(ChatColor.GOLD+"☀ "+pretty(s.getSpawnedType())+" Spawner "+ChatColor.GRAY+"• Drops every 25 seconds");}
+ private String pretty(EntityType t){String s=t.name().toLowerCase(Locale.ROOT).replace('_',' ');return Character.toUpperCase(s.charAt(0))+s.substring(1);}
+}
