@@ -1,48 +1,21 @@
 package net.sunlightsmp.playersettings;
 
-import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.*;import org.bukkit.block.Block;import org.bukkit.block.BlockFace;import org.bukkit.block.TileState;import org.bukkit.entity.Player;import org.bukkit.event.*;import org.bukkit.event.player.*;import org.bukkit.inventory.*;import org.bukkit.inventory.meta.ItemMeta;import org.bukkit.configuration.file.YamlConfiguration;import org.bukkit.persistence.PersistentDataType;import java.io.*;import java.util.*;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-
-public final class DigitalKeyManager {
-    private static final List<String> TYPES=List.of("common","spawner","sunlight","crimson","sunset");
-    private final SunlightPlayerSettings plugin;
-    private final File file;
-    private final YamlConfiguration data;
-    private final NamespacedKey physicalKey;
-
-    public DigitalKeyManager(SunlightPlayerSettings plugin){
-        this.plugin=plugin;
-        this.file=new File(plugin.getDataFolder(),"digital-keys.yml");
-        this.data=YamlConfiguration.loadConfiguration(file);
-        this.physicalKey=new NamespacedKey(plugin,"sunlight_crate_key_type");
-    }
-    private String type(String t){return t.toLowerCase(Locale.ROOT).replace("_","");}
-    public boolean valid(String t){return TYPES.contains(type(t));}
-    private String path(Player p,String t){return p.getUniqueId()+"."+type(t);}
-    public int get(Player p,String t){return Math.max(0,data.getInt(path(p,t),0));}
-    public void add(Player p,String t,int amount){if(!valid(t)||amount<=0)return;String k=path(p,t);data.set(k,get(p,t)+amount);save();}
-    public boolean take(Player p,String t){if(get(p,t)<=0)return false;data.set(path(p,t),get(p,t)-1);save();return true;}
-    public void save(){try{data.save(file);}catch(IOException e){plugin.getLogger().warning("Could not save digital keys: "+e.getMessage());}}
-    public void keyAll(String t,int amount){if(!valid(t))return;amount=Math.max(1,Math.min(100000,amount));for(Player p:plugin.getServer().getOnlinePlayers())add(p,t,amount);}
-    public void convertPhysicalKeys(Player p){
-        for(int slot=0;slot<p.getInventory().getSize();slot++){
-            ItemStack x=p.getInventory().getItem(slot);if(x==null||x.getType()!=Material.TRIPWIRE_HOOK||!x.hasItemMeta())continue;
-            ItemMeta m=x.getItemMeta();String t=m.getPersistentDataContainer().get(physicalKey,PersistentDataType.STRING);if(!valid(t))continue;
-            int amount=x.getAmount();add(p,t,amount);p.getInventory().setItem(slot,null);
-            p.sendMessage(ChatColor.GREEN+"☀ Converted "+amount+" "+pretty(t)+" physical key(s) into digital keys.");
-        }
-    }
-    public String pretty(String t){t=type(t);return Character.toUpperCase(t.charAt(0))+t.substring(1);}
-    public String summary(Player p){StringBuilder s=new StringBuilder(ChatColor.GOLD+"☀ YOUR DIGITAL KEYS\n");for(String t:TYPES)s.append(color(t)).append(pretty(t)).append(ChatColor.GRAY+": ").append(ChatColor.WHITE).append(get(p,t)).append("\n");return s.toString();}
-    private ChatColor color(String t){return switch(type(t)){case "common"->ChatColor.GREEN;case "spawner"->ChatColor.YELLOW;case "sunlight"->ChatColor.GOLD;case "crimson"->ChatColor.RED;default->ChatColor.LIGHT_PURPLE;};}
+public final class DigitalKeyManager implements Listener{
+ private static final List<String> TYPES=List.of("common","spawner","sunlight","crimson","sunset");
+ private final SunlightPlayerSettings plugin;private final File file;private final YamlConfiguration data;private final NamespacedKey physicalKey,crateKey;
+ public DigitalKeyManager(SunlightPlayerSettings plugin){this.plugin=plugin;file=new File(plugin.getDataFolder(),"digital-keys.yml");data=YamlConfiguration.loadConfiguration(file);physicalKey=new NamespacedKey(plugin,"sunlight_crate_key_type");crateKey=new NamespacedKey(plugin,"sunlight_crate_type");plugin.getServer().getPluginManager().registerEvents(this,plugin);}
+ private String type(String t){return t.toLowerCase(Locale.ROOT).replace("_","");}public boolean valid(String t){return TYPES.contains(type(t));}private String path(Player p,String t){return p.getUniqueId()+"."+type(t);}public int get(Player p,String t){return Math.max(0,data.getInt(path(p,t),0));}public void add(Player p,String t,int amount){if(!valid(t)||amount<=0)return;data.set(path(p,t),get(p,t)+amount);save();}public boolean take(Player p,String t){if(get(p,t)<=0)return false;data.set(path(p,t),get(p,t)-1);save();return true;}public void save(){try{data.save(file);}catch(IOException e){plugin.getLogger().warning("Could not save digital keys: "+e.getMessage());}}
+ public void keyAll(String t,int amount){if(!valid(t))return;amount=Math.max(1,Math.min(100000,amount));for(Player p:plugin.getServer().getOnlinePlayers()){add(p,t,amount);p.sendActionBar(ChatColor.YELLOW+"☀ +"+amount+" "+color(t)+pretty(t)+ChatColor.YELLOW+" Digital Key");}}
+ public void convertPhysicalKeys(Player p){for(int slot=0;slot<p.getInventory().getSize();slot++){ItemStack x=p.getInventory().getItem(slot);if(x==null||x.getType()!=Material.TRIPWIRE_HOOK||!x.hasItemMeta())continue;ItemMeta m=x.getItemMeta();String t=m.getPersistentDataContainer().get(physicalKey,PersistentDataType.STRING);if(!valid(t))continue;int amount=x.getAmount();add(p,t,amount);p.getInventory().setItem(slot,null);p.sendMessage(ChatColor.GREEN+"☀ Converted "+amount+" "+pretty(t)+" physical key(s) into digital keys.");}}
+ private ItemStack tempPhysicalKey(String t){ItemStack k=new ItemStack(Material.TRIPWIRE_HOOK);ItemMeta m=k.getItemMeta();m.setDisplayName(color(t)+"☀ "+pretty(t)+" Crate Key");m.getPersistentDataContainer().set(physicalKey,PersistentDataType.STRING,type(t));k.setItemMeta(m);return k;}
+ private void useThroughExistingCrateCode(Player p,String t){if(!take(p,t))return;Map<Integer,ItemStack> left=p.getInventory().addItem(tempPhysicalKey(t));if(!left.isEmpty()){add(p,t,1);p.sendMessage(ChatColor.RED+"☀ Inventory is full.");return;}plugin.getServer().getScheduler().runTaskLater(plugin,()->removeTempKey(p,t),1L);}
+ private void removeTempKey(Player p,String t){if(!p.isOnline())return;for(int slot=0;slot<p.getInventory().getSize();slot++){ItemStack x=p.getInventory().getItem(slot);if(x==null||x.getType()!=Material.TRIPWIRE_HOOK||!x.hasItemMeta())continue;String k=x.getItemMeta().getPersistentDataContainer().get(physicalKey,PersistentDataType.STRING);if(type(t).equals(k)){if(x.getAmount()<=1)p.getInventory().setItem(slot,null);else x.setAmount(x.getAmount()-1);return;}}}
+ @EventHandler public void join(PlayerJoinEvent e){convertPhysicalKeys(e.getPlayer());}
+ @EventHandler(priority=EventPriority.HIGHEST,ignoreCancelled=true) public void commands(PlayerCommandPreprocessEvent e){Player p=e.getPlayer();String[] a=e.getMessage().trim().split("\\s+");if(a.length==0)return;String cmd=a[0].toLowerCase(Locale.ROOT);if(cmd.startsWith("/"))cmd=cmd.substring(1);if(cmd.equals("suncrate")){if(a.length>=2&&valid(a[1])&&get(p,a[1])>0){e.setCancelled(true);useThroughExistingCrateCode(p,type(a[1]));return;}if(a.length>=2&&valid(a[1])){e.setCancelled(true);p.sendMessage(ChatColor.RED+"☀ You have no "+pretty(a[1])+" Digital Keys.");return;}if(a.length>=2&&a[1].equalsIgnoreCase("key")){e.setCancelled(true);if(!p.isOp()){p.sendMessage(ChatColor.RED+"No permission.");return;}if(a.length<3||!valid(a[2])){p.sendMessage(ChatColor.YELLOW+"☀ /suncrate key <crate> [amount]");return;}int n=1;try{if(a.length>=4)n=Integer.parseInt(a[3]);}catch(Exception ignored){}add(p,a[2],Math.max(1,Math.min(100000,n)));p.sendMessage(ChatColor.GREEN+"☀ Added "+n+" "+pretty(a[2])+" Digital Key(s).");return;}}
+ if(cmd.equals("sunkeyall")){e.setCancelled(true);if(!p.isOp())return;if(a.length<3||!valid(a[1])){p.sendMessage(ChatColor.YELLOW+"☀ /sunkeyall <crate> <amount>");return;}int n;try{n=Integer.parseInt(a[2]);}catch(Exception ex){p.sendMessage(ChatColor.RED+"Amount must be a number.");return;}keyAll(a[1],n);return;}
+ if(cmd.equals("sunkeys")||cmd.equals("sunflowerskeys")){e.setCancelled(true);p.sendMessage(summary(p));}}
+ @EventHandler(priority=EventPriority.HIGHEST,ignoreCancelled=true) public void crateBlock(PlayerInteractEvent e){if(e.getAction()!=Action.RIGHT_CLICK_BLOCK||e.getClickedBlock()==null)return;Block b=e.getClickedBlock();if(!(b.getState() instanceof TileState ts))return;String t=ts.getPersistentDataContainer().get(crateKey,PersistentDataType.STRING);if(!valid(t))return;Player p=e.getPlayer();if(get(p,t)<=0){e.setCancelled(true);p.sendMessage(ChatColor.RED+"☀ You have no "+pretty(t)+" Digital Keys.");return;}useThroughExistingCrateCode(p,t);}
+ public String pretty(String t){t=type(t);return Character.toUpperCase(t.charAt(0))+t.substring(1);}public String summary(Player p){StringBuilder s=new StringBuilder(ChatColor.GOLD+"☀ YOUR DIGITAL KEYS\n");for(String t:TYPES)s.append(color(t)).append(pretty(t)).append(ChatColor.GRAY+": ").append(ChatColor.WHITE).append(get(p,t)).append("\n");return s.toString();}private ChatColor color(String t){return switch(type(t)){case "common"->ChatColor.GREEN;case "spawner"->ChatColor.YELLOW;case "sunlight"->ChatColor.GOLD;case "crimson"->ChatColor.RED;default->ChatColor.LIGHT_PURPLE;};}
 }
