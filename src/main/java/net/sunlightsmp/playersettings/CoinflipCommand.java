@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class CoinflipCommand implements org.bukkit.command.CommandExecutor, Listener {
     private static final String TITLE = ChatColor.GOLD + "☀ Coinflip";
