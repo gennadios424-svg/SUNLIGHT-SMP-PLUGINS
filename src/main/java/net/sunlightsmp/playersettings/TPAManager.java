@@ -30,15 +30,12 @@ public final class TPAManager implements Listener {
         if (requester.equals(target)) {
             requester.sendMessage(Component.text("You cannot send a TPA request to yourself.", NamedTextColor.RED)); return;
         }
-
         if (tpHere) {
             if (!plugin.getSettings().get(target, Setting.TPA_HERE_NOTIFICATIONS)) {
-                requester.sendMessage(Component.text("That player has TPAHere notifications disabled.", NamedTextColor.RED));
-                return;
+                requester.sendMessage(Component.text("That player has TPAHere notifications disabled.", NamedTextColor.RED)); return;
             }
         } else if (!plugin.getSettings().get(target, Setting.TP_REQUESTS)) {
-            requester.sendMessage(Component.text("That player has TPA requests disabled.", NamedTextColor.RED));
-            return;
+            requester.sendMessage(Component.text("That player has TPA requests disabled.", NamedTextColor.RED)); return;
         }
 
         TPARequest old = outgoing.remove(requester.getUniqueId());
@@ -175,13 +172,15 @@ public final class TPAManager implements Listener {
                 for (int dz = -radius; dz <= radius; dz++) {
                     if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) continue;
                     int x = target.getBlockX() + dx, z = target.getBlockZ() + dz;
-                    int y = target.getWorld().getHighestBlockYAt(x, z);
-                    if (y <= target.getWorld().getMinHeight()) continue;
-                    org.bukkit.block.Block ground = target.getWorld().getBlockAt(x, y - 1, z);
-                    org.bukkit.block.Block feet = target.getWorld().getBlockAt(x, y, z);
-                    org.bukkit.block.Block head = target.getWorld().getBlockAt(x, y + 1, z);
+                    int groundY = target.getWorld().getHighestBlockYAt(x, z);
+                    if (groundY <= target.getWorld().getMinHeight()) continue;
+
+                    org.bukkit.block.Block ground = target.getWorld().getBlockAt(x, groundY, z);
+                    org.bukkit.block.Block feet = target.getWorld().getBlockAt(x, groundY + 1, z);
+                    org.bukkit.block.Block head = target.getWorld().getBlockAt(x, groundY + 2, z);
+
                     if (!ground.getType().isSolid() || !feet.isEmpty() || !head.isEmpty()) continue;
-                    return new Location(target.getWorld(), x + 0.5, y, z + 0.5, target.getYaw(), target.getPitch());
+                    return new Location(target.getWorld(), x + 0.5, groundY + 1, z + 0.5, target.getYaw(), target.getPitch());
                 }
             }
         }
