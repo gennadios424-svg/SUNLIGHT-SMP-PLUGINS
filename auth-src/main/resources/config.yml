@@ -1,0 +1,38 @@
+# SunlightAuth
+# For a secure mixed premium + cracked setup, put the Paper server behind
+# Velocity with online-mode=true and modern forwarding.
+#
+# Premium players are detected from their official UUID forwarded by Velocity.
+# Cracked/offline UUIDs use /register and /login.
+#
+login-timeout-seconds: 60
+session-seconds: 43200
+min-password-length: 6
+max-password-length: 64
+
+premium:
+  auto-detect-velocity-uuid: true
+  trusted-uuids: []
+
+messages:
+  prefix: "&6☀ &eSunlightAuth &8» "
+  register: "&ePlease register: &6/register <password> <password>"
+  login: "&ePlease login: &6/login <password>"
+  registered: "&aAccount registered successfully."
+  logged-in: "&aLogged in successfully!"
+  premium: "&aPremium account verified. Welcome back!"
+  wrong-password: "&cIncorrect password."
+  passwords-differ: "&cThe passwords do not match."
+  password-short: "&cPassword must be at least %min% characters."
+  password-long: "&cPassword is too long."
+  already-registered: "&cThis account is already registered."
+  not-registered: "&cThis account is not registered. Use /register first."
+  already-authenticated: "&aYou are already authenticated."
+  changed: "&aPassword changed successfully."
+  old-wrong: "&cYour old password is incorrect."
+  logout: "&eYou have been logged out."
+  timeout: "&cAuthentication timed out."
+  only-auth: "&cYou must be logged in to do that."
+  usage-register: "&cUsage: /register <password> <password>"
+  usage-login: "&cUsage: /login <password>"
+  usage-change: "&cUsage: /changepassword <old> <new>"
