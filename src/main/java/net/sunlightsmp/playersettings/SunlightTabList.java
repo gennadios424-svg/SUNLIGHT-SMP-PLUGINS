@@ -53,6 +53,7 @@ public final class SunlightTabList implements Listener {
         for(Player target:players){
             TeamManager.TeamData team=plugin.getTeamManager().getTeam(target.getUniqueId());
             String identity=team==null?"":plugin.getTeamManager().prefix(team);
+            if(plugin.getAfkManager()!=null && plugin.getAfkManager().isAfk(target)) identity+=ChatColor.GRAY+"[AFK] ";
             target.setPlayerListName(identity+ChatColor.WHITE+target.getName());
             target.setPlayerListOrder(teamOrder.getOrDefault(target.getUniqueId(),soloBase+(++solo)));
         }
