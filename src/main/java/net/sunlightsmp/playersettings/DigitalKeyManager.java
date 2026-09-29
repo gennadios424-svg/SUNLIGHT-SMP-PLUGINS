@@ -1,6 +1,6 @@
 package net.sunlightsmp.playersettings;
 
-import org.bukkit.*;import org.bukkit.block.Block;import org.bukkit.block.BlockFace;import org.bukkit.block.TileState;import org.bukkit.entity.Player;import org.bukkit.event.*;import org.bukkit.event.player.*;import org.bukkit.inventory.*;import org.bukkit.inventory.meta.ItemMeta;import org.bukkit.configuration.file.YamlConfiguration;import org.bukkit.persistence.PersistentDataType;import java.io.*;import java.util.*;
+import org.bukkit.*;import org.bukkit.block.Block;import org.bukkit.block.BlockFace;import org.bukkit.block.TileState;import org.bukkit.entity.Player;import org.bukkit.event.block.Action;import org.bukkit.event.*;import org.bukkit.event.player.*;import org.bukkit.inventory.*;import org.bukkit.inventory.meta.ItemMeta;import org.bukkit.configuration.file.YamlConfiguration;import org.bukkit.persistence.PersistentDataType;import java.io.*;import java.util.*;
 
 public final class DigitalKeyManager implements Listener{
  private static final List<String> TYPES=List.of("common","spawner","sunlight","crimson","sunset");
