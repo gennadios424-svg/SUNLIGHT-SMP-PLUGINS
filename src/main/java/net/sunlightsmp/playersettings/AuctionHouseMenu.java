@@ -41,33 +41,20 @@ public final class AuctionHouseMenu implements Listener {
     }
     private void open(Player p,int page){ open(p,page,searchQueries.get(p.getUniqueId())); }
 
+    private List<AuctionListing> visibleListings(Player p,String query){ List<AuctionListing> all=manager.all(); List<AuctionListing> ls=new ArrayList<>(); String q=query==null?null:query.toLowerCase(Locale.ROOT); for(AuctionListing listing:all){ if(q==null||q.isBlank()){ls.add(listing);}else{String type=listing.item().getType().name().toLowerCase(Locale.ROOT);String display=listing.item().hasItemMeta()&&listing.item().getItemMeta().hasDisplayName()?ChatColor.stripColor(listing.item().getItemMeta().getDisplayName()).toLowerCase(Locale.ROOT):"";String seller=listing.sellerName().toLowerCase(Locale.ROOT);if(type.contains(q)||display.contains(q)||seller.contains(q))ls.add(listing);}} int sort=sortModes.getOrDefault(p.getUniqueId(),0); if(sort==1)ls.sort(Comparator.comparingDouble(AuctionListing::price)); else if(sort==2)ls.sort(Comparator.comparingDouble(AuctionListing::price).reversed()); return ls; }
+    private String sortName(Player p){return switch(sortModes.getOrDefault(p.getUniqueId(),0)){case 1->"Price: Low → High";case 2->"Price: High → Low";default->"Sort: Default";};}
+
     private void open(Player p,int page,String query){
         pages.put(p.getUniqueId(),page); Inventory inv=Bukkit.createInventory(null,54,TITLE);
         for(int i=45;i<54;i++)inv.setItem(i,item(Material.GRAY_STAINED_GLASS_PANE," ")); inv.setItem(49,item(Material.YELLOW_STAINED_GLASS_PANE," "));
-        List<AuctionListing> all=manager.all();
-        List<AuctionListing> ls=new ArrayList<>();
-        String q=query==null?null:query.toLowerCase(Locale.ROOT);
-        for(AuctionListing listing:all){
-            if(q==null || q.isBlank()){
-                ls.add(listing);
-            }else{
-                String type=listing.item().getType().name().toLowerCase(Locale.ROOT);
-                String display=listing.item().hasItemMeta()&&listing.item().getItemMeta().hasDisplayName()
-                        ?ChatColor.stripColor(listing.item().getItemMeta().getDisplayName()).toLowerCase(Locale.ROOT):"";
-                String seller=listing.sellerName().toLowerCase(Locale.ROOT);
-                if(type.contains(q)||display.contains(q)||seller.contains(q)) ls.add(listing);
-            }
-        }
-        int sort=sortModes.getOrDefault(p.getUniqueId(),0);
-        if(sort==1) ls.sort(Comparator.comparingDouble(AuctionListing::price));
-        else if(sort==2) ls.sort(Comparator.comparingDouble(AuctionListing::price).reversed());
+        List<AuctionListing> ls=visibleListings(p,query);
 
         int start=page*45;
         for(int i=start;i<Math.min(start+45,ls.size());i++){AuctionListing l=ls.get(i);ItemStack x=l.item();ItemMeta m=x.getItemMeta();List<String> lore=m!=null&&m.getLore()!=null?new ArrayList<>(m.getLore()):new ArrayList<>();lore.add("");lore.add(ChatColor.YELLOW+"Price: "+ChatColor.GOLD+"$"+money(l.price()));lore.add(ChatColor.GRAY+"Seller: "+l.sellerName());lore.add(ChatColor.DARK_GRAY+"ID: "+l.id());lore.add(ChatColor.GREEN+"Click to view");if(m==null){m=x.getItemMeta();}m.setLore(lore);x.setItemMeta(m);inv.setItem(i-start,x);}
         inv.setItem(45,item(Material.CHEST,ChatColor.YELLOW+"Your Listings","",ChatColor.GRAY+"Manage your active auctions."));
         if(page>0)inv.setItem(48,item(Material.ARROW,ChatColor.YELLOW+"Previous Page"));
         if((page+1)*45<ls.size())inv.setItem(50,item(Material.ARROW,ChatColor.YELLOW+"Next Page"));
-        inv.setItem(49,item(Material.SUNFLOWER,ChatColor.GOLD+"☀ Sunlight AH","",ChatColor.GRAY+"Listings: "+ls.size())); inv.setItem(53,item(Material.GOLD_INGOT,ChatColor.YELLOW+"Sell Item","",ChatColor.GRAY+"Hold an item, then click here.",ChatColor.GRAY+"Enter the price in chat."));
+        inv.setItem(47,item(Material.HOPPER,ChatColor.YELLOW+"Sort","",ChatColor.GRAY+sortName(p),ChatColor.GRAY+"Click to cycle")); inv.setItem(49,item(Material.SUNFLOWER,ChatColor.GOLD+"☀ Sunlight AH","",ChatColor.GRAY+"Listings: "+ls.size())); inv.setItem(53,item(Material.GOLD_INGOT,ChatColor.YELLOW+"Sell Item","",ChatColor.GRAY+"Hold an item, then click here.",ChatColor.GRAY+"Enter the price in chat."));
         p.openInventory(inv);
     }
     public void openSelling(Player p){
@@ -91,7 +78,7 @@ public final class AuctionHouseMenu implements Listener {
             p.closeInventory(); awaitingSearch.add(p.getUniqueId());
             p.sendMessage(ChatColor.YELLOW+"☀ Type what you want to search for in chat, or type "+ChatColor.RED+"cancel"+ChatColor.YELLOW+" to stop.");
             return;
-        }if(s==53){p.closeInventory();if(p.getInventory().getItemInMainHand().getType().isAir()){p.sendMessage(ChatColor.RED+"Hold the item you want to sell in your main hand.");return;}awaitingPrice.add(p.getUniqueId());p.sendMessage(ChatColor.YELLOW+"☀ Type the price in chat, or type "+ChatColor.RED+"cancel"+ChatColor.YELLOW+" to stop.");return;}int page=pages.getOrDefault(p.getUniqueId(),0);if(s==48&&page>0){open(p,page-1);return;}if(s==50&&(page+1)*45<manager.all().size()){open(p,page+1);return;}if(s==45){openSelling(p);return;}if(s<45){List<AuctionListing> ls=manager.all();int idx=page*45+s;if(idx<ls.size())confirm(p,ls.get(idx));}}
+        }if(s==53){p.closeInventory();if(p.getInventory().getItemInMainHand().getType().isAir()){p.sendMessage(ChatColor.RED+"Hold the item you want to sell in your main hand.");return;}awaitingPrice.add(p.getUniqueId());p.sendMessage(ChatColor.YELLOW+"☀ Type the price in chat, or type "+ChatColor.RED+"cancel"+ChatColor.YELLOW+" to stop.");return;}int page=pages.getOrDefault(p.getUniqueId(),0);if(s==48&&page>0){open(p,page-1);return;}if(s==50&&(page+1)*45<visibleListings(p,searchQueries.get(p.getUniqueId())).size()){open(p,page+1);return;}if(s==45){openSelling(p);return;}if(s<45){List<AuctionListing> ls=visibleListings(p,searchQueries.get(p.getUniqueId()));int idx=page*45+s;if(idx<ls.size())confirm(p,ls.get(idx));}}
         else if(t.equals(CONFIRM)){if(s==11){ItemStack shown=e.getInventory().getItem(13);long id=findId(p);AuctionListing l=manager.get(id);if(l!=null&&manager.buy(p,id)){p.closeInventory();p.sendMessage(ChatColor.GREEN+"☀ Purchase complete!");p.playSound(p.getLocation(),org.bukkit.Sound.ENTITY_PLAYER_LEVELUP,1f,1.2f);}else{p.sendMessage(ChatColor.RED+"Purchase failed: listing changed, insufficient funds, or inventory full.");}}else if(s==15)p.closeInventory();}
         else {if(s==49){open(p);return;}if(s<45){List<AuctionListing> mine=manager.all().stream().filter(x->x.seller().equals(p.getUniqueId())).toList();if(s<mine.size()){long id=mine.get(s).id();if(manager.cancel(p,id)){p.sendMessage(ChatColor.YELLOW+"Listing cancelled and item returned.");p.playSound(p.getLocation(),org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING,1f,1.4f);openSelling(p);}}}}
     }
