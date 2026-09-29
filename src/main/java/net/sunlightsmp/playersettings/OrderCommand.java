@@ -6,7 +6,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
-import org.bukkit.event.command.CommandExecutor;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.inventory.*;
@@ -366,18 +366,17 @@ public final class OrderCommand implements CommandExecutor, Listener {
                 session.amount = amount;
                 session.step = 2;
                 Bukkit.getScheduler().runTask(plugin, () -> openPriceSign(player));
-            } else {
+            } else if (signSession.step == 1) {
                 double price = Double.parseDouble(value);
                 if (price <= 0 || !Double.isFinite(price)) throw new IllegalArgumentException();
                 session.total = price;
-                creating.remove(player.getUniqueId());
-                Bukkit.getScheduler().runTask(plugin, () -> {
-                    openDurationSign(player);
-                });
+                session.step = 3;
+                Bukkit.getScheduler().runTask(plugin, () -> openDurationSign(player));
+            } else {
+                completeSignOrder(player, signSession, value);
             }
         } catch (Exception ex) {
-            creating.remove(player.getUniqueId());
-            player.sendMessage(ChatColor.RED + "☀ Invalid value. Order creation cancelled.");
+            player.sendMessage(ChatColor.RED + "☀ Invalid value. Please try again or close the sign to cancel.");
         }
     }
 
