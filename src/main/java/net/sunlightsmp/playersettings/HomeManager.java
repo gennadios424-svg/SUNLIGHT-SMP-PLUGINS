@@ -87,6 +87,7 @@ public final class HomeManager implements Listener {
     private String fmt(double d){ return String.valueOf(Math.round(d*100.0)/100.0); }
 
     public boolean setHome(Player p, String raw) {
+        if(!p.hasPermission("homes.sethome")){p.sendMessage(ChatColor.RED+"❌ You do not have permission to set homes.");return false;}
         if (!validName(raw)) { p.sendMessage(ChatColor.RED+"☀ Invalid home name."); return false; }
         String n=raw.toLowerCase(Locale.ROOT);
         String path=key(p.getUniqueId(),n);
@@ -103,6 +104,7 @@ public final class HomeManager implements Listener {
     private boolean validName(String n){ return n!=null && n.matches("[A-Za-z0-9_-]{1,24}"); }
 
     public void deleteHome(Player p,String raw) {
+        if(!p.hasPermission("homes.delete")){p.sendMessage(ChatColor.RED+"❌ You do not have permission to delete homes.");return;}
         String n=raw.toLowerCase(Locale.ROOT);
         if(!data.contains(key(p.getUniqueId(),n))){p.sendMessage(ChatColor.RED+"❌ Home '"+n+"' does not exist.");return;}
         deleteConfirm.put(p.getUniqueId(),n);
@@ -123,6 +125,7 @@ public final class HomeManager implements Listener {
         return new Location(w,data.getDouble(path+".x"),data.getDouble(path+".y"),data.getDouble(path+".z"),(float)data.getDouble(path+".yaw"),(float)data.getDouble(path+".pitch"));
     }
     public void teleport(Player p,String raw){
+        if(!p.hasPermission("homes.teleport")){p.sendMessage(ChatColor.RED+"❌ You do not have permission to teleport to homes.");return;}
         String n=raw.toLowerCase(Locale.ROOT); Location l=getHome(p.getUniqueId(),n);
         if(l==null){p.sendMessage(ChatColor.RED+"❌ Home '"+n+"' does not exist or its world is unavailable.");return;}
         if(p.isDead()){p.sendMessage(ChatColor.RED+"❌ You cannot teleport while dead.");return;}
@@ -175,6 +178,7 @@ public final class HomeManager implements Listener {
     }
 
     public void rename(Player p,String old,String nn){
+        if(!p.hasPermission("homes.sethome")){p.sendMessage(ChatColor.RED+"❌ You do not have permission to rename homes.");return;}
         old=old.toLowerCase(Locale.ROOT); nn=nn.toLowerCase(Locale.ROOT);
         if(!validName(nn)){p.sendMessage(ChatColor.RED+"❌ Invalid new home name.");return;}
         String a=key(p.getUniqueId(),old), b=key(p.getUniqueId(),nn);
@@ -184,6 +188,7 @@ public final class HomeManager implements Listener {
         data.set(b,s); data.set(a,null); save(); p.sendMessage(ChatColor.GREEN+"✅ Home renamed to "+ChatColor.YELLOW+nn+ChatColor.GREEN+".");
     }
     public void info(Player p,String raw){
+        if(!p.hasPermission("homes.use")){p.sendMessage(ChatColor.RED+"❌ You do not have permission to view homes.");return;}
         String n=raw.toLowerCase(Locale.ROOT), path=key(p.getUniqueId(),n);
         if(!data.contains(path)){p.sendMessage(ChatColor.RED+"❌ Home '"+n+"' does not exist.");return;}
         String w=data.getString(path+".world","?"); double x=data.getDouble(path+".x"),y=data.getDouble(path+".y"),z=data.getDouble(path+".z");
