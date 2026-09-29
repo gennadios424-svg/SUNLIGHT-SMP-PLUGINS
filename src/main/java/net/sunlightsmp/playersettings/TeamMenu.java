@@ -34,7 +34,7 @@ public final class TeamMenu implements Listener {
         inv.setItem(22,item(Material.ARROW,"§cBack"));fill(inv);p.openInventory(inv);
     }
     @EventHandler public void click(InventoryClickEvent e){
-        if(!(e.getWhoClicked() instanceof Player p))return;String title=e.getView().getTitle();if(!title.startsWith("☀")&&!title.startsWith("⚙"))return;e.setCancelled(true);
+        if(!(e.getWhoClicked() instanceof Player p))return;String title=e.getView().getTitle();\n        // Only handle TeamMenu inventories. Do not intercept Order, Shop, AH, or other ☀ menus.\n        if(!title.equals("☀ Team") && !title.contains(" • Members") && !title.contains(" • Settings"))return;\n        e.setCancelled(true);
         if(title.equals("☀ Team")){if(e.getSlot()==11)p.closeInventory();else if(e.getSlot()==13)p.sendMessage("§7Use §f/team list §7to find a team, then §f/team join <name>§7.");else if(e.getSlot()==15){p.closeInventory();p.sendMessage("§7Use §f/team accept §7or §f/team deny§7 for your pending invitation.");}return;}
         if(title.contains("• Members")){if(e.getSlot()==49){openMain(p);return;}return;}
         if(title.contains("• Settings")){if(e.getSlot()==22)openMain(p);return;}
