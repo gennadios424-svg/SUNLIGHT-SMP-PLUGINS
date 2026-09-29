@@ -16,7 +16,7 @@ public final class TeamMenu implements Listener {
     private void fill(Inventory inv){ItemStack x=item(Material.GRAY_STAINED_GLASS_PANE," ");for(int i=0;i<inv.getSize();i++)if(inv.getItem(i)==null)inv.setItem(i,x);}
     public void openMain(Player p){
         var t=manager.getTeam(p.getUniqueId()); Inventory inv=Bukkit.createInventory(null,27,t==null?"☀ Team":"☀ "+t.name);
-        if(t==null){inv.setItem(11,item(Material.SUNFLOWER,"§e➕ Create Team","§7Use §f/team create <name>"));inv.setItem(13,item(Material.COMPASS,"§b🔎 Find / Join Team","§7Teams are invite-only for now."));inv.setItem(15,item(Material.PAPER,"§d📩 Team Invitations","§7Use §f/team accept §7or §f/team deny"));} 
+        if(t==null){inv.setItem(11,item(Material.SUNFLOWER,"§e➕ Create Team","§7Use §f/team create <name>"));inv.setItem(13,item(Material.COMPASS,"§b🔎 Find / Join Team","§7Use §f/team list §7then §f/team join <name>"));inv.setItem(15,item(Material.PAPER,"§d📩 Team Invitations","§7Use §f/team accept §7or §f/team deny"));} 
         else {inv.setItem(10,item(Material.PLAYER_HEAD,"§e👥 Team Members","§7"+t.members.size()+"/"+TeamManager.MAX_MEMBERS+" members"));inv.setItem(12,item(Material.PAPER,"§d✉ Invitations","§7Invite with §f/team invite <player>"));inv.setItem(14,item(Material.COMPARATOR,"§e⚙ Team Settings","§7Owner/officer controls"));inv.setItem(16,item(Material.NAME_TAG,"§b🏷 Team Name","§7"+t.name));inv.setItem(18,item(Material.LEATHER_CHESTPLATE,"§6🎨 Team Color","§7Current: "+t.color+"■"));inv.setItem(20,item(Material.BARRIER,"§c🚪 Leave Team","§7Owner must transfer/disband first"));inv.setItem(22,item(Material.BOOK,"§aℹ Team Info","§7View team details"));inv.setItem(24,item(Material.PAPER,"§b💬 Team Chat","§7Use §f/tc")); }
         fill(inv);p.openInventory(inv);
     }
@@ -35,7 +35,7 @@ public final class TeamMenu implements Listener {
     }
     @EventHandler public void click(InventoryClickEvent e){
         if(!(e.getWhoClicked() instanceof Player p))return;String title=e.getView().getTitle();if(!title.startsWith("☀")&&!title.startsWith("⚙"))return;e.setCancelled(true);
-        if(title.equals("☀ Team")){if(e.getSlot()==11)p.closeInventory();else if(e.getSlot()==13)p.sendMessage("§7Teams are currently joined through invitations: §f/team invite <player>");else if(e.getSlot()==15){p.closeInventory();p.sendMessage("§7Use §f/team accept §7or §f/team deny§7 for your pending invitation.");}return;}
+        if(title.equals("☀ Team")){if(e.getSlot()==11)p.closeInventory();else if(e.getSlot()==13)p.sendMessage("§7Use §f/team list §7to find a team, then §f/team join <name>§7.");else if(e.getSlot()==15){p.closeInventory();p.sendMessage("§7Use §f/team accept §7or §f/team deny§7 for your pending invitation.");}return;}
         if(title.contains("• Members")){if(e.getSlot()==49){openMain(p);return;}return;}
         if(title.contains("• Settings")){if(e.getSlot()==22)openMain(p);return;}
         var t=manager.getTeam(p.getUniqueId());if(t==null){openMain(p);return;}
