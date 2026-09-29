@@ -1,22 +1,269 @@
 package net.sunlightsmp.playersettings;
-import net.milkbowl.vault.economy.Economy;import org.bukkit.*;import org.bukkit.configuration.file.YamlConfiguration;import org.bukkit.entity.Player;import org.bukkit.inventory.ItemStack;import java.io.*;import java.util.*;
-public final class OrderManager{
- private final SunlightPlayerSettings p;private final File f;private YamlConfiguration d;private final Map<Long,Order>a=new LinkedHashMap<>(),h=new LinkedHashMap<>();private long next=1;
- public OrderManager(SunlightPlayerSettings p){this.p=p;f=new File(p.getDataFolder(),"orders.yml");load();p.getServer().getScheduler().runTaskTimer(p,this::expire,20L,600L);}
- private Economy eco(){var r=p.getServer().getServicesManager().getRegistration(Economy.class);return r==null?null:r.getProvider();}
- public synchronized void load(){try{p.getDataFolder().mkdirs();if(!f.exists())f.createNewFile();}catch(IOException ignored){}d=YamlConfiguration.loadConfiguration(f);next=d.getLong("next-id",1);a.clear();h.clear();read("active",a);read("history",h);expire();}
- private void read(String s,Map<Long,Order>m){var q=d.getConfigurationSection(s);if(q==null)return;for(String k:q.getKeys(false))try{var c=d.getConfigurationSection(s+"."+k);ItemStack i=c.getItemStack("item");if(i!=null)m.put(Long.parseLong(k),new Order(Long.parseLong(k),UUID.fromString(c.getString("buyer")),c.getString("buyer-name","Unknown"),i,c.getInt("remaining"),c.getDouble("total"),c.getDouble("per"),c.getLong("expires"),c.getString("status","UNKNOWN")));}catch(Exception ignored){}}
- public synchronized void save(){d=new YamlConfiguration();d.set("next-id",next);write("active",a);write("history",h);try{d.save(f);}catch(IOException e){p.getLogger().warning("orders.yml: "+e.getMessage());}}
- private void write(String s,Map<Long,Order>m){for(Order o:m.values()){String x=s+"."+o.id();d.set(x+".buyer",o.buyer().toString());d.set(x+".buyer-name",o.buyerName());d.set(x+".item",o.item());d.set(x+".remaining",o.remaining());d.set(x+".total",o.totalPrice());d.set(x+".per",o.pricePerItem());d.set(x+".expires",o.expiresAt());d.set(x+".status",o.status());}}
- private boolean blocked(ItemStack i){return i==null||i.getType().isAir()||p.getConfig().getStringList("order.blocked-materials").stream().anyMatch(x->x.equalsIgnoreCase(i.getType().name()));}
- public synchronized Order create(Player b,ItemStack sample,int amount,double total,long exp){Economy e=eco();if(e==null||blocked(sample)||amount<=0||total<=0||exp<=System.currentTimeMillis()||amount>p.getConfig().getInt("order.max-amount",2304)||total>p.getConfig().getDouble("order.max-price",1e9)||!e.has(b,total))return null;if(!e.withdrawPlayer(b,total).transactionSuccess())return null;Order o=new Order(next++,b.getUniqueId(),b.getName(),sample.clone(),amount,total,total/amount,exp,"ACTIVE");a.put(o.id(),o);save();return o;}
- public synchronized Order get(long id){expire();return a.get(id);}public synchronized List<Order> active(){expire();return new ArrayList<>(a.values());}
- public synchronized List<Order> byBuyer(UUID u,boolean all){expire();List<Order>r=new ArrayList<>();for(Order o:a.values())if(o.buyer().equals(u))r.add(o);if(all)for(Order o:h.values())if(o.buyer().equals(u))r.add(o);r.sort(Comparator.comparingLong(Order::id).reversed());return r;}
- public synchronized List<Order> search(String s){expire();List<Order>r=new ArrayList<>();for(Order o:a.values())if(o.item().getType().name().equalsIgnoreCase(s))r.add(o);return r;}
- public synchronized boolean cancel(Player b,long id){Order o=a.get(id);if(o==null||!o.buyer().equals(b.getUniqueId()))return false;a.remove(id);refund(o.buyer(),o.paymentFor(o.remaining()));h.put(id,new Order(o.id(),o.buyer(),o.buyerName(),o.item(),o.remaining(),o.totalPrice(),o.pricePerItem(),o.expiresAt(),"CANCELLED"));save();return true;}
- public synchronized boolean fulfill(Player s,long id,ItemStack supplied){Order o=a.get(id);Economy e=eco();Player b=o==null?null:Bukkit.getPlayer(o.buyer());if(o==null||o.expired()||o.buyer().equals(s.getUniqueId())||b==null||!b.isOnline()||supplied==null||!supplied.isSimilar(o.item()))return false;int n=Math.min(supplied.getAmount(),o.remaining());if(n<=0)return false;ItemStack give=supplied.clone();give.setAmount(n);if(!b.getInventory().addItem(give).isEmpty())return false;double pay=o.paymentFor(n);if(!e.depositPlayer(Bukkit.getOfflinePlayer(s.getUniqueId()),pay).transactionSuccess()){remove(b,give);return false;}int left=o.remaining()-n;a.remove(id);if(left>0)a.put(id,new Order(o.id(),o.buyer(),o.buyerName(),o.item(),left,o.totalPrice(),o.pricePerItem(),o.expiresAt(),"ACTIVE"));else h.put(id,new Order(o.id(),o.buyer(),o.buyerName(),o.item(),0,o.totalPrice(),o.pricePerItem(),o.expiresAt(),"COMPLETED"));save();b.sendMessage(ChatColor.GREEN+"☀ Your order #"+id+" was "+(left>0?"partially ":"")+"fulfilled! "+n+" supplied. Remaining: "+left+".");s.sendMessage(ChatColor.GREEN+"☀ You received $"+money(pay)+" for order #"+id+".");return true;}
- private void remove(Player b,ItemStack x){for(int i=0;i<b.getInventory().getSize();i++){ItemStack z=b.getInventory().getItem(i);if(z!=null&&z.isSimilar(x)){z.setAmount(z.getAmount()-x.getAmount());return;}}}
- private void refund(UUID u,double x){if(x>0&&eco()!=null)eco().depositPlayer(Bukkit.getOfflinePlayer(u),x);}
- private void expire(){boolean c=false;Iterator<Order>it=a.values().iterator();while(it.hasNext()){Order o=it.next();if(!o.expired())continue;it.remove();refund(o.buyer(),o.paymentFor(o.remaining()));h.put(o.id(),new Order(o.id(),o.buyer(),o.buyerName(),o.item(),o.remaining(),o.totalPrice(),o.pricePerItem(),o.expiresAt(),"EXPIRED"));Player b=Bukkit.getPlayer(o.buyer());if(b!=null)b.sendMessage(ChatColor.RED+"☀ Order #"+o.id()+" expired. Remaining escrow was refunded.");c=true;}if(c)save();}
- public String money(double x){return String.format(Locale.US,"%.2f",x);}
+
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.*;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+
+import java.io.*;
+import java.util.*;
+
+public final class OrderManager {
+    private final SunlightPlayerSettings plugin;
+    private final File file;
+    private YamlConfiguration data;
+    private final Map<Long, Order> active = new LinkedHashMap<>();
+    private final Map<Long, Order> history = new LinkedHashMap<>();
+    private long nextId = 1;
+
+    public OrderManager(SunlightPlayerSettings plugin) {
+        this.plugin = plugin;
+        this.file = new File(plugin.getDataFolder(), "orders.yml");
+        load();
+        plugin.getServer().getScheduler().runTaskTimer(plugin, this::expire, 20L, 100L);
+    }
+
+    private Economy economy() {
+        var registration = plugin.getServer().getServicesManager().getRegistration(Economy.class);
+        return registration == null ? null : registration.getProvider();
+    }
+
+    public synchronized void load() {
+        try {
+            plugin.getDataFolder().mkdirs();
+            if (!file.exists()) file.createNewFile();
+        } catch (IOException ignored) {}
+        data = YamlConfiguration.loadConfiguration(file);
+        nextId = Math.max(1, data.getLong("next-id", 1));
+        active.clear();
+        history.clear();
+        readOrders("active", active);
+        readOrders("history", history);
+        expire();
+    }
+
+    private void readOrders(String section, Map<Long, Order> target) {
+        var root = data.getConfigurationSection(section);
+        if (root == null) return;
+        for (String key : root.getKeys(false)) {
+            try {
+                var c = data.getConfigurationSection(section + "." + key);
+                if (c == null) continue;
+                ItemStack item = c.getItemStack("item");
+                if (item == null || item.getType().isAir()) continue;
+                long id = Long.parseLong(key);
+                target.put(id, new Order(id, UUID.fromString(c.getString("buyer")),
+                        c.getString("buyer-name", "Unknown"), item,
+                        c.getInt("remaining"), c.getDouble("total"), c.getDouble("per"),
+                        c.getLong("expires"), c.getString("status", "UNKNOWN")));
+            } catch (Exception ignored) {}
+        }
+    }
+
+    public synchronized void save() {
+        YamlConfiguration out = new YamlConfiguration();
+        out.set("next-id", nextId);
+        writeOrders(out, "active", active);
+        writeOrders(out, "history", history);
+        try {
+            out.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().warning("orders.yml: " + e.getMessage());
+        }
+        data = out;
+    }
+
+    private void writeOrders(YamlConfiguration out, String section, Map<Long, Order> orders) {
+        for (Order o : orders.values()) {
+            String path = section + "." + o.id();
+            out.set(path + ".buyer", o.buyer().toString());
+            out.set(path + ".buyer-name", o.buyerName());
+            out.set(path + ".item", o.item());
+            out.set(path + ".remaining", o.remaining());
+            out.set(path + ".total", o.totalPrice());
+            out.set(path + ".per", o.pricePerItem());
+            out.set(path + ".expires", o.expiresAt());
+            out.set(path + ".status", o.status());
+        }
+    }
+
+    private boolean blocked(ItemStack item) {
+        if (item == null || item.getType().isAir()) return true;
+        return plugin.getConfig().getStringList("order.blocked-materials").stream()
+                .anyMatch(x -> x.equalsIgnoreCase(item.getType().name()));
+    }
+
+    public synchronized Order create(Player buyer, ItemStack sample, int amount, double total, long expiresAt) {
+        Economy eco = economy();
+        if (eco == null || blocked(sample) || amount <= 0 || total <= 0 ||
+                !Double.isFinite(total) || expiresAt <= System.currentTimeMillis()) return null;
+
+        int maxAmount = plugin.getConfig().getInt("order.max-amount", 2304);
+        double maxPrice = plugin.getConfig().getDouble("order.max-price", 1_000_000_000D);
+        if (amount > maxAmount || total > maxPrice || !eco.has(buyer, total)) return null;
+        int maxOrders = plugin.getConfig().getInt("order.max-orders-per-player", 20);
+        long ownActive = active.values().stream().filter(o -> o.buyer().equals(buyer.getUniqueId())).count();
+        if (ownActive >= maxOrders) return null;
+
+        if (!eco.withdrawPlayer(buyer, total).transactionSuccess()) return null;
+
+        Order order = new Order(nextId++, buyer.getUniqueId(), buyer.getName(),
+                sample.clone(), amount, total, total / amount, expiresAt, "ACTIVE");
+        active.put(order.id(), order);
+        save();
+        return order;
+    }
+
+    public synchronized Order get(long id) {
+        expire();
+        return active.get(id);
+    }
+
+    public synchronized List<Order> active() {
+        expire();
+        return new ArrayList<>(active.values());
+    }
+
+    public synchronized List<Order> byBuyer(UUID uuid, boolean includeHistory) {
+        expire();
+        List<Order> result = new ArrayList<>();
+        for (Order o : active.values()) if (o.buyer().equals(uuid)) result.add(o);
+        if (includeHistory) for (Order o : history.values()) if (o.buyer().equals(uuid)) result.add(o);
+        result.sort(Comparator.comparingLong(Order::id).reversed());
+        return result;
+    }
+
+    public synchronized List<Order> search(String materialName, String sort) {
+        expire();
+        List<Order> result = new ArrayList<>();
+        for (Order o : active.values()) {
+            if (o.item().getType().name().equalsIgnoreCase(materialName)) result.add(o);
+        }
+        switch (sort.toLowerCase(Locale.ROOT)) {
+            case "highest" -> result.sort(Comparator.comparingDouble(Order::pricePerItem).reversed());
+            case "lowest" -> result.sort(Comparator.comparingDouble(Order::pricePerItem));
+            case "newest" -> result.sort(Comparator.comparingLong(Order::id).reversed());
+            case "reward" -> result.sort(Comparator.comparingDouble(Order::totalPrice).reversed());
+            default -> {}
+        }
+        return result;
+    }
+
+    public synchronized boolean cancel(Player buyer, long id) {
+        Order order = active.get(id);
+        if (order == null || !order.buyer().equals(buyer.getUniqueId())) return false;
+
+        active.remove(id);
+        refund(order.buyer(), order.paymentFor(order.remaining()));
+        history.put(id, new Order(order.id(), order.buyer(), order.buyerName(), order.item(),
+                order.remaining(), order.totalPrice(), order.pricePerItem(), order.expiresAt(), "CANCELLED"));
+        save();
+        return true;
+    }
+
+    /*
+     * The supplied stack is already inside the fulfillment GUI, meaning it has
+     * been removed from the seller's normal inventory by Bukkit's inventory UI.
+     * This method therefore performs the protected money/item settlement and
+     * restores the seller's items if any step fails.
+     */
+    public synchronized boolean fulfill(Player seller, long id, ItemStack supplied) {
+        Order order = active.get(id);
+        Economy eco = economy();
+        Player buyer = order == null ? null : Bukkit.getPlayer(order.buyer());
+
+        if (eco == null || order == null || order.expired() ||
+                order.buyer().equals(seller.getUniqueId()) ||
+                buyer == null || !buyer.isOnline() ||
+                supplied == null || supplied.getType().isAir() ||
+                !supplied.isSimilar(order.item())) return false;
+
+        int amount = Math.min(supplied.getAmount(), order.remaining());
+        if (amount <= 0) return false;
+
+        ItemStack delivered = supplied.clone();
+        delivered.setAmount(amount);
+        double payment = order.paymentFor(amount);
+
+        // First reserve the exact delivered stack by placing it in the buyer inventory.
+        Map<Integer, ItemStack> leftovers = buyer.getInventory().addItem(delivered);
+        if (!leftovers.isEmpty()) {
+            restoreSeller(seller, delivered);
+            return false;
+        }
+
+        // Then settle payment. If the economy transaction fails, remove exactly what
+        // was delivered and restore it to the seller, so neither side loses items.
+        if (!eco.depositPlayer(seller, payment).transactionSuccess()) {
+            removeExact(buyer, delivered);
+            restoreSeller(seller, delivered);
+            return false;
+        }
+
+        int remaining = order.remaining() - amount;
+        active.remove(id);
+        if (remaining > 0) {
+            active.put(id, new Order(order.id(), order.buyer(), order.buyerName(), order.item(),
+                    remaining, order.totalPrice(), order.pricePerItem(), order.expiresAt(), "ACTIVE"));
+        } else {
+            history.put(id, new Order(order.id(), order.buyer(), order.buyerName(), order.item(),
+                    0, order.totalPrice(), order.pricePerItem(), order.expiresAt(), "COMPLETED"));
+        }
+        save();
+
+        String state = remaining > 0 ? "partially " : "";
+        buyer.sendMessage(ChatColor.GREEN + "☀ Your order #" + id + " was " + state +
+                "fulfilled! " + amount + " supplied. Remaining: " + remaining + ".");
+        seller.sendMessage(ChatColor.GREEN + "☀ You received $" + money(payment) +
+                " for fulfilling order #" + id + ".");
+        return true;
+    }
+
+    private void removeExact(Player player, ItemStack wanted) {
+        int left = wanted.getAmount();
+        for (int slot = 0; slot < player.getInventory().getSize() && left > 0; slot++) {
+            ItemStack stack = player.getInventory().getItem(slot);
+            if (stack == null || stack.getType().isAir() || !stack.isSimilar(wanted)) continue;
+            int take = Math.min(left, stack.getAmount());
+            stack.setAmount(stack.getAmount() - take);
+            if (stack.getAmount() <= 0) player.getInventory().setItem(slot, null);
+            left -= take;
+        }
+    }
+
+    private void restoreSeller(Player seller, ItemStack stack) {
+        Map<Integer, ItemStack> leftovers = seller.getInventory().addItem(stack.clone());
+        leftovers.values().forEach(item -> seller.getWorld().dropItemNaturally(seller.getLocation(), item));
+    }
+
+    private void refund(UUID uuid, double amount) {
+        Economy eco = economy();
+        if (amount > 0 && eco != null) eco.depositPlayer(Bukkit.getOfflinePlayer(uuid), amount);
+    }
+
+    private void expire() {
+        boolean changed = false;
+        Iterator<Order> iterator = active.values().iterator();
+        while (iterator.hasNext()) {
+            Order order = iterator.next();
+            if (!order.expired()) continue;
+            iterator.remove();
+            double refund = order.paymentFor(order.remaining());
+            refund(order.buyer(), refund);
+            history.put(order.id(), new Order(order.id(), order.buyer(), order.buyerName(), order.item(),
+                    order.remaining(), order.totalPrice(), order.pricePerItem(), order.expiresAt(), "EXPIRED"));
+            Player buyer = Bukkit.getPlayer(order.buyer());
+            if (buyer != null) {
+                buyer.sendMessage(ChatColor.RED + "☀ Order #" + order.id() +
+                        " expired. $" + money(refund) + " was refunded.");
+            }
+            changed = true;
+        }
+        if (changed) save();
+    }
+
+    public String money(double amount) {
+        return String.format(Locale.US, "%.2f", amount);
+    }
 }
