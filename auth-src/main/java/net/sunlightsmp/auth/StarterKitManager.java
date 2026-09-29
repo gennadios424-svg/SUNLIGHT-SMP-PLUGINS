@@ -14,6 +14,14 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -185,6 +193,47 @@ public final class StarterKitManager implements Listener, CommandExecutor, TabCo
             }
         }
     }
+
+    private boolean kitRequired(Player p) { return !hasKit(p.getUniqueId()); }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onMove(PlayerMoveEvent e) {
+        if (!kitRequired(e.getPlayer()) || e.getTo() == null) return;
+        e.setTo(e.getFrom());
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onCommand(PlayerCommandPreprocessEvent e) {
+        if (!kitRequired(e.getPlayer())) return;
+        String command = e.getMessage().trim().toLowerCase(Locale.ROOT);
+        if (command.startsWith("/kitadmin")) return;
+        e.setCancelled(true);
+        e.getPlayer().sendMessage(ChatColor.YELLOW + "☀ Choose your starter kit before you can play.");
+        Bukkit.getScheduler().runTask(this.plugin, () -> openSelection(e.getPlayer()));
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onChat(AsyncPlayerChatEvent e) {
+        if (!kitRequired(e.getPlayer())) return;
+        e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onDamage(EntityDamageEvent e) {
+        if (e.getEntity() instanceof Player p && kitRequired(p)) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onBreak(BlockBreakEvent e) { if (kitRequired(e.getPlayer())) e.setCancelled(true); }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlace(BlockPlaceEvent e) { if (kitRequired(e.getPlayer())) e.setCancelled(true); }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInteract(PlayerInteractEvent e) { if (kitRequired(e.getPlayer())) e.setCancelled(true); }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onDrop(PlayerDropItemEvent e) { if (kitRequired(e.getPlayer())) e.setCancelled(true); }
 
     @EventHandler
     public void onDeath(PlayerDeathEvent e) {
