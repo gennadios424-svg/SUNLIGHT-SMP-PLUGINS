@@ -24,7 +24,7 @@ public final class ShopMenu implements Listener {
 
     public ShopMenu(SunlightPlayerSettings plugin){this.plugin=plugin;}
     private Economy economy(){var r=plugin.getServer().getServicesManager().getRegistration(Economy.class);return r==null?null:r.getProvider();}
-    private ItemStack item(Material m,String name,String... lore){ItemStack i=new ItemStack(m);ItemMeta x=i.getItemMeta();x.setDisplayName(name);x.setLore(Arrays.asList(lore));i.setItemMeta(x);return i;}
+    private void frame(Inventory inv){ ItemStack side=item(Material.BLACK_STAINED_GLASS_PANE," "); ItemStack accent=item(Material.YELLOW_STAINED_GLASS_PANE,ChatColor.GOLD+"☀"); for(int r=0;r<inv.getSize()/9;r++){inv.setItem(r*9,side);inv.setItem(r*9+8,side);} for(int s=0;s<9;s++){inv.setItem(s,accent);inv.setItem(inv.getSize()-9+s,accent);} }\n    private ItemStack item(Material m,String name,String... lore){ItemStack i=new ItemStack(m);ItemMeta x=i.getItemMeta();x.setDisplayName(name);x.setLore(Arrays.asList(lore));i.setItemMeta(x);return i;}
     private String pretty(Material m){StringBuilder s=new StringBuilder();for(String x:m.name().toLowerCase(Locale.ROOT).split("_")){if(s.length()>0)s.append(' ');s.append(Character.toUpperCase(x.charAt(0))).append(x.substring(1));}return s.toString();}
     private String prettyEntity(EntityType t){StringBuilder s=new StringBuilder();for(String x:t.name().toLowerCase(Locale.ROOT).split("_")){if(s.length()>0)s.append(' ');s.append(Character.toUpperCase(x.charAt(0))).append(x.substring(1));}return s.toString();}
     private String money(double n){return NumberFormat.getNumberInstance(Locale.US).format(n);}
@@ -33,7 +33,7 @@ public final class ShopMenu implements Listener {
     public void open(Player p){cats.put(p.getUniqueId(),"home");pages.put(p.getUniqueId(),0);draw(p);}
     private void draw(Player p){
         String c=cats.getOrDefault(p.getUniqueId(),"home");Inventory inv=Bukkit.createInventory(null,54,TITLE);
-        for(int i=45;i<54;i++)inv.setItem(i,item(Material.GRAY_STAINED_GLASS_PANE," "));
+        frame(inv);
         if(c.equals("home")){
             inv.setItem(10,item(Material.REDSTONE,ChatColor.RED+"Redstone","","",ChatColor.GRAY+"Redstone & automation"));
             inv.setItem(12,item(Material.WHEAT,ChatColor.GREEN+"Farm","","",ChatColor.GRAY+"Farming supplies"));
@@ -55,7 +55,7 @@ public final class ShopMenu implements Listener {
         int amount=Math.max(1,Math.min(2304,amounts.getOrDefault(p.getUniqueId(),1)));amounts.put(p.getUniqueId(),amount);
         boolean spawner=spawnerType(m)!=null;
         Inventory inv=Bukkit.createInventory(null,54,BUY_TITLE);
-        for(int i=0;i<54;i++)inv.setItem(i,item(Material.GRAY_STAINED_GLASS_PANE," "));
+        frame(inv);
         double total=spawner?1500D*amount:ShopPricing.buyPrice(m)*amount;
         ItemStack display=spawner?spawnerItem(m):item(m,ChatColor.WHITE+pretty(m));
         ItemMeta meta=display.getItemMeta();meta.setLore(List.of("",ChatColor.YELLOW+"Amount: "+amount,ChatColor.GREEN+"Total: "+(spawner?money((long)total)+" Sunflowers":"$"+money(total))));display.setItemMeta(meta);
