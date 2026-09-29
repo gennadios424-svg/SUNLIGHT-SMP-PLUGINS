@@ -25,6 +25,7 @@ public final class HomeManager implements Listener {
     private FileConfiguration data;
     private final Map<UUID, TeleportTask> pending = new HashMap<>();
     private final Map<UUID, String> deleteConfirm = new HashMap<>();
+    private final Map<UUID, Long> cooldownUntil = new HashMap<>();
 
     public HomeManager(SunlightPlayerSettings plugin) {
         this.plugin = plugin;
@@ -86,6 +87,7 @@ public final class HomeManager implements Listener {
     private String fmt(double d){ return String.valueOf(Math.round(d*100.0)/100.0); }
 
     public boolean setHome(Player p, String raw) {
+        if(!p.hasPermission("homes.sethome")){p.sendMessage(ChatColor.RED+"❌ You do not have permission to set homes.");return false;}
         if (!validName(raw)) { p.sendMessage(ChatColor.RED+"☀ Invalid home name."); return false; }
         String n=raw.toLowerCase(Locale.ROOT);
         String path=key(p.getUniqueId(),n);
@@ -102,6 +104,7 @@ public final class HomeManager implements Listener {
     private boolean validName(String n){ return n!=null && n.matches("[A-Za-z0-9_-]{1,24}"); }
 
     public void deleteHome(Player p,String raw) {
+        if(!p.hasPermission("homes.delete")){p.sendMessage(ChatColor.RED+"❌ You do not have permission to delete homes.");return;}
         String n=raw.toLowerCase(Locale.ROOT);
         if(!data.contains(key(p.getUniqueId(),n))){p.sendMessage(ChatColor.RED+"❌ Home '"+n+"' does not exist.");return;}
         deleteConfirm.put(p.getUniqueId(),n);
@@ -122,10 +125,13 @@ public final class HomeManager implements Listener {
         return new Location(w,data.getDouble(path+".x"),data.getDouble(path+".y"),data.getDouble(path+".z"),(float)data.getDouble(path+".yaw"),(float)data.getDouble(path+".pitch"));
     }
     public void teleport(Player p,String raw){
+        if(!p.hasPermission("homes.teleport")){p.sendMessage(ChatColor.RED+"❌ You do not have permission to teleport to homes.");return;}
         String n=raw.toLowerCase(Locale.ROOT); Location l=getHome(p.getUniqueId(),n);
         if(l==null){p.sendMessage(ChatColor.RED+"❌ Home '"+n+"' does not exist or its world is unavailable.");return;}
         if(p.isDead()){p.sendMessage(ChatColor.RED+"❌ You cannot teleport while dead.");return;}
-        if(plugin.isPlayerInCombat(p)){p.sendMessage(ChatColor.RED+"❌ You cannot teleport while in combat!");return;}
+        if(plugin.getConfig().getBoolean("homes.combat-restriction",true) && plugin.isPlayerInCombat(p)){p.sendMessage(ChatColor.RED+"❌ You cannot teleport while in combat!");return;}
+        long now=System.currentTimeMillis(), until=cooldownUntil.getOrDefault(p.getUniqueId(),0L);
+        if(until>now){long sec=(long)Math.ceil((until-now)/1000.0);p.sendMessage(ChatColor.YELLOW+"⏳ You must wait "+sec+" seconds before teleporting again.");return;}
         cancelPending(p,false);
         int delay=Math.max(0,plugin.getConfig().getInt("homes.teleport-delay",5));
         if(delay==0){doTeleport(p,n,l);return;}
@@ -138,7 +144,7 @@ public final class HomeManager implements Listener {
         if(safe==null){p.sendMessage(ChatColor.RED+"❌ Your home location is unsafe and no safe location was found.");return;}
         if(!safe.getWorld().equals(l.getWorld()) || safe.getX()!=l.getX() || safe.getY()!=l.getY() || safe.getZ()!=l.getZ())
             p.sendMessage(ChatColor.YELLOW+"⚠ Your home location is unsafe. Teleported you to the nearest safe location.");
-        p.teleport(safe); p.sendMessage(ChatColor.GREEN+"☀ Teleported to home "+ChatColor.YELLOW+n+ChatColor.GREEN+".");
+        p.teleport(safe); int cd=Math.max(0,plugin.getConfig().getInt("homes.cooldown-seconds",0)); if(cd>0) cooldownUntil.put(p.getUniqueId(),System.currentTimeMillis()+cd*1000L); p.sendMessage(ChatColor.GREEN+"☀ Teleported to home "+ChatColor.YELLOW+n+ChatColor.GREEN+".");
     }
     private Location safe(Location base){
         World w=base.getWorld(); if(w==null)return null;
@@ -164,7 +170,7 @@ public final class HomeManager implements Listener {
         final Player p; final String n; final Location l; final Location start; BukkitTask task; int left;
         TeleportTask(Player p,String n,Location l){this.p=p;this.n=n;this.l=l;this.start=p.getLocation().clone();this.left=Math.max(1,plugin.getConfig().getInt("homes.teleport-delay",5));}
         public void run(){
-            if(!p.isOnline()||p.isDead()||plugin.isPlayerInCombat(p)){cancelPending(p,false);return;}
+            if(!p.isOnline()||p.isDead()||(plugin.getConfig().getBoolean("homes.combat-restriction",true)&&plugin.isPlayerInCombat(p))){cancelPending(p,false);return;}
             if(p.getLocation().distanceSquared(start)>0.01){cancelPending(p,true);return;}
             if(left<=0){pending.remove(p.getUniqueId());task.cancel();doTeleport(p,n,l);return;}
             p.sendActionBar(ChatColor.YELLOW+"⏳ Teleporting in "+left+"s..."); left--;
@@ -172,6 +178,7 @@ public final class HomeManager implements Listener {
     }
 
     public void rename(Player p,String old,String nn){
+        if(!p.hasPermission("homes.sethome")){p.sendMessage(ChatColor.RED+"❌ You do not have permission to rename homes.");return;}
         old=old.toLowerCase(Locale.ROOT); nn=nn.toLowerCase(Locale.ROOT);
         if(!validName(nn)){p.sendMessage(ChatColor.RED+"❌ Invalid new home name.");return;}
         String a=key(p.getUniqueId(),old), b=key(p.getUniqueId(),nn);
@@ -181,6 +188,7 @@ public final class HomeManager implements Listener {
         data.set(b,s); data.set(a,null); save(); p.sendMessage(ChatColor.GREEN+"✅ Home renamed to "+ChatColor.YELLOW+nn+ChatColor.GREEN+".");
     }
     public void info(Player p,String raw){
+        if(!p.hasPermission("homes.use")){p.sendMessage(ChatColor.RED+"❌ You do not have permission to view homes.");return;}
         String n=raw.toLowerCase(Locale.ROOT), path=key(p.getUniqueId(),n);
         if(!data.contains(path)){p.sendMessage(ChatColor.RED+"❌ Home '"+n+"' does not exist.");return;}
         String w=data.getString(path+".world","?"); double x=data.getDouble(path+".x"),y=data.getDouble(path+".y"),z=data.getDouble(path+".z");
