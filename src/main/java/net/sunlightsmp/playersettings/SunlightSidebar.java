@@ -68,8 +68,19 @@ public final class SunlightSidebar {
                     ChatColor.GOLD + "☀ " + ChatColor.YELLOW + "SUNLIGHT SMP");
             o.setDisplaySlot(DisplaySlot.SIDEBAR);
 
-            // Remove every old line from our dedicated objective so stale lines from previous plugin versions cannot duplicate.
-            for (String x : new HashSet<>(o.getScoreboard().getEntries())) o.getScoreboard().resetScores(x);
+            // Clear only known Sunlight sidebar entries. Do not touch other plugins' scoreboard objectives.
+            String[] bases = {
+                    ChatColor.DARK_GRAY + "━━━━━━━━━━━━",
+                    ChatColor.GRAY + "Money: ",
+                    ChatColor.GRAY + "Sunflowers: ",
+                    ChatColor.GRAY + "Playtime: ",
+                    ChatColor.DARK_GRAY + " ",
+                    ChatColor.YELLOW + "sunlightsmp.play-mc.fun"
+            };
+            for (String base : bases) {
+                board.resetScores(base);
+                for (ChatColor code : ChatColor.values()) board.resetScores(base + code);
+            }
 
             List<String> lines = List.of(
                     ChatColor.DARK_GRAY + "━━━━━━━━━━━━",
