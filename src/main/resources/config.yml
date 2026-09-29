@@ -22,6 +22,9 @@ order:
   max-price: 1000000000
   max-expiration-days: 7
   blocked-materials: []
+  default-expiration: 7d
+  max-orders-per-player: 20
+  max-search-results: 45
 
 # Home system
 homes:
