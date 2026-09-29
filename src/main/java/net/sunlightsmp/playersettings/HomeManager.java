@@ -25,6 +25,7 @@ public final class HomeManager implements Listener {
     private FileConfiguration data;
     private final Map<UUID, TeleportTask> pending = new HashMap<>();
     private final Map<UUID, String> deleteConfirm = new HashMap<>();
+    private final Map<UUID, Long> cooldownUntil = new HashMap<>();
 
     public HomeManager(SunlightPlayerSettings plugin) {
         this.plugin = plugin;
@@ -125,7 +126,9 @@ public final class HomeManager implements Listener {
         String n=raw.toLowerCase(Locale.ROOT); Location l=getHome(p.getUniqueId(),n);
         if(l==null){p.sendMessage(ChatColor.RED+"❌ Home '"+n+"' does not exist or its world is unavailable.");return;}
         if(p.isDead()){p.sendMessage(ChatColor.RED+"❌ You cannot teleport while dead.");return;}
-        if(plugin.isPlayerInCombat(p)){p.sendMessage(ChatColor.RED+"❌ You cannot teleport while in combat!");return;}
+        if(plugin.getConfig().getBoolean("homes.combat-restriction",true) && plugin.isPlayerInCombat(p)){p.sendMessage(ChatColor.RED+"❌ You cannot teleport while in combat!");return;}
+        long now=System.currentTimeMillis(), until=cooldownUntil.getOrDefault(p.getUniqueId(),0L);
+        if(until>now){long sec=(long)Math.ceil((until-now)/1000.0);p.sendMessage(ChatColor.YELLOW+"⏳ You must wait "+sec+" seconds before teleporting again.");return;}
         cancelPending(p,false);
         int delay=Math.max(0,plugin.getConfig().getInt("homes.teleport-delay",5));
         if(delay==0){doTeleport(p,n,l);return;}
@@ -138,7 +141,7 @@ public final class HomeManager implements Listener {
         if(safe==null){p.sendMessage(ChatColor.RED+"❌ Your home location is unsafe and no safe location was found.");return;}
         if(!safe.getWorld().equals(l.getWorld()) || safe.getX()!=l.getX() || safe.getY()!=l.getY() || safe.getZ()!=l.getZ())
             p.sendMessage(ChatColor.YELLOW+"⚠ Your home location is unsafe. Teleported you to the nearest safe location.");
-        p.teleport(safe); p.sendMessage(ChatColor.GREEN+"☀ Teleported to home "+ChatColor.YELLOW+n+ChatColor.GREEN+".");
+        p.teleport(safe); int cd=Math.max(0,plugin.getConfig().getInt("homes.cooldown-seconds",0)); if(cd>0) cooldownUntil.put(p.getUniqueId(),System.currentTimeMillis()+cd*1000L); p.sendMessage(ChatColor.GREEN+"☀ Teleported to home "+ChatColor.YELLOW+n+ChatColor.GREEN+".");
     }
     private Location safe(Location base){
         World w=base.getWorld(); if(w==null)return null;
@@ -164,7 +167,7 @@ public final class HomeManager implements Listener {
         final Player p; final String n; final Location l; final Location start; BukkitTask task; int left;
         TeleportTask(Player p,String n,Location l){this.p=p;this.n=n;this.l=l;this.start=p.getLocation().clone();this.left=Math.max(1,plugin.getConfig().getInt("homes.teleport-delay",5));}
         public void run(){
-            if(!p.isOnline()||p.isDead()||plugin.isPlayerInCombat(p)){cancelPending(p,false);return;}
+            if(!p.isOnline()||p.isDead()||(plugin.getConfig().getBoolean("homes.combat-restriction",true)&&plugin.isPlayerInCombat(p))){cancelPending(p,false);return;}
             if(p.getLocation().distanceSquared(start)>0.01){cancelPending(p,true);return;}
             if(left<=0){pending.remove(p.getUniqueId());task.cancel();doTeleport(p,n,l);return;}
             p.sendActionBar(ChatColor.YELLOW+"⏳ Teleporting in "+left+"s..."); left--;
