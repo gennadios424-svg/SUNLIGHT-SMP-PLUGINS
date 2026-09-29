@@ -68,7 +68,7 @@ public final class HomeManager implements Listener {
     }
     private void openPage(Player p, int page, List<String> hs, int pages) {
         Inventory inv = Bukkit.createInventory(null, 54, TITLE + " §8(" + (page + 1) + "/" + pages + ")");
-        for (int i=0;i<54;i++) inv.setItem(i, item(Material.BLACK_STAINED_GLASS_PANE, " "));
+        frame(inv);
         int start=page*45;
         for (int i=0;i<45 && start+i<hs.size();i++) {
             String n=hs.get(start+i), path=key(p.getUniqueId(),n), w=data.getString(path+".world","?");
@@ -83,6 +83,13 @@ public final class HomeManager implements Listener {
         if(page>0) inv.setItem(47,item(Material.ARROW,ChatColor.YELLOW+"← PREVIOUS"));
         if(page<pages-1) inv.setItem(51,item(Material.ARROW,ChatColor.YELLOW+"NEXT →"));
         p.openInventory(inv);
+    }
+    private void frame(Inventory inv) {
+        ItemStack side=item(Material.BLACK_STAINED_GLASS_PANE," ");
+        ItemStack accent=item(Material.YELLOW_STAINED_GLASS_PANE,ChatColor.GOLD+"☀");
+        int rows=inv.getSize()/9;
+        for(int r=0;r<rows;r++){ inv.setItem(r*9,side); inv.setItem(r*9+8,side); }
+        for(int s=0;s<9;s++){ inv.setItem(s,accent); inv.setItem(inv.getSize()-9+s,accent); }
     }
     private String fmt(double d){ return String.valueOf(Math.round(d*100.0)/100.0); }
 
@@ -109,7 +116,7 @@ public final class HomeManager implements Listener {
         if(!data.contains(key(p.getUniqueId(),n))){p.sendMessage(ChatColor.RED+"❌ Home '"+n+"' does not exist.");return;}
         deleteConfirm.put(p.getUniqueId(),n);
         Inventory i=Bukkit.createInventory(null,27,"⚠ Delete Home: "+n);
-        for(int s=0;s<27;s++) i.setItem(s,item(Material.BLACK_STAINED_GLASS_PANE," "));
+        frame(i);
         i.setItem(11,item(Material.LIME_CONCRETE,ChatColor.GREEN+"CONFIRM",ChatColor.GRAY+"Delete "+n));
         i.setItem(15,item(Material.RED_CONCRETE,ChatColor.RED+"CANCEL"));
         p.openInventory(i);
