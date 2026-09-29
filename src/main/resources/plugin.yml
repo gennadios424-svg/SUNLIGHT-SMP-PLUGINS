@@ -108,6 +108,9 @@ commands:
   order:
     description: Player-to-player item order system
     usage: /order [create|search|cancel|myorders|history]
+  tags:
+    description: Open the Sunlight SMP Tag Shop
+    usage: /tags
 permissions:
   bounty.use:
     default: true
@@ -128,6 +131,8 @@ permissions:
     aliases: [teamchat]
 permissions:
   sunlightsmp.settings:
+    default: true
+  sunlightsmp.tags:
     default: true
   sunlightsmp.tpa:
     default: true
