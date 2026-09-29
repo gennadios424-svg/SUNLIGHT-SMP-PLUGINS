@@ -47,3 +47,10 @@ bounty:
   kill-cooldown-minutes: 30
   allow-cancel: true
   refund-on-cancel: true
+
+
+# Sunlight SMP AFK reward zone
+afk:
+  reward: 3
+  interval-minutes: 5
+  giver-enabled: true
