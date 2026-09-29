@@ -32,7 +32,7 @@ public final class AuctionHouseMenu implements Listener {
         return value;
     }
     private void frame(Inventory inv){
-        ItemStack side=item(Material.BLACK_STAINED_GLASS_PANE," "); ItemStack accent=item(Material.YELLOW_STAINED_GLASS_PANE,ChatColor.GOLD+"☀");
+        ItemStack side=item(Material.ORANGE_STAINED_GLASS_PANE," "); ItemStack accent=item(Material.YELLOW_STAINED_GLASS_PANE,ChatColor.GOLD+"☀");
         for(int r=0;r<inv.getSize()/9;r++){inv.setItem(r*9,side);inv.setItem(r*9+8,side);}
         for(int s=0;s<9;s++){inv.setItem(s,accent);inv.setItem(inv.getSize()-9+s,accent);}
     }
