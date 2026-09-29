@@ -36,7 +36,7 @@ public final class OrderCommand implements CommandExecutor, Listener {
     }
 
     private void frame(Inventory inv) {
-        for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, item(Material.BLACK_STAINED_GLASS_PANE, " "));
+        frame(inv);
         for (int i : new int[]{0,1,2,3,4,5,6,7,8,45,46,47,48,50,51,52,53}) {
             if (i < inv.getSize()) inv.setItem(i, item(Material.YELLOW_STAINED_GLASS_PANE, ChatColor.GOLD + "☀"));
         }
