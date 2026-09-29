@@ -85,7 +85,7 @@ public final class HomeManager implements Listener {
         p.openInventory(inv);
     }
     private void frame(Inventory inv) {
-        ItemStack side=item(Material.BLACK_STAINED_GLASS_PANE," ");
+        ItemStack side=item(Material.ORANGE_STAINED_GLASS_PANE," ");
         ItemStack accent=item(Material.YELLOW_STAINED_GLASS_PANE,ChatColor.GOLD+"☀");
         int rows=inv.getSize()/9;
         for(int r=0;r<rows;r++){ inv.setItem(r*9,side); inv.setItem(r*9+8,side); }
