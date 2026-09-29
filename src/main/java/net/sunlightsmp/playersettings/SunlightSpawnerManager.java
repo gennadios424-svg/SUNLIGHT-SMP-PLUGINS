@@ -1,6 +1,6 @@
 package net.sunlightsmp.playersettings;
 
-import org.bukkit.*;import org.bukkit.block.*;import org.bukkit.entity.*;import org.bukkit.event.*;import org.bukkit.event.block.*;import org.bukkit.event.player.*;import org.bukkit.event.inventory.*;import org.bukkit.inventory.*;import org.bukkit.inventory.meta.*;import org.bukkit.persistence.PersistentDataType;import org.bukkit.scheduler.BukkitRunnable;import org.bukkit.configuration.file.*;import java.io.*;import java.util.*;
+import org.bukkit.*;import org.bukkit.block.*;import org.bukkit.entity.*;import org.bukkit.event.*;import org.bukkit.event.world.ChunkLoadEvent;import org.bukkit.event.block.*;import org.bukkit.event.player.*;import org.bukkit.event.inventory.*;import org.bukkit.inventory.*;import org.bukkit.inventory.meta.*;import org.bukkit.persistence.PersistentDataType;import org.bukkit.scheduler.BukkitRunnable;import org.bukkit.configuration.file.*;import java.io.*;import java.util.*;
 
 public final class SunlightSpawnerManager implements Listener{
  private final SunlightPlayerSettings plugin; private final NamespacedKey marker; private final File file; private FileConfiguration data; private final Set<Location> active=new HashSet<>(); private final Map<UUID,Location> menus=new HashMap<>();
