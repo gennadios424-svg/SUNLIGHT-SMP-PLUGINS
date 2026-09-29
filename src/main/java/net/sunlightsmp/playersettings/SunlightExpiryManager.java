@@ -14,6 +14,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public final class SunlightExpiryManager implements Listener {
     private final SunlightPlayerSettings plugin;
