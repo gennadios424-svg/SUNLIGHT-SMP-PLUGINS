@@ -62,7 +62,7 @@ public final class SunlightExpiryManager implements Listener {
             long seconds = total % 60;
             String time = days + "d " + String.format("%02dh %02dm %02ds", hours, minutes, seconds);
             List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
-            lore.removeIf(line -> ChatColor.stripColor(line).toLowerCase().startsWith("expires in") || ChatColor.stripColor(line).toLowerCase().startsWith("time left:"));
+            lore.removeIf(line -> { String clean=ChatColor.stripColor(line).toLowerCase(Locale.ROOT).trim(); return clean.startsWith("expires in") || clean.startsWith("time left:") || clean.startsWith("☀ time left:") || clean.startsWith("⏱ time left:"); });
             lore.add(ChatColor.LIGHT_PURPLE + "☀ Time left: " + time);
             meta.setLore(lore);
             item.setItemMeta(meta);
