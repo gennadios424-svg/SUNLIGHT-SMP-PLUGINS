@@ -46,7 +46,8 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
     private final Map<UUID, Long> sessions = new ConcurrentHashMap<>();
     private final Map<UUID, BukkitTask> timeouts = new ConcurrentHashMap<>();
     private File accountsFile;
-    private org.bukkit.configuration.file.YamlConfiguration accounts;\n    private StarterKitManager starterKitManager;
+    private org.bukkit.configuration.file.YamlConfiguration accounts;
+    private StarterKitManager starterKitManager;
 
     @Override
     public void onEnable() {
@@ -59,7 +60,9 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
         Objects.requireNonNull(getCommand("login")).setExecutor(this);
         Objects.requireNonNull(getCommand("changepassword")).setExecutor(this);
         Objects.requireNonNull(getCommand("logout")).setExecutor(this);
-        Objects.requireNonNull(getCommand("sunauth")).setExecutor(this);\n        Objects.requireNonNull(getCommand("kitadmin")).setExecutor(starterKitManager);\n        Objects.requireNonNull(getCommand("kitadmin")).setTabCompleter(starterKitManager);
+        Objects.requireNonNull(getCommand("sunauth")).setExecutor(this);
+        Objects.requireNonNull(getCommand("kitadmin")).setExecutor(starterKitManager);
+        Objects.requireNonNull(getCommand("kitadmin")).setTabCompleter(starterKitManager);
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             startAuth(player);
@@ -157,7 +160,10 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
         if (task != null) task.cancel();
         p.setWalkSpeed(0.2f);
         p.setFlySpeed(0.1f);
-        sessions.put(p.getUniqueId(), System.currentTimeMillis() + Math.max(0, getConfig().getLong("session-seconds", 43200)) * 1000L);\n        if (starterKitManager != null) Bukkit.getScheduler().runTaskLater(this, () -> {\n            if (p.isOnline() && isAuthenticated(p) && !starterKitManager.hasKit(p.getUniqueId())) starterKitManager.openSelection(p);\n        }, 2L);
+        sessions.put(p.getUniqueId(), System.currentTimeMillis() + Math.max(0, getConfig().getLong("session-seconds", 43200)) * 1000L);
+        if (starterKitManager != null) Bukkit.getScheduler().runTaskLater(this, () -> {
+            if (p.isOnline() && isAuthenticated(p) && !starterKitManager.hasKit(p.getUniqueId())) starterKitManager.openSelection(p);
+        }, 2L);
     }
 
     private void saveAccounts() {
