@@ -126,6 +126,12 @@ permissions:
     default: op
   homes.use:
     default: true
+  homes.limit.3:
+    default: false
+  homes.limit.5:
+    default: false
+  homes.limit.10:
+    default: false
   homes.sethome:
     default: true
   homes.delete:
