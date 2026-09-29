@@ -55,7 +55,7 @@ public final class SunflowerAfkManager implements CommandExecutor, Listener {
                 afkLocation = p.getLocation().clone();
                 save();
                 msg(p, ChatColor.GREEN + "☀ Success! " + ChatColor.WHITE + "AFK location set to " + ChatColor.YELLOW +
-                        p.getWorld().getName() + " " + p.getBlockX() + ", " + p.getBlockY() + ", " + p.getBlockZ() + ChatColor.WHITE + ".");
+                        p.getWorld().getName() + " " + p.getLocation().getBlockX() + ", " + p.getLocation().getBlockY() + ", " + p.getLocation().getBlockZ() + ChatColor.WHITE + ".");
             }
             case "give" -> {
                 int amount = 1;
