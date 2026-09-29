@@ -22,3 +22,15 @@ order:
   max-price: 1000000000
   max-expiration-days: 7
   blocked-materials: []
+
+# Home system
+homes:
+  default-limit: 3
+  vip-limit: 5
+  premium-limit: 10
+  admin-limit: 100
+  max-permission-check: 50
+  teleport-delay: 5
+  cooldown-seconds: 0
+  combat-restriction: true
+  safety-check: true
