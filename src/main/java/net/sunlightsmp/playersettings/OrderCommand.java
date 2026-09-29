@@ -18,11 +18,14 @@ public final class OrderCommand implements CommandExecutor, Listener {
     private final SunlightPlayerSettings plugin;
     private final OrderManager manager;
     private final Map<UUID, CreateSession> creating = new HashMap<>();
+    private final Map<UUID, Integer> createItemPages = new HashMap<>();
+    private final Map<UUID, Integer> searchItemPages = new HashMap<>();
     private final Map<UUID, Long> fulfilling = new HashMap<>();
     private final Map<UUID, SignSession> signs = new HashMap<>();
 
     private static final String MAIN = "☀ Player Orders";
     private static final String SEARCH = "☀ Search Orders";
+    private static final String CREATE_ITEM = "☀ Create Order • Item";
     private static final String MY = "☀ My Orders";
     private static final String HISTORY = "☀ Order History";
     private static final String DETAIL_PREFIX = "☀ Order #";
@@ -146,14 +149,55 @@ public final class OrderCommand implements CommandExecutor, Listener {
     }
 
     private void openCreate(Player player) {
-        ItemStack held = player.getInventory().getItemInMainHand();
-        if (held.getType().isAir()) {
-            player.sendMessage(ChatColor.RED + "☀ Hold the item you want to order in your main hand.");
-            return;
+        creating.remove(player.getUniqueId());
+        createItemPages.put(player.getUniqueId(), 0);
+        drawItemSelector(player, CREATE_ITEM, createItemPages, true);
+    }
+
+    private void drawItemSelector(Player player, String title, Map<UUID, Integer> pages, boolean creatingOrder) {
+        int page = pages.getOrDefault(player.getUniqueId(), 0);
+        List<Material> items = obtainableItems();
+        int maxPage = Math.max(0, (items.size() - 1) / 45);
+        page = Math.min(page, maxPage);
+        pages.put(player.getUniqueId(), page);
+
+        Inventory inv = plugin.getServer().createInventory(null, 54, title);
+        frame(inv);
+
+        int start = page * 45;
+        for (int i = 0; i < 45 && start + i < items.size(); i++) {
+            Material material = items.get(start + i);
+            inv.setItem(i, item(material, ChatColor.WHITE + nice(material),
+                    ChatColor.GRAY + (creatingOrder ? "Click to order this item" : "Click to view active orders")));
         }
-        creating.put(player.getUniqueId(), new CreateSession(held.clone()));
-        player.closeInventory();
-        openAmountSign(player);
+
+        inv.setItem(45, item(Material.ARROW, ChatColor.YELLOW + "PREVIOUS"));
+        inv.setItem(49, item(Material.SUNFLOWER, ChatColor.GOLD + "☀ " + (creatingOrder ? "CHOOSE ITEM" : "SEARCH ITEM"),
+                ChatColor.GRAY + "Page " + (page + 1) + " / " + (maxPage + 1)));
+        inv.setItem(53, item(Material.ARROW, ChatColor.YELLOW + "NEXT"));
+        player.openInventory(inv);
+    }
+
+    private List<Material> obtainableItems() {
+        List<Material> out = new ArrayList<>();
+        for (Material material : Material.values()) {
+            if (isWorthListed(material)) out.add(material);
+        }
+        out.sort(Comparator.comparing(Material::name));
+        return out;
+    }
+
+    private boolean isWorthListed(Material material) {
+        if (material == null || material == Material.AIR || !material.isItem()) return false;
+        if (material.name().endsWith("_SPAWN_EGG")) return false;
+        return switch (material) {
+            case BEDROCK, BARRIER, END_PORTAL_FRAME, END_PORTAL, NETHER_PORTAL,
+                 COMMAND_BLOCK, CHAIN_COMMAND_BLOCK, REPEATING_COMMAND_BLOCK,
+                 STRUCTURE_BLOCK, STRUCTURE_VOID, JIGSAW, LIGHT,
+                 DEBUG_STICK, KNOWLEDGE_BOOK, BUDDING_AMETHYST,
+                 REINFORCED_DEEPSLATE, PETRIFIED_OAK_SLAB -> false;
+            default -> true;
+        };
     }
 
     private void main(Player player, String sort) {
@@ -206,30 +250,8 @@ public final class OrderCommand implements CommandExecutor, Listener {
     }
 
     private void searchMenu(Player player) {
-        Inventory inv = plugin.getServer().createInventory(null, 54, SEARCH);
-        frame(inv);
-
-        // Show each currently requested material once, so the selector stays clean.
-        Set<Material> materials = new LinkedHashSet<>();
-        for (Order order : manager.active()) materials.add(order.item().getType());
-
-        int slot = 10;
-        for (Material material : materials) {
-            if (slot >= 45) break;
-            inv.setItem(slot, item(material, ChatColor.YELLOW + nice(material),
-                    ChatColor.GRAY + "Click to see active orders",
-                    ChatColor.DARK_GRAY + "Search this item"));
-            slot++;
-            if (slot % 9 == 8) slot += 2;
-        }
-
-        if (materials.isEmpty()) {
-            inv.setItem(22, item(Material.BARRIER, ChatColor.RED + "No items are currently ordered"));
-        }
-
-        inv.setItem(45, item(Material.ARROW, ChatColor.YELLOW + "BACK",
-                "Return to active orders"));
-        player.openInventory(inv);
+        searchItemPages.put(player.getUniqueId(), 0);
+        drawItemSelector(player, SEARCH, searchItemPages, false);
     }
 
     private void detail(Player player, Order order) {
@@ -443,14 +465,47 @@ public final class OrderCommand implements CommandExecutor, Listener {
             return;
         }
 
+        if (title.equals(CREATE_ITEM)) {
+            event.setCancelled(true);
+            int raw = event.getRawSlot();
+            if (raw == 45) {
+                int page = createItemPages.getOrDefault(player.getUniqueId(), 0);
+                if (page > 0) { createItemPages.put(player.getUniqueId(), page - 1); openCreateItemMenu(player); }
+                return;
+            }
+            if (raw == 53) {
+                int page = createItemPages.getOrDefault(player.getUniqueId(), 0);
+                int max = Math.max(0, (obtainableItems().size() - 1) / 45);
+                if (page < max) { createItemPages.put(player.getUniqueId(), page + 1); openCreateItemMenu(player); }
+                return;
+            }
+            if (raw < 0 || raw >= 45) return;
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null || clicked.getType().isAir()) return;
+            creating.put(player.getUniqueId(), new CreateSession(new ItemStack(clicked.getType())));
+            player.closeInventory();
+            openAmountSign(player);
+            return;
+        }
+
         if (title.equals(SEARCH)) {
             event.setCancelled(true);
-            if (event.getRawSlot() == 45) { main(player, "newest"); return; }
+            int raw = event.getRawSlot();
+            if (raw == 45) {
+                int page = searchItemPages.getOrDefault(player.getUniqueId(), 0);
+                if (page > 0) { searchItemPages.put(player.getUniqueId(), page - 1); drawItemSelector(player, SEARCH, searchItemPages, false); }
+                return;
+            }
+            if (raw == 53) {
+                int page = searchItemPages.getOrDefault(player.getUniqueId(), 0);
+                int max = Math.max(0, (obtainableItems().size() - 1) / 45);
+                if (page < max) { searchItemPages.put(player.getUniqueId(), page + 1); drawItemSelector(player, SEARCH, searchItemPages, false); }
+                return;
+            }
+            if (raw < 0 || raw >= 45) return;
             ItemStack clicked = event.getCurrentItem();
-            if (clicked == null || !clicked.hasItemMeta()) return;
-            Material material = clicked.getType();
-            if (material.isAir() || material.name().contains("STAINED_GLASS") || material == Material.BARREL) return;
-            browse(player, manager.search(material.name(), "newest"), "newest");
+            if (clicked == null || clicked.getType().isAir()) return;
+            browse(player, manager.search(clicked.getType().name(), "newest"), "newest");
             return;
         }
 
@@ -469,8 +524,20 @@ public final class OrderCommand implements CommandExecutor, Listener {
         }
 
         if (title.startsWith(FULFILL_PREFIX)) {
-            if (event.getRawSlot() != 13) event.setCancelled(true);
-            if (event.getRawSlot() == 15) {
+            int raw = event.getRawSlot();
+
+            if (raw != 13) {
+                event.setCancelled(true);
+            } else {
+                switch (event.getAction()) {
+                    case PICKUP_ALL, PICKUP_HALF, PICKUP_ONE, PICKUP_SOME,
+                         PLACE_ALL, PLACE_ONE, PLACE_SOME, SWAP_WITH_CURSOR -> {
+                    }
+                    default -> event.setCancelled(true);
+                }
+            }
+
+            if (raw == 15) {
                 event.setCancelled(true);
                 Long id = fulfilling.get(player.getUniqueId());
                 Order order = id == null ? null : manager.get(id);
@@ -485,8 +552,14 @@ public final class OrderCommand implements CommandExecutor, Listener {
                 int amount = Math.min(supplied.getAmount(), order.remaining());
                 ItemStack settlement = supplied.clone();
                 settlement.setAmount(amount);
-                supplied.setAmount(supplied.getAmount() - amount);
-                if (supplied.getAmount() <= 0) event.getView().getTopInventory().setItem(13, null);
+
+                int oldAmount = supplied.getAmount();
+                if (amount >= oldAmount) {
+                    event.getView().getTopInventory().setItem(13, null);
+                } else {
+                    supplied.setAmount(oldAmount - amount);
+                    event.getView().getTopInventory().setItem(13, supplied);
+                }
 
                 if (manager.fulfill(player, id, settlement)) {
                     fulfilling.remove(player.getUniqueId());
@@ -496,11 +569,12 @@ public final class OrderCommand implements CommandExecutor, Listener {
                     if (rollback == null || rollback.getType().isAir()) {
                         event.getView().getTopInventory().setItem(13, settlement);
                     } else {
-                        rollback.setAmount(rollback.getAmount() + settlement.getAmount());
+                        rollback.setAmount(Math.min(64, rollback.getAmount() + settlement.getAmount()));
                     }
                     player.sendMessage(ChatColor.RED + "☀ Fulfillment failed safely. Nothing was lost.");
                 }
-            } else if (event.getRawSlot() == 22) {
+            } else if (raw == 22) {
+                event.setCancelled(true);
                 fulfilling.remove(player.getUniqueId());
                 player.closeInventory();
             }
@@ -531,6 +605,13 @@ public final class OrderCommand implements CommandExecutor, Listener {
     }
 
     @EventHandler
+    public void drag(InventoryDragEvent event) {
+        if (event.getView().getTitle().startsWith(FULFILL_PREFIX)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
     public void close(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player player)) return;
         if (!event.getView().getTitle().startsWith(FULFILL_PREFIX)) return;
@@ -549,6 +630,8 @@ public final class OrderCommand implements CommandExecutor, Listener {
     public void quit(org.bukkit.event.player.PlayerQuitEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
         creating.remove(uuid);
+        createItemPages.remove(uuid);
+        searchItemPages.remove(uuid);
         fulfilling.remove(uuid);
         SignSession sign = signs.remove(uuid);
         if (sign != null) restoreSign(sign);
