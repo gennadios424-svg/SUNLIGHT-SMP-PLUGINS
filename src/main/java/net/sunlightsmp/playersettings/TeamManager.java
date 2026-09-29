@@ -61,6 +61,16 @@ public final class TeamManager {
         return true;
     }
 
+    public synchronized boolean join(UUID player, String teamName) {
+        if (playerTeams.containsKey(player)) return false;
+        TeamData t = getByName(teamName);
+        if (t == null || t.members.size() >= MAX_MEMBERS) return false;
+        t.members.put(player, Role.MEMBER);
+        playerTeams.put(player, t.id);
+        save();
+        return true;
+    }
+
     public synchronized Invitation getInvitation(UUID target) { return invitations.get(target); }
 
     public synchronized boolean accept(UUID target) {
