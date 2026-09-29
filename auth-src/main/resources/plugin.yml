@@ -2,7 +2,7 @@ name: SunlightAuth
 version: 1.1.0
 main: net.sunlightsmp.auth.SunlightAuth
 api-version: '1.21'
-description: Secure cracked-player authentication and Sunlight SMP starter kits
+description: Secure cracked-player authentication
 author: Sunlight SMP
 
 commands:
@@ -23,15 +23,7 @@ commands:
   sunauth:
     description: SunlightAuth administration
     permission: sunlightsmp.auth.admin
-  kitadmin:
-    description: Manage permanent starter kits
-    usage: /kitadmin <reset|set> <player> [kit]
-    permission: sunlightsmp.kitadmin
-
 permissions:
   sunlightsmp.auth.admin:
     description: Manage SunlightAuth
-    default: op
-  sunlightsmp.kitadmin:
-    description: Manage permanent starter kits
     default: op
