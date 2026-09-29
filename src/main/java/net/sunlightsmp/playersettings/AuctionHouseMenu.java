@@ -31,7 +31,12 @@ public final class AuctionHouseMenu implements Listener {
         if(!Double.isFinite(value))throw new NumberFormatException();
         return value;
     }
-    private void frame(Inventory inv){\n        ItemStack side=item(Material.BLACK_STAINED_GLASS_PANE," "); ItemStack accent=item(Material.YELLOW_STAINED_GLASS_PANE,ChatColor.GOLD+"☀");\n        for(int r=0;r<inv.getSize()/9;r++){inv.setItem(r*9,side);inv.setItem(r*9+8,side);}\n        for(int s=0;s<9;s++){inv.setItem(s,accent);inv.setItem(inv.getSize()-9+s,accent);}\n    }\n    public void open(Player p){searchQueries.remove(p.getUniqueId());sortModes.put(p.getUniqueId(),0);open(p,0);}
+    private void frame(Inventory inv){
+        ItemStack side=item(Material.BLACK_STAINED_GLASS_PANE," "); ItemStack accent=item(Material.YELLOW_STAINED_GLASS_PANE,ChatColor.GOLD+"☀");
+        for(int r=0;r<inv.getSize()/9;r++){inv.setItem(r*9,side);inv.setItem(r*9+8,side);}
+        for(int s=0;s<9;s++){inv.setItem(s,accent);inv.setItem(inv.getSize()-9+s,accent);}
+    }
+    public void open(Player p){searchQueries.remove(p.getUniqueId());sortModes.put(p.getUniqueId(),0);open(p,0);}
 
     public void openSearch(Player p,String query){
         String q=query.trim();
