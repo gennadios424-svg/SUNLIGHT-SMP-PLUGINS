@@ -17,6 +17,11 @@ public final class TagCommand implements org.bukkit.command.CommandExecutor, Lis
 
     public TagCommand(SunlightPlayerSettings plugin, TagManager manager) { this.plugin=plugin; this.manager=manager; }
 
+    @Override public boolean onCommand(org.bukkit.command.CommandSender sender, org.bukkit.command.Command command, String label, String[] args) {
+        if (sender instanceof Player p) open(p);
+        return true;
+    }
+
     private ItemStack item(Material mat, String name, String... lore) {
         ItemStack i = new ItemStack(mat);
         ItemMeta m = i.getItemMeta();
