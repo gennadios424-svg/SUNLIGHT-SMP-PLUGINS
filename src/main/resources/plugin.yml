@@ -108,6 +108,7 @@ commands:
   order:
     description: Player-to-player item order system
     usage: /order [create|search|cancel|myorders|history]
+permissions:
   bounty.use:
     default: true
   bounty.create:
