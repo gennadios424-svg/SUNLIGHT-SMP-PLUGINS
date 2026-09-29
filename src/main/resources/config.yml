@@ -16,3 +16,9 @@ tpa:
 auction:
   expire-days: 7
   max-price: 1000000000
+
+order:
+  max-amount: 2304
+  max-price: 1000000000
+  max-expiration-days: 7
+  blocked-materials: []
