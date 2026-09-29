@@ -18,6 +18,7 @@ public final class WorthCommand implements CommandExecutor, Listener, TabComplet
     private static final String TITLE = ChatColor.GOLD + "☀ Sunlight Worth";
     private final SunlightPlayerSettings plugin;
     private final Map<UUID, Integer> pages = new HashMap<>();
+    private final Map<UUID, Integer> sortModes = new HashMap<>();
 
     public WorthCommand(SunlightPlayerSettings plugin) { this.plugin = plugin; }
 
@@ -45,7 +46,7 @@ public final class WorthCommand implements CommandExecutor, Listener, TabComplet
         return true;
     }
 
-    private void drawSearch(Player p, List<Material> items, String query) {
+    private List<Material> sorted(List<Material> items, Player p) { List<Material> out=new ArrayList<>(items); int mode=sortModes.getOrDefault(p.getUniqueId(),0); if(mode==1)out.sort(Comparator.comparingDouble(SellPricing::price)); else if(mode==2)out.sort(Comparator.comparingDouble(SellPricing::price).reversed()); else out.sort(Comparator.comparing(m->m.name())); return out; }\n    private String sortName(Player p){return switch(sortModes.getOrDefault(p.getUniqueId(),0)){case 1->"Price: Low → High";case 2->"Price: High → Low";default->"Name";};}\n\n    private void drawSearch(Player p, List<Material> items, String query) {\n        items=sorted(items,p);
         Inventory inv = Bukkit.createInventory(null, 54, TITLE + ChatColor.DARK_GRAY + " • " + query);
         for (int i = 45; i < 54; i++) inv.setItem(i, item(Material.GRAY_STAINED_GLASS_PANE, " "));
         for (int i = 0; i < Math.min(45, items.size()); i++) {
@@ -89,7 +90,7 @@ public final class WorthCommand implements CommandExecutor, Listener, TabComplet
         }
 
         inv.setItem(45, item(Material.ARROW, ChatColor.YELLOW + "Previous Page"));
-        inv.setItem(49, item(Material.SUNFLOWER, ChatColor.GOLD + "☀ Sunlight Worth",
+        inv.setItem(47, item(Material.HOPPER, ChatColor.YELLOW + "Sort", "", ChatColor.GRAY + sortName(p), ChatColor.GRAY + "Click to cycle"));\n        inv.setItem(49, item(Material.SUNFLOWER, ChatColor.GOLD + "☀ Sunlight Worth",
                 ChatColor.GRAY + "Every survival-obtainable item",
                 ChatColor.GRAY + "is listed here."));
         inv.setItem(53, item(Material.ARROW, ChatColor.YELLOW + "Next Page"));
@@ -152,7 +153,7 @@ public final class WorthCommand implements CommandExecutor, Listener, TabComplet
         if (!(e.getWhoClicked() instanceof Player p) || !e.getView().getTitle().equals(TITLE)) return;
         e.setCancelled(true);
         int s = e.getRawSlot();
-        if (s == 45) {
+        if (s == 47) {\n            int next=(sortModes.getOrDefault(p.getUniqueId(),0)+1)%3; sortModes.put(p.getUniqueId(),next); pages.put(p.getUniqueId(),0); draw(p);\n        } else if (s == 45) {
             int page = pages.getOrDefault(p.getUniqueId(), 0);
             if (page > 0) { pages.put(p.getUniqueId(), page - 1); draw(p); }
         } else if (s == 53) {
