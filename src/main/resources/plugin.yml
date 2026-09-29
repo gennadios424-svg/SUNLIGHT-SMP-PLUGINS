@@ -1,9 +1,9 @@
 name: SunlightPlayerSettings
-version: 1.4.0
+version: 1.5.0
 main: net.sunlightsmp.playersettings.SunlightPlayerSettings
 api-version: '1.21'
 author: Sunlight SMP
-description: Sunlight SMP player settings, TPA, native Auction House, Discord, Store, RTP, voice chat and Coinflip
+description: Sunlight SMP player settings, TPA, Auction House, Discord, Store, RTP, voice chat, Coinflip, Orders and Teams
 softdepend: [voicechat]
 commands:
   settings:
@@ -68,11 +68,11 @@ commands:
     usage: /sunflower [claim]
     aliases: [sunflowers]
   sunflowerspawner:
-    description: Buy a Sunlight Spawner for 1,500 Sunflowers
+    description: Buy a Sunlight Spawner
     usage: /sunflowerspawner <skeleton|zombie|witch|iron_golem|spider|creeper>
   coinflip:
     description: Create or join a player vs player coinflip
-    usage: /cf <amount>
+    usage: /coinflip <amount>
     aliases: [cf, flip]
   sunkeyall:
     description: Give every online player crate keys with an animation
@@ -97,8 +97,18 @@ commands:
     description: Rename a home
     usage: /renamehome <old> <new>
   suncrate:
-    description: Open a Sunlight crate
-    usage: /suncrate <crate> | /suncrate elytra | /suncrate give <crate> [amount] | /suncrate edit <crate> | /suncrate reload\n  order:\n    description: Player-to-player item order system\n    usage: /order [create|search|cancel|myorders|history]
+    description: Open or manage a Sunlight crate
+    usage: /suncrate <crate> | /suncrate give <crate> [amount] | /suncrate edit <crate> | /suncrate reload
+  order:
+    description: Player-to-player item order system
+    usage: /order [create|search|cancel|myorders|history]
+  team:
+    description: Sunlight SMP player team system
+    usage: /team [create|invite|accept|deny|kick|promote|demote|leave|chat|info|rename|tag|color]
+  tc:
+    description: Toggle team chat
+    usage: /tc
+    aliases: [teamchat]
 permissions:
   sunlightsmp.settings:
     default: true
