@@ -99,9 +99,26 @@ commands:
   suncrate:
     description: Open or manage a Sunlight crate
     usage: /suncrate <crate> | /suncrate give <crate> [amount] | /suncrate edit <crate> | /suncrate reload
+  bounty:
+    description: Player bounty system
+    usage: /bounty [player amount|list|history|cancel player]
+  bountyadmin:
+    description: Admin bounty management
+    usage: /bountyadmin <remove|add|clear|reload>
   order:
     description: Player-to-player item order system
     usage: /order [create|search|cancel|myorders|history]
+permissions:
+  bounty.use:
+    default: true
+  bounty.create:
+    default: true
+  bounty.cancel:
+    default: true
+  bounty.admin:
+    default: op
+  bounty.bypass:
+    default: false
   team:
     description: Sunlight SMP player team system
     usage: /team [create|invite|accept|deny|kick|promote|demote|leave|chat|info|rename|tag|color]

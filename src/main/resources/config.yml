@@ -37,3 +37,13 @@ homes:
   cooldown-seconds: 0
   combat-restriction: true
   safety-check: true
+
+
+bounty:
+  minimum: 1000
+  maximum: 10000000
+  announcement-threshold: 500000
+  require-pvp: true
+  kill-cooldown-minutes: 30
+  allow-cancel: true
+  refund-on-cancel: true
