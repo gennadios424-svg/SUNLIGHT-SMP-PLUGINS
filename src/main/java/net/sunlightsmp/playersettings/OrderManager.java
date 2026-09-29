@@ -102,6 +102,9 @@ public final class OrderManager {
         int maxAmount = plugin.getConfig().getInt("order.max-amount", 2304);
         double maxPrice = plugin.getConfig().getDouble("order.max-price", 1_000_000_000D);
         if (amount > maxAmount || total > maxPrice || !eco.has(buyer, total)) return null;
+        int maxOrders = plugin.getConfig().getInt("order.max-orders-per-player", 20);
+        long ownActive = active.values().stream().filter(o -> o.buyer().equals(buyer.getUniqueId())).count();
+        if (ownActive >= maxOrders) return null;
 
         if (!eco.withdrawPlayer(buyer, total).transactionSuccess()) return null;
 
