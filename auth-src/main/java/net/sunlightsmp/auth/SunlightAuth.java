@@ -113,12 +113,22 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
         return authenticated.contains(p.getUniqueId());
     }
 
+    private void requireStarterKit(Player p) {
+        if (starterKitManager == null || starterKitManager.hasKit(p.getUniqueId())) return;
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            if (p.isOnline() && isAuthenticated(p) && !starterKitManager.hasKit(p.getUniqueId())) {
+                starterKitManager.openSelection(p);
+            }
+        }, 2L);
+    }
+
     private void startAuth(Player p) {
         authenticated.remove(p.getUniqueId());
 
         if (isPremium(p)) {
             authenticated.add(p.getUniqueId());
             send(p, "premium");
+            requireStarterKit(p);
             return;
         }
 
@@ -126,6 +136,7 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
         Long sessionUntil = sessions.get(p.getUniqueId());
         if (sessionUntil != null && sessionUntil > System.currentTimeMillis()) {
             authenticated.add(p.getUniqueId());
+            requireStarterKit(p);
             return;
         }
 
@@ -164,9 +175,7 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
         p.setWalkSpeed(0.2f);
         p.setFlySpeed(0.1f);
         sessions.put(p.getUniqueId(), System.currentTimeMillis() + Math.max(0, getConfig().getLong("session-seconds", 43200)) * 1000L);
-        if (starterKitManager != null) Bukkit.getScheduler().runTaskLater(this, () -> {
-            if (p.isOnline() && isAuthenticated(p) && !starterKitManager.hasKit(p.getUniqueId())) starterKitManager.openSelection(p);
-        }, 2L);
+        requireStarterKit(p);
     }
 
     private void saveAccounts() {
