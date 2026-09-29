@@ -19,6 +19,8 @@ public final class TeamCommand implements CommandExecutor, TabCompleter {
         switch(sub) {
             case "create" -> { if(a.length<2){msg(p,"§e/team create <name>");return true;} if(!manager.validName(a[1])||manager.getTeam(p.getUniqueId())!=null||manager.getByName(a[1])!=null){msg(p,"§cUnable to create that team. Check the name or your current team.");return true;} manager.create(p.getUniqueId(),a[1]);msg(p,"§a☀ Team created: §e"+a[1]); plugin.getTabList().refreshNow(); }
             case "invite" -> { if(a.length<2){msg(p,"§e/team invite <player>");return true;} Player target=plugin.getServer().getPlayerExact(a[1]); if(target==null){msg(p,"§cThat player is not online.");return true;} if(manager.invite(p.getUniqueId(),target.getUniqueId(),target.getName())){msg(p,"§aInvitation sent to §e"+target.getName()+"§a.");target.sendMessage("§6📩 §eTeam Invitation§r\n§f"+p.getName()+" invited you to join §e"+manager.getTeam(p.getUniqueId()).name+"§f. §a/team accept §7or §c/team deny");}else msg(p,"§cYou cannot invite that player."); }
+            case "join" -> { if(a.length<2){msg(p,"§e/team join <team>");return true;} if(manager.join(p.getUniqueId(),a[1])){msg(p,"§aYou joined §e"+manager.getByName(a[1]).name+"§a.");plugin.getTabList().refreshNow();}else msg(p,"§cThat team does not exist, is full, or you are already in a team."); }
+            case "list" -> { StringBuilder b=new StringBuilder("§6☀ §eAvailable Teams§7: "); manager.getTeams().stream().limit(10).forEach(t->b.append("§f").append(t.name).append(" §7(").append(t.members.size()).append("/").append(TeamManager.MAX_MEMBERS).append(")  ")); msg(p,b.toString()); }
             case "accept" -> { if(manager.accept(p.getUniqueId())){msg(p,"§aYou joined the team!");plugin.getTabList().refreshNow();}else msg(p,"§cYou have no valid pending team invitation."); }
             case "deny" -> { if(manager.deny(p.getUniqueId())!=null)msg(p,"§7Team invitation declined.");else msg(p,"§cYou have no pending team invitation."); }
             case "kick" -> { if(a.length<2){msg(p,"§e/team kick <player>");return true;} Player t=plugin.getServer().getPlayerExact(a[1]);if(t!=null&&manager.kick(p.getUniqueId(),t.getUniqueId())){msg(p,"§aRemoved §e"+t.getName()+"§a from the team.");plugin.getTabList().refreshNow();}else msg(p,"§cYou cannot remove that player."); }
@@ -39,7 +41,7 @@ public final class TeamCommand implements CommandExecutor, TabCompleter {
     private void msg(Player p,String s){p.sendMessage(ChatColor.translateAlternateColorCodes('&',s));}
 
     @Override public List<String> onTabComplete(CommandSender s, Command c, String l, String[] a) {
-        if(a.length==1)return List.of("create","invite","accept","deny","kick","promote","demote","leave","chat","info","rename","tag","color");
+        if(a.length==1)return List.of("create","list","join","invite","accept","deny","kick","promote","demote","leave","chat","info","rename","tag","color");
         if(a.length==2 && List.of("invite","kick","promote","demote").contains(a[0].toLowerCase()))return plugin.getServer().getOnlinePlayers().stream().map(Player::getName).filter(n->n.toLowerCase().startsWith(a[1].toLowerCase())).toList();
         if(a.length==2&&a[0].equalsIgnoreCase("color"))return List.of("yellow","gold","green","aqua","blue","light_purple","red","white","gray");
         return List.of();
