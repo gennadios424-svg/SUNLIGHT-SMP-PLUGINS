@@ -80,6 +80,22 @@ commands:
   suncrates:
     description: Open the Sunlight Crates menu
     usage: /suncrates
+  home:
+    description: Open homes or teleport to a home
+    usage: /home [name]
+    aliases: [homes]
+  sethome:
+    description: Create or update a home
+    usage: /sethome <name>
+  delhome:
+    description: Delete a home
+    usage: /delhome <name>
+  homeinfo:
+    description: Show home information
+    usage: /homeinfo <name>
+  renamehome:
+    description: Rename a home
+    usage: /renamehome <old> <new>
   suncrate:
     description: Open a Sunlight crate
     usage: /suncrate <crate> | /suncrate elytra | /suncrate give <crate> [amount] | /suncrate edit <crate> | /suncrate reload\n  order:\n    description: Player-to-player item order system\n    usage: /order [create|search|cancel|myorders|history]
@@ -98,3 +114,17 @@ permissions:
     default: op
   sunlightsmp.keyall:
     default: op
+  homes.use:
+    default: true
+  homes.sethome:
+    default: true
+  homes.delete:
+    default: true
+  homes.teleport:
+    default: true
+  homes.admin:
+    default: op
+  homes.vip:
+    default: false
+  homes.premium:
+    default: false
