@@ -47,24 +47,19 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
     private final Map<UUID, BukkitTask> timeouts = new ConcurrentHashMap<>();
     private File accountsFile;
     private org.bukkit.configuration.file.YamlConfiguration accounts;
-    private StarterKitManager starterKitManager;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         accountsFile = new File(getDataFolder(), "accounts.yml");
         accounts = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(accountsFile);
-        starterKitManager = new StarterKitManager(this);
         Bukkit.getPluginManager().registerEvents(this, this);
-        Bukkit.getPluginManager().registerEvents(starterKitManager, this);
 
         Objects.requireNonNull(getCommand("register")).setExecutor(this);
         Objects.requireNonNull(getCommand("login")).setExecutor(this);
         Objects.requireNonNull(getCommand("changepassword")).setExecutor(this);
         Objects.requireNonNull(getCommand("logout")).setExecutor(this);
         Objects.requireNonNull(getCommand("sunauth")).setExecutor(this);
-        Objects.requireNonNull(getCommand("kitadmin")).setExecutor(starterKitManager);
-        Objects.requireNonNull(getCommand("kitadmin")).setTabCompleter(starterKitManager);
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             startAuth(player);
@@ -77,7 +72,6 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
         for (BukkitTask task : timeouts.values()) task.cancel();
         timeouts.clear();
         saveAccounts();
-        if (starterKitManager != null) starterKitManager.save();
     }
 
     private String msg(String key) {
@@ -113,22 +107,12 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
         return authenticated.contains(p.getUniqueId());
     }
 
-    private void requireStarterKit(Player p) {
-        if (starterKitManager == null || starterKitManager.hasKit(p.getUniqueId())) return;
-        Bukkit.getScheduler().runTaskLater(this, () -> {
-            if (p.isOnline() && isAuthenticated(p) && !starterKitManager.hasKit(p.getUniqueId())) {
-                starterKitManager.openSelection(p);
-            }
-        }, 2L);
-    }
-
     private void startAuth(Player p) {
         authenticated.remove(p.getUniqueId());
 
         if (isPremium(p)) {
             authenticated.add(p.getUniqueId());
             send(p, "premium");
-            requireStarterKit(p);
             return;
         }
 
@@ -136,7 +120,6 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
         Long sessionUntil = sessions.get(p.getUniqueId());
         if (sessionUntil != null && sessionUntil > System.currentTimeMillis()) {
             authenticated.add(p.getUniqueId());
-            requireStarterKit(p);
             return;
         }
 
@@ -175,7 +158,6 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
         p.setWalkSpeed(0.2f);
         p.setFlySpeed(0.1f);
         sessions.put(p.getUniqueId(), System.currentTimeMillis() + Math.max(0, getConfig().getLong("session-seconds", 43200)) * 1000L);
-        requireStarterKit(p);
     }
 
     private void saveAccounts() {
