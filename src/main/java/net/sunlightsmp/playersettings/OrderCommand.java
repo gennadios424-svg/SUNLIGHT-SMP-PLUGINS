@@ -2,7 +2,7 @@ package net.sunlightsmp.playersettings;
 
 import org.bukkit.*;
 import org.bukkit.entity.Player;
-import org.bukkit.event.*;
+import org.bukkit.event.*;import org.bukkit.command.CommandExecutor;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.*;
