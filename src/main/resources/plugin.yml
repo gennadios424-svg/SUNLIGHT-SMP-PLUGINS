@@ -111,17 +111,6 @@ commands:
   tags:
     description: Open the Sunlight SMP Tag Shop
     usage: /tags
-permissions:
-  bounty.use:
-    default: true
-  bounty.create:
-    default: true
-  bounty.cancel:
-    default: true
-  bounty.admin:
-    default: op
-  bounty.bypass:
-    default: false
   team:
     description: Sunlight SMP player team system
     usage: /team [create|invite|accept|deny|kick|promote|demote|leave|chat|info|rename|tag|color]
@@ -129,11 +118,16 @@ permissions:
     description: Toggle team chat
     usage: /tc
     aliases: [teamchat]
+  afk:
+    description: Teleport to the Sunlight SMP AFK Zone
+    usage: /afk [set|give|remove|reload]
 permissions:
   sunlightsmp.settings:
     default: true
   sunlightsmp.tags:
     default: true
+  sunlight.afk.admin:
+    default: op
   sunlightsmp.tpa:
     default: true
   sunlightsmp.ah:
