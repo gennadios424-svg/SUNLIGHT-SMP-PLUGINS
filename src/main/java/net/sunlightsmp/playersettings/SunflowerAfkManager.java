@@ -67,6 +67,7 @@ public final class SunflowerAfkManager implements CommandExecutor, Listener {
                 msg(p, ChatColor.GREEN + "☀ Success! " + ChatColor.WHITE + "You received " + ChatColor.YELLOW + amount + " " + ChatColor.WHITE + "Sunflower Giver.");
             }
             case "reload" -> {
+                plugin.reloadConfig();
                 load();
                 msg(p, ChatColor.GREEN + "☀ Success! " + ChatColor.WHITE + "AFK configuration reloaded.");
             }
@@ -168,8 +169,8 @@ public final class SunflowerAfkManager implements CommandExecutor, Listener {
                 ChatColor.GRAY + "Place an invisible AFK reward detection point.",
                 "",
                 ChatColor.WHITE + "Players inside receive:",
-                ChatColor.GREEN + "+3 " + ChatColor.GOLD + "🌻 Sunflowers",
-                ChatColor.GRAY + "Every 5 minutes",
+                ChatColor.GREEN + "+" + plugin.getConfig().getLong("afk.reward", 3L) + " " + ChatColor.GOLD + "🌻 Sunflowers",
+                ChatColor.GRAY + "Every " + plugin.getConfig().getLong("afk.interval-minutes", 5L) + " minutes",
                 "",
                 ChatColor.DARK_GRAY + "Admin item • Original blocks are untouched"
         ));
@@ -197,7 +198,7 @@ public final class SunflowerAfkManager implements CommandExecutor, Listener {
         } catch (Exception e) { return null; }
     }
 
-    private void save() {
+    public void save() {
         YamlConfiguration y = new YamlConfiguration();
         if (afkLocation != null) {
             y.set("afk-location.world", afkLocation.getWorld().getName());
@@ -211,7 +212,7 @@ public final class SunflowerAfkManager implements CommandExecutor, Listener {
         try { y.save(file); } catch (IOException e) { plugin.getLogger().warning("Could not save afk.yml: " + e.getMessage()); }
     }
 
-    private void load() {
+    public void load() {
         if (!file.exists()) return;
         YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
         String world = y.getString("afk-location.world");
