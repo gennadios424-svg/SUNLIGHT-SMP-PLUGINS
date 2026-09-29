@@ -54,7 +54,9 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
         saveDefaultConfig();
         accountsFile = new File(getDataFolder(), "accounts.yml");
         accounts = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(accountsFile);
+        starterKitManager = new StarterKitManager(this);
         Bukkit.getPluginManager().registerEvents(this, this);
+        Bukkit.getPluginManager().registerEvents(starterKitManager, this);
 
         Objects.requireNonNull(getCommand("register")).setExecutor(this);
         Objects.requireNonNull(getCommand("login")).setExecutor(this);
@@ -75,6 +77,7 @@ public final class SunlightAuth extends JavaPlugin implements Listener, CommandE
         for (BukkitTask task : timeouts.values()) task.cancel();
         timeouts.clear();
         saveAccounts();
+        if (starterKitManager != null) starterKitManager.save();
     }
 
     private String msg(String key) {
