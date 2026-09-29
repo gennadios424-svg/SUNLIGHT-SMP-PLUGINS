@@ -138,7 +138,12 @@ public final class OrderManager {
         expire();
         List<Order> result = new ArrayList<>();
         for (Order o : active.values()) {
-            if (o.item().getType().name().equalsIgnoreCase(materialName)) result.add(o);
+            // Empty material = browse every active order.
+            // A material name = only orders for that exact item.
+            if (materialName == null || materialName.isBlank() ||
+                    o.item().getType().name().equalsIgnoreCase(materialName)) {
+                result.add(o);
+            }
         }
         switch (sort.toLowerCase(Locale.ROOT)) {
             case "highest" -> result.sort(Comparator.comparingDouble(Order::pricePerItem).reversed());
