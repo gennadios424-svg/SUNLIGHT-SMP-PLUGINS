@@ -55,7 +55,7 @@ public final class SunlightExpiryManager implements Listener {
                 p.sendMessage(ChatColor.RED + "☀ A Sunlight item in your inventory has expired.");
                 continue;
             }
-            long total = left / 1000;
+            long total = Math.max(0L, (left + 999L) / 1000L);
             long days = total / 86400;
             long hours = (total % 86400) / 3600;
             long minutes = (total % 3600) / 60;
