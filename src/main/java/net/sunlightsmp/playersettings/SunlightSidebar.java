@@ -17,7 +17,7 @@ import java.util.*;
 
 public final class SunlightSidebar {
     private final SunlightPlayerSettings plugin;
-    private final Map<UUID, Set<String>> ownedLines = new HashMap<>();
+    
 
     public SunlightSidebar(SunlightPlayerSettings plugin) {
         this.plugin = plugin;
@@ -68,9 +68,8 @@ public final class SunlightSidebar {
                     ChatColor.GOLD + "☀ " + ChatColor.YELLOW + "SUNLIGHT SMP");
             o.setDisplaySlot(DisplaySlot.SIDEBAR);
 
-            Set<String> old = ownedLines.computeIfAbsent(p.getUniqueId(), k -> new HashSet<>());
-            for (String x : old) board.resetScores(x);
-            old.clear();
+            // Remove every old line from our dedicated objective so stale lines from previous plugin versions cannot duplicate.
+            for (String x : new HashSet<>(o.getScoreboard().getEntries())) o.getScoreboard().resetScores(x);
 
             List<String> lines = List.of(
                     ChatColor.DARK_GRAY + "━━━━━━━━━━━━",
@@ -86,7 +85,7 @@ public final class SunlightSidebar {
             for (String line : lines) {
                 String entry = line + uniqueCode(index++);
                 o.getScore(entry).setScore(score--);
-                old.add(entry);
+
             }
         }
     }
