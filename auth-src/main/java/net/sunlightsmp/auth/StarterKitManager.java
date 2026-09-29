@@ -162,7 +162,7 @@ public final class StarterKitManager implements Listener, CommandExecutor, TabCo
     public void giveKit(Player p, String kit, boolean clearInventory) {
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("starter-kits." + kit.toLowerCase(Locale.ROOT) + ".items");
         if (section == null) return;
-        if (clearInventory) p.getInventory().clear();
+        if (clearInventory && plugin.getConfig().getBoolean("starter-kits.replace-inventory-on-respawn", true)) p.getInventory().clear();
         for (String key : section.getKeys(false)) {
             String materialName = section.getString(key + ".material", "STONE");
             int amount = Math.max(1, section.getInt(key + ".amount", 1));
