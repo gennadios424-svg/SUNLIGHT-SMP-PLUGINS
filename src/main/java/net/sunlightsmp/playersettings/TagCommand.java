@@ -33,7 +33,12 @@ public final class TagCommand implements org.bukkit.command.CommandExecutor, Lis
 
     private String money(long n) { return String.format(Locale.US, "%,d", n); }
 
-    private void fill(Inventory inv) {\n        frame(inv);\n        return;\n    }\n    private void frame(Inventory inv){ ItemStack side=item(Material.BLACK_STAINED_GLASS_PANE," "); ItemStack accent=item(Material.YELLOW_STAINED_GLASS_PANE,ChatColor.GOLD+"☀"); for(int r=0;r<inv.getSize()/9;r++){inv.setItem(r*9,side);inv.setItem(r*9+8,side);} for(int s=0;s<9;s++){inv.setItem(s,accent);inv.setItem(inv.getSize()-9+s,accent);} }\n    private void oldFill(Inventory inv) {
+    private void fill(Inventory inv) {
+        frame(inv);
+        return;
+    }
+    private void frame(Inventory inv){ ItemStack side=item(Material.BLACK_STAINED_GLASS_PANE," "); ItemStack accent=item(Material.YELLOW_STAINED_GLASS_PANE,ChatColor.GOLD+"☀"); for(int r=0;r<inv.getSize()/9;r++){inv.setItem(r*9,side);inv.setItem(r*9+8,side);} for(int s=0;s<9;s++){inv.setItem(s,accent);inv.setItem(inv.getSize()-9+s,accent);} }
+    private void oldFill(Inventory inv) {
         for (int i=0;i<inv.getSize();i++)
             inv.setItem(i,item(Material.BLACK_STAINED_GLASS_PANE," "));
     }
